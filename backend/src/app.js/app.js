@@ -1,0 +1,1 @@
+console.log("Application Pro Récup chargée.");

@@ -1,0 +1,391 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Impact carbone | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/impact-carbone.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation"
+                >
+                    Lots
+                </a>
+
+                <a
+                    href="./stocks.html"
+                    class="lien-navigation"
+                >
+                    Stocks
+                </a>
+
+                <a
+                    href="./ventes.html"
+                    class="lien-navigation"
+                >
+                    Ventes
+                </a>
+
+                <a
+                    href="./impact-carbone.html"
+                    class="lien-navigation actif"
+                >
+                    Impact carbone
+                </a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        PERFORMANCE ENVIRONNEMENTALE
+                    </p>
+
+                    <h1>
+                        Impact carbone
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez les estimations carbone
+                        calculées automatiquement à partir des ventes.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonActualiserEntete"
+                    class="bouton-principal"
+                >
+                    Actualiser
+                </button>
+
+            </header>
+
+            <section class="resume-carbone">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Calculs
+                    </span>
+
+                    <strong id="nombreImpacts">
+                        0
+                    </strong>
+
+                    <p>
+                        impact(s) carbone calculé(s)
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-carbone">
+                        CO₂e total
+                    </span>
+
+                    <strong id="co2eTotal">
+                        0 kg
+                    </strong>
+
+                    <p>
+                        émissions estimées cumulées
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-quantite">
+                        Quantité concernée
+                    </span>
+
+                    <strong id="quantiteTotale">
+                        0 kg
+                    </strong>
+
+                    <p>
+                        quantité totale analysée
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-facteur">
+                        Facteur moyen
+                    </span>
+
+                    <strong id="facteurMoyen">
+                        0
+                    </strong>
+
+                    <p>
+                        kg CO₂e par kg de matière
+                    </p>
+
+                </article>
+
+            </section>
+
+            <section class="panneau-recherche">
+
+                <div>
+
+                    <label for="champRecherche">
+                        Recherche
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Référence, acheteur, matière, source ou créateur..."
+                    >
+
+                </div>
+
+                <div>
+
+                    <label for="filtreMatiere">
+                        Matière
+                    </label>
+
+                    <select id="filtreMatiere">
+
+                        <option value="">
+                            Toutes les matières
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="grille-carbone">
+
+                <article class="panneau">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <p class="sur-titre">
+                                HISTORIQUE DES CALCULS
+                            </p>
+
+                            <h2>
+                                Impacts carbone estimés
+                            </h2>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            id="boutonActualiser"
+                            class="bouton-secondaire"
+                        >
+                            Actualiser
+                        </button>
+
+                    </div>
+
+                    <div class="tableau-conteneur">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Acheteur</th>
+                                    <th>Matière</th>
+                                    <th>Quantité</th>
+                                    <th>Facteur</th>
+                                    <th>CO₂e estimé</th>
+                                    <th>Source</th>
+                                    <th>Zone</th>
+                                    <th>Créée par</th>
+                                    <th>Date</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="corpsTableauImpacts">
+
+                                <tr>
+
+                                    <td
+                                        colspan="10"
+                                        class="etat-tableau"
+                                    >
+                                        Chargement des impacts carbone...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </article>
+
+                <article class="panneau panneau-repartition">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            RÉPARTITION
+                        </p>
+
+                        <h2>
+                            CO₂e par matière
+                        </h2>
+
+                    </div>
+
+                    <div
+                        id="listeRepartition"
+                        class="liste-repartition"
+                    >
+
+                        <p class="etat-repartition">
+                            Chargement...
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/impact-carbone.js"></script>
+
+</body>
+
+</html>

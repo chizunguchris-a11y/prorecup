@@ -1,0 +1,378 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Stocks | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/stocks.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation"
+                >
+                    Lots
+                </a>
+
+                <a
+                    href="./stocks.html"
+                    class="lien-navigation actif"
+                >
+                    Stocks
+                </a>
+
+                <a
+    		    href="./ventes.html"
+    		    class="lien-navigation"
+		>
+    		    Ventes
+		</a>
+
+                <a
+    		    href="./impact-carbone.html"
+    		    class="lien-navigation"
+		>
+    		    Impact carbone
+		</a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        INVENTAIRE DES MATIÈRES
+                    </p>
+
+                    <h1>
+                        Stocks
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez les quantités disponibles
+                        pour votre organisation.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonActualiserEntete"
+                    class="bouton-principal"
+                >
+                    Actualiser
+                </button>
+
+            </header>
+
+            <section class="resume-stocks">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Types
+                    </span>
+
+                    <strong id="nombreTypes">
+                        0
+                    </strong>
+
+                    <p>
+                        type(s) de matière en stock
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-quantite">
+                        Quantité totale
+                    </span>
+
+                    <strong id="quantiteTotale">
+                        0 kg
+                    </strong>
+
+                    <p>
+                        quantité disponible cumulée
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-alerte">
+                        Stock faible
+                    </span>
+
+                    <strong id="nombreStocksFaibles">
+                        0
+                    </strong>
+
+                    <p>
+                        stock(s) inférieur(s) à 10 kg
+                    </p>
+
+                </article>
+
+            </section>
+
+            <section class="panneau-recherche">
+
+                <div>
+
+                    <label for="champRecherche">
+                        Recherche
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Rechercher une matière..."
+                    >
+
+                </div>
+
+                <div>
+
+                    <label for="filtreNiveau">
+                        Niveau de stock
+                    </label>
+
+                    <select id="filtreNiveau">
+
+                        <option value="">
+                            Tous les niveaux
+                        </option>
+
+                        <option value="faible">
+                            Stock faible
+                        </option>
+
+                        <option value="normal">
+                            Stock normal
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="grille-stocks">
+
+                <article class="panneau">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <p class="sur-titre">
+                                STOCK DISPONIBLE
+                            </p>
+
+                            <h2>
+                                Liste des matières
+                            </h2>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            id="boutonActualiser"
+                            class="bouton-secondaire"
+                        >
+                            Actualiser
+                        </button>
+
+                    </div>
+
+                    <div class="tableau-conteneur">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+                                    <th>Matière</th>
+                                    <th>Quantité</th>
+                                    <th>Unité</th>
+                                    <th>Niveau</th>
+                                    <th>Dernière mise à jour</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="corpsTableauStocks">
+
+                                <tr>
+
+                                    <td
+                                        colspan="5"
+                                        class="etat-tableau"
+                                    >
+                                        Chargement des stocks...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </article>
+
+                <article class="panneau panneau-repartition">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            RÉPARTITION
+                        </p>
+
+                        <h2>
+                            Quantités par matière
+                        </h2>
+
+                    </div>
+
+                    <div
+                        id="listeRepartition"
+                        class="liste-repartition"
+                    >
+
+                        <p class="etat-repartition">
+                            Chargement...
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/stocks.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,551 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Ventes | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/ventes.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation"
+                >
+                    Lots
+                </a>
+
+                <a
+                    href="./stocks.html"
+                    class="lien-navigation"
+                >
+                    Stocks
+                </a>
+
+                <a
+                    href="./ventes.html"
+                    class="lien-navigation actif"
+                >
+                    Ventes
+                </a>
+
+                <a
+    		    href="./impact-carbone.html"
+    		    class="lien-navigation"
+		>
+    		    Impact carbone
+		</a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        ACTIVITÉ COMMERCIALE
+                    </p>
+
+                    <h1>
+                        Ventes
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez et enregistrez les ventes
+                        de matières disponibles en stock.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonNouvelleVente"
+                    class="bouton-principal"
+                >
+                    Nouvelle vente
+                </button>
+
+            </header>
+
+            <section class="resume-ventes">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Ventes
+                    </span>
+
+                    <strong id="nombreVentes">
+                        0
+                    </strong>
+
+                    <p>
+                        vente(s) enregistrée(s)
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-revenu">
+                        Chiffre d’affaires
+                    </span>
+
+                    <strong id="chiffreAffaires">
+                        0
+                    </strong>
+
+                    <p>
+                        montant total des ventes
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-quantite">
+                        Quantité vendue
+                    </span>
+
+                    <strong id="quantiteVendue">
+                        0 kg
+                    </strong>
+
+                    <p>
+                        quantité totale commercialisée
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-carbone">
+                        Carbone
+                    </span>
+
+                    <strong id="impactCarbone">
+                        0 kg CO₂e
+                    </strong>
+
+                    <p>
+                        impact carbone estimé
+                    </p>
+
+                </article>
+
+            </section>
+
+            <section class="panneau-recherche">
+
+                <div>
+
+                    <label for="champRecherche">
+                        Recherche
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Acheteur, référence, matière ou créateur..."
+                    >
+
+                </div>
+
+                <div>
+
+                    <label for="filtreStatut">
+                        Statut
+                    </label>
+
+                    <select id="filtreStatut">
+
+                        <option value="">
+                            Tous les statuts
+                        </option>
+
+                        <option value="confirmee">
+                            Confirmée
+                        </option>
+
+                        <option value="annulee">
+                            Annulée
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="panneau">
+
+                <div class="entete-panneau">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            HISTORIQUE COMMERCIAL
+                        </p>
+
+                        <h2>
+                            Liste des ventes
+                        </h2>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Référence</th>
+                                <th>Acheteur</th>
+                                <th>Matière</th>
+                                <th>Quantité</th>
+                                <th>Prix unitaire</th>
+                                <th>Montant total</th>
+                                <th>CO₂e</th>
+                                <th>Créée par</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauVentes">
+
+                            <tr>
+
+                                <td
+                                    colspan="10"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des ventes...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="fenetreVente"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <section class="contenu-modale">
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        NOUVELLE VENTE
+                    </p>
+
+                    <h2>
+                        Enregistrer une vente
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerModale"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireVente">
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="stock_id">
+                            Stock à vendre *
+                        </label>
+
+                        <select
+                            id="stock_id"
+                            name="stock_id"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionnez un stock
+                            </option>
+
+                        </select>
+
+                        <p
+                            id="informationStock"
+                            class="aide-champ"
+                        >
+                            Sélectionnez une matière disponible.
+                        </p>
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="quantite">
+                            Quantité vendue *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="quantite"
+                            name="quantite"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="Exemple : 5"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="prix_unitaire">
+                            Prix unitaire *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="prix_unitaire"
+                            name="prix_unitaire"
+                            min="0"
+                            step="0.01"
+                            placeholder="Exemple : 450"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="acheteur_nom">
+                            Nom de l’acheteur *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="acheteur_nom"
+                            name="acheteur_nom"
+                            maxlength="150"
+                            placeholder="Exemple : Eco Plast RDC"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="reference_vente">
+                            Référence de vente
+                        </label>
+
+                        <input
+                            type="text"
+                            id="reference_vente"
+                            name="reference_vente"
+                            maxlength="100"
+                            placeholder="Exemple : VTE-2026-004"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="montant_estime">
+                            Montant total estimé
+                        </label>
+
+                        <input
+                            type="text"
+                            id="montant_estime"
+                            readonly
+                            value="0"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="erreurFormulaire"
+                    class="message message-erreur cache"
+                ></div>
+
+                <div class="actions-formulaire">
+
+                    <button
+                        type="button"
+                        id="boutonAnnuler"
+                        class="bouton-annuler"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrer"
+                        class="bouton-principal"
+                    >
+                        Enregistrer la vente
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/ventes.js"></script>
+
+</body>
+
+</html>

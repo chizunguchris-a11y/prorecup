@@ -1,0 +1,520 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Lots | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/lots.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation actif"
+                >
+                    Lots
+                </a>
+
+                <a
+    		    href="./stocks.html"
+    		    class="lien-navigation"
+		>
+    		    Stocks
+		</a>
+
+                <a
+    		    href="./ventes.html"
+    		    class="lien-navigation"
+		>
+    		    Ventes
+		</a>
+
+                <a
+    		    href="./impact-carbone.html"
+    		    class="lien-navigation"
+		>
+    		    Impact carbone
+		</a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        TRAÇABILITÉ DES MATIÈRES
+                    </p>
+
+                    <h1>
+                        Lots
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez les lots créés à partir
+                        des collectes validées.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonNouveauLot"
+                    class="bouton-principal"
+                >
+                    Nouveau lot
+                </button>
+
+            </header>
+
+            <section class="resume-lots">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Total
+                    </span>
+
+                    <strong id="nombreLots">
+                        0
+                    </strong>
+
+                    <p>
+                        lot(s) enregistré(s)
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-stock">
+                        En stock
+                    </span>
+
+                    <strong id="nombreEnStock">
+                        0
+                    </strong>
+
+                    <p>
+                        lot(s) actuellement en stock
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette etiquette-poids">
+                        Poids total
+                    </span>
+
+                    <strong id="poidsTotal">
+                        0 kg
+                    </strong>
+
+                    <p>
+                        poids réel cumulé
+                    </p>
+
+                </article>
+
+            </section>
+
+            <section class="panneau-recherche">
+
+                <div>
+
+                    <label for="champRecherche">
+                        Recherche
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Client, site, déchet ou statut..."
+                    >
+
+                </div>
+
+                <div>
+
+                    <label for="filtreStatut">
+                        Statut
+                    </label>
+
+                    <select id="filtreStatut">
+
+                        <option value="">
+                            Tous les statuts
+                        </option>
+
+                        <option value="en_stock">
+                            En stock
+                        </option>
+
+                        <option value="vendu">
+                            Vendu
+                        </option>
+
+                        <option value="transforme">
+                            Transformé
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="panneau">
+
+                <div class="entete-panneau">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            INVENTAIRE
+                        </p>
+
+                        <h2>
+                            Liste des lots
+                        </h2>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Client</th>
+                                <th>Site</th>
+                                <th>Déchet</th>
+                                <th>Poids réel</th>
+                                <th>Statut du lot</th>
+                                <th>Collecte</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauLots">
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des lots...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="fenetreLot"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <section class="contenu-modale">
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        NOUVEAU LOT
+                    </p>
+
+                    <h2>
+                        Créer un lot
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerModale"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireLot">
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="collecte_id">
+                            Collecte validée *
+                        </label>
+
+                        <select
+                            id="collecte_id"
+                            name="collecte_id"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionnez une collecte
+                            </option>
+
+                        </select>
+
+                        <p class="aide-champ">
+                            Seules les collectes validées sans lot
+                            existant sont proposées.
+                        </p>
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="type_dechet_affiche">
+                            Type de déchet
+                        </label>
+
+                        <input
+                            type="text"
+                            id="type_dechet_affiche"
+                            readonly
+                            placeholder="Sélectionnez une collecte"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="poids_estime_affiche">
+                            Poids estimé
+                        </label>
+
+                        <input
+                            type="text"
+                            id="poids_estime_affiche"
+                            readonly
+                            placeholder="Sélectionnez une collecte"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="poids_reel">
+                            Poids réel en kg *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="poids_reel"
+                            name="poids_reel"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="Exemple : 38,5"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="statut_lot">
+                            Statut initial
+                        </label>
+
+                        <select
+                            id="statut_lot"
+                            name="statut_lot"
+                        >
+
+                            <option value="en_stock">
+                                En stock
+                            </option>
+
+                            <option value="transforme">
+                                Transformé
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="erreurFormulaire"
+                    class="message message-erreur cache"
+                ></div>
+
+                <div class="actions-formulaire">
+
+                    <button
+                        type="button"
+                        id="boutonAnnuler"
+                        class="bouton-annuler"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrer"
+                        class="bouton-principal"
+                    >
+                        Créer le lot
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/lots.js"></script>
+
+</body>
+
+</html>

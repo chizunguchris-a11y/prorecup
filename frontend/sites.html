@@ -1,0 +1,424 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sites de collecte | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/sites.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+                    <strong>Pro Récup</strong>
+                    <span>Gestion environnementale</span>
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation actif"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation"
+                >
+                    Lots
+                </a>
+
+                <a
+                    href="./stocks.html"
+                    class="lien-navigation"
+                >
+                    Stocks
+                </a>
+
+                <a
+                    href="./ventes.html"
+                    class="lien-navigation"
+                >
+                    Ventes
+                </a>
+
+                <a
+                    href="./impact-carbone.html"
+                    class="lien-navigation"
+                >
+                    Impact carbone
+                </a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        RÉSEAU DE COLLECTE
+                    </p>
+
+                    <h1>
+                        Sites de collecte
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez et gérez les sites
+                        de votre organisation.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonNouveauSite"
+                    class="bouton-principal"
+                >
+                    Nouveau site
+                </button>
+
+            </header>
+
+            <section class="resume-sites">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Total
+                    </span>
+
+                    <strong id="nombreSites">
+                        0
+                    </strong>
+
+                    <p>
+                        site(s) enregistré(s)
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Recherche
+                    </span>
+
+                    <div class="zone-recherche">
+
+                        <input
+                            type="search"
+                            id="champRecherche"
+                            placeholder="Nom, adresse, zone ou responsable..."
+                        >
+
+                    </div>
+
+                </article>
+
+            </section>
+
+            <section class="panneau">
+
+                <div class="entete-panneau">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            IMPLANTATIONS
+                        </p>
+
+                        <h2>
+                            Liste des sites
+                        </h2>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Nom</th>
+                                <th>Adresse</th>
+                                <th>Zone</th>
+                                <th>Responsable</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauSites">
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des sites...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="fenetreSite"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <section class="contenu-modale">
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p
+                        id="surTitreModale"
+                        class="sur-titre"
+                    >
+                        NOUVEAU SITE
+                    </p>
+
+                    <h2 id="titreModale">
+                        Enregistrer un site
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerModale"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireSite">
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="nom">
+                            Nom du site *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nom"
+                            name="nom"
+                            maxlength="150"
+                            placeholder="Exemple : Centre de collecte Gombe"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="adresse">
+                            Adresse
+                        </label>
+
+                        <input
+                            type="text"
+                            id="adresse"
+                            name="adresse"
+                            maxlength="255"
+                            placeholder="Boulevard du 30 Juin"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="zone_geographique">
+                            Zone géographique
+                        </label>
+
+                        <input
+                            type="text"
+                            id="zone_geographique"
+                            name="zone_geographique"
+                            maxlength="150"
+                            placeholder="Gombe"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="responsable_nom">
+                            Nom du responsable
+                        </label>
+
+                        <input
+                            type="text"
+                            id="responsable_nom"
+                            name="responsable_nom"
+                            maxlength="150"
+                            placeholder="Jean Mukendi"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="erreurFormulaire"
+                    class="message message-erreur cache"
+                ></div>
+
+                <div class="actions-formulaire">
+
+                    <button
+                        type="button"
+                        id="boutonAnnuler"
+                        class="bouton-annuler"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrer"
+                        class="bouton-principal"
+                    >
+                        Enregistrer le site
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sites.js"></script>
+
+</body>
+
+</html>

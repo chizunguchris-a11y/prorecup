@@ -1,2 +1,45 @@
-.env
+﻿# Dépendances Node.js
 node_modules/
+
+# Variables d'environnement sensibles
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Journaux
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Couverture des tests
+coverage/
+.nyc_output/
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp
+
+# Fichiers système Windows
+Thumbs.db
+Desktop.ini
+
+# Fichiers système macOS
+.DS_Store
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cache
+.cache/
+
+# Fichiers générés
+dist/
+build/

@@ -1,0 +1,440 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Clients | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/clients.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+                    <strong>Pro Récup</strong>
+                    <span>Gestion environnementale</span>
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <a
+                    href="./dashboard.html"
+                    class="lien-navigation"
+                >
+                    Tableau de bord
+                </a>
+
+                <a
+                    href="./clients.html"
+                    class="lien-navigation actif"
+                >
+                    Clients
+                </a>
+
+                <a
+                    href="./sites.html"
+                    class="lien-navigation"
+                >
+                    Sites de collecte
+                </a>
+
+                <a
+                    href="./collectes.html"
+                    class="lien-navigation"
+                >
+                    Collectes
+                </a>
+
+                <a
+                    href="./lots.html"
+                    class="lien-navigation"
+                >
+                    Lots
+                </a>
+
+                <a
+                    href="./stocks.html"
+                    class="lien-navigation"
+                >
+                    Stocks
+                </a>
+
+                <a
+                    href="./ventes.html"
+                    class="lien-navigation"
+                >
+                    Ventes
+                </a>
+
+                <a
+                    href="./impact-carbone.html"
+                    class="lien-navigation"
+                >
+                    Impact carbone
+                </a>
+
+            </nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete">
+
+                <div>
+
+                    <p class="sur-titre">
+                        GESTION COMMERCIALE
+                    </p>
+
+                    <h1>
+                        Clients
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez et gérez les clients
+                        de votre organisation.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonNouveauClient"
+                    class="bouton-principal"
+                >
+                    Nouveau client
+                </button>
+
+            </header>
+
+            <section class="resume-clients">
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Total
+                    </span>
+
+                    <strong id="nombreClients">
+                        0
+                    </strong>
+
+                    <p>
+                        client(s) enregistré(s)
+                    </p>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span class="etiquette">
+                        Recherche
+                    </span>
+
+                    <div class="zone-recherche">
+
+                        <input
+                            type="search"
+                            id="champRecherche"
+                            placeholder="Nom, type, e-mail ou téléphone..."
+                        >
+
+                    </div>
+
+                </article>
+
+            </section>
+
+            <section class="panneau">
+
+                <div class="entete-panneau">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            RÉPERTOIRE
+                        </p>
+
+                        <h2>
+                            Liste des clients
+                        </h2>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Nom</th>
+                                <th>Type</th>
+                                <th>E-mail</th>
+                                <th>Téléphone</th>
+                                <th>Adresse</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauClients">
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des clients...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="fenetreClient"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <section class="contenu-modale">
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p
+                        id="surTitreModale"
+                        class="sur-titre"
+                    >
+                        NOUVEAU CLIENT
+                    </p>
+
+                    <h2 id="titreModale">
+                        Enregistrer un client
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerModale"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireClient">
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-champ champ-large">
+
+                        <label for="nom">
+                            Nom du client *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nom"
+                            name="nom"
+                            maxlength="150"
+                            placeholder="Exemple : Hôpital Central"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="type_client">
+                            Type de client
+                        </label>
+
+                        <input
+                            type="text"
+                            id="type_client"
+                            name="type_client"
+                            maxlength="100"
+                            placeholder="Entreprise, hôpital..."
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="contact_email">
+                            Adresse e-mail
+                        </label>
+
+                        <input
+                            type="email"
+                            id="contact_email"
+                            name="contact_email"
+                            placeholder="contact@client.com"
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="contact_telephone">
+                            Téléphone
+                        </label>
+
+                        <input
+                            type="text"
+                            id="contact_telephone"
+                            name="contact_telephone"
+                            maxlength="30"
+                            placeholder="+243..."
+                        >
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="adresse_siege">
+                            Adresse du siège
+                        </label>
+
+                        <input
+                            type="text"
+                            id="adresse_siege"
+                            name="adresse_siege"
+                            maxlength="255"
+                            placeholder="Kinshasa"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="erreurFormulaire"
+                    class="message message-erreur cache"
+                ></div>
+
+                <div class="actions-formulaire">
+
+                    <button
+                        type="button"
+                        id="boutonAnnuler"
+                        class="bouton-annuler"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrer"
+                        class="bouton-principal"
+                    >
+                        Enregistrer le client
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/clients.js"></script>
+
+</body>
+
+</html>

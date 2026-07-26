@@ -1,0 +1,357 @@
+﻿* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --vert-principal: #166534;
+    --vert-clair: #22c55e;
+    --vert-tres-clair: #dcfce7;
+    --bleu-nuit: #0f172a;
+    --texte: #1e293b;
+    --texte-secondaire: #64748b;
+    --fond: #f8fafc;
+    --blanc: #ffffff;
+    --bordure: #dbe3ec;
+    --rouge: #b91c1c;
+    --rouge-clair: #fee2e2;
+    --ombre:
+        0 24px 60px rgba(15, 23, 42, 0.14);
+}
+
+body {
+    min-height: 100vh;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    color: var(--texte);
+    background: var(--fond);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.page-connexion {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    min-height: 100vh;
+}
+
+.presentation {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    padding: 70px 9%;
+    color: var(--blanc);
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(34, 197, 94, 0.35),
+            transparent 28%
+        ),
+        linear-gradient(
+            145deg,
+            #052e16,
+            #14532d 55%,
+            #166534
+        );
+}
+
+.presentation::after {
+    position: absolute;
+    right: -130px;
+    bottom: -130px;
+    width: 420px;
+    height: 420px;
+    content: "";
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+}
+
+.logo {
+    display: grid;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 35px;
+    place-items: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--vert-principal);
+    background: var(--blanc);
+    border-radius: 18px;
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.petit-titre {
+    margin-bottom: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #bbf7d0;
+}
+
+.presentation h1 {
+    max-width: 650px;
+    margin-bottom: 22px;
+    font-size: clamp(42px, 5vw, 72px);
+    line-height: 1.05;
+}
+
+.presentation h1 span {
+    color: #86efac;
+}
+
+.description {
+    max-width: 610px;
+    margin-bottom: 45px;
+    font-size: 18px;
+    line-height: 1.75;
+    color: #dcfce7;
+}
+
+.fonctionnalites {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 720px;
+}
+
+.fonctionnalite {
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+}
+
+.fonctionnalite strong {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 15px;
+}
+
+.fonctionnalite span {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #dcfce7;
+}
+
+.zone-formulaire {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 45px;
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f1f5f9
+        );
+}
+
+.carte-connexion {
+    width: 100%;
+    max-width: 470px;
+    padding: 46px;
+    background: var(--blanc);
+    border: 1px solid #eef2f7;
+    border-radius: 24px;
+    box-shadow: var(--ombre);
+}
+
+.entete-formulaire {
+    margin-bottom: 34px;
+}
+
+.sur-titre {
+    margin-bottom: 11px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--vert-principal);
+}
+
+.entete-formulaire h2 {
+    margin-bottom: 10px;
+    font-size: 34px;
+    color: var(--bleu-nuit);
+}
+
+.entete-formulaire > p:last-child {
+    line-height: 1.65;
+    color: var(--texte-secondaire);
+}
+
+.groupe-champ {
+    margin-bottom: 22px;
+}
+
+.groupe-champ label {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.groupe-champ input {
+    width: 100%;
+    height: 50px;
+    padding: 0 15px;
+    color: var(--texte);
+    background: #fbfdff;
+    border: 1px solid var(--bordure);
+    border-radius: 11px;
+    outline: none;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.groupe-champ input:focus {
+    border-color: var(--vert-clair);
+    box-shadow:
+        0 0 0 4px rgba(34, 197, 94, 0.13);
+}
+
+.champ-mot-de-passe {
+    position: relative;
+}
+
+.champ-mot-de-passe input {
+    padding-right: 90px;
+}
+
+.bouton-afficher {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--vert-principal);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.bouton-principal {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 8px;
+    padding: 13px 20px;
+    font-weight: 800;
+    color: var(--blanc);
+    background:
+        linear-gradient(
+            135deg,
+            #15803d,
+            #22c55e
+        );
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow:
+        0 12px 24px rgba(22, 101, 52, 0.22);
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        opacity 0.2s;
+}
+
+.bouton-principal:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 16px 30px rgba(22, 101, 52, 0.28);
+}
+
+.bouton-principal:disabled {
+    cursor: wait;
+    opacity: 0.7;
+    transform: none;
+}
+
+.message {
+    margin: 6px 0 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: 10px;
+}
+
+.message-erreur {
+    color: var(--rouge);
+    background: var(--rouge-clair);
+    border: 1px solid #fecaca;
+}
+
+.message-succes {
+    color: var(--vert-principal);
+    background: var(--vert-tres-clair);
+    border: 1px solid #bbf7d0;
+}
+
+.cache {
+    display: none;
+}
+
+.pied-formulaire {
+    margin-top: 30px;
+    font-size: 12px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+@media (max-width: 900px) {
+
+    .page-connexion {
+        grid-template-columns: 1fr;
+    }
+
+    .presentation {
+        min-height: 440px;
+        padding: 55px 7%;
+    }
+
+    .fonctionnalites {
+        grid-template-columns: 1fr;
+    }
+
+    .zone-formulaire {
+        padding: 30px 18px;
+    }
+
+}
+
+@media (max-width: 520px) {
+
+    .presentation {
+        min-height: 380px;
+    }
+
+    .presentation h1 {
+        font-size: 40px;
+    }
+
+    .description {
+        font-size: 16px;
+    }
+
+    .fonctionnalites {
+        display: none;
+    }
+
+    .carte-connexion {
+        padding: 30px 22px;
+        border-radius: 18px;
+    }
+
+}

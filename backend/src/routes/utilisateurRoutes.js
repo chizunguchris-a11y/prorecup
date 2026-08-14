@@ -1,7 +1,7 @@
 import express from "express";
 
 import utilisateurController
-    from "../controllers/UtilisateurController.js";
+    from "../controllers/utilisateurController.js";
 
 import authMiddleware
     from "../middlewares/authMiddleware.js";

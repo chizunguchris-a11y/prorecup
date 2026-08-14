@@ -1,7 +1,7 @@
 ﻿import express from "express";
 
 import collecteController
-    from "../controllers/CollecteController.js";
+    from "../controllers/collecteController.js";
 
 import authMiddleware
     from "../middlewares/authMiddleware.js";

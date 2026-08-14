@@ -43,3 +43,11 @@ Desktop.ini
 # Fichiers générés
 dist/
 build/
+
+# Fichiers temporaires Pro Recup
+anciens_fichiers/
+reset-agent-password.js
+reset-manager-password.js
+
+# Scripts temporaires
+reset-*.js

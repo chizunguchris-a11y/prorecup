@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Notifications — Pro Récup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/notifications.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Gestionnaire
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        CENTRE D’ALERTES
+                    </p>
+
+                    <h1>
+                        Notifications
+                    </h1>
+
+                    <p class="sous-titre">
+                        Suivez les événements importants et les situations
+                        nécessitant votre attention.
+                    </p>
+
+                </div>
+
+                <div class="actions-entete">
+
+                    <button
+                        type="button"
+                        class="bouton bouton-secondaire"
+                        id="boutonToutMarquerLu"
+                    >
+                        Tout marquer comme lu
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton bouton-primaire"
+                        id="boutonActualiserNotifications"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+            </header>
+
+            <div
+                id="erreurNotifications"
+                class="alerte-page cache"
+                role="alert"
+            ></div>
+
+            <section class="cartes-resume">
+
+                <article class="carte-resume">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong id="nombreNotifications">
+                        0
+                    </strong>
+
+                    <small>
+                        notifications disponibles
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Non lues
+                    </span>
+
+                    <strong id="nombreNonLues">
+                        0
+                    </strong>
+
+                    <small>
+                        nécessitent une consultation
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Alertes
+                    </span>
+
+                    <strong id="nombreAlertes">
+                        0
+                    </strong>
+
+                    <small>
+                        situations importantes
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Informations
+                    </span>
+
+                    <strong id="nombreInformations">
+                        0
+                    </strong>
+
+                    <small>
+                        événements opérationnels
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="zone-filtres">
+
+                <div class="groupe-filtre filtre-recherche">
+
+                    <label for="rechercheNotifications">
+                        Rechercher
+                    </label>
+
+                    <input
+                        type="search"
+                        id="rechercheNotifications"
+                        placeholder="Mission, agent, tricycle, incident..."
+                    >
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="filtreTypeNotification">
+                        Type
+                    </label>
+
+                    <select id="filtreTypeNotification">
+
+                        <option value="">
+                            Tous les types
+                        </option>
+
+                        <option value="alerte">
+                            Alertes
+                        </option>
+
+                        <option value="succes">
+                            Succès
+                        </option>
+
+                        <option value="information">
+                            Informations
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="filtreLectureNotification">
+                        Lecture
+                    </label>
+
+                    <select id="filtreLectureNotification">
+
+                        <option value="">
+                            Toutes
+                        </option>
+
+                        <option value="non_lue">
+                            Non lues
+                        </option>
+
+                        <option value="lue">
+                            Lues
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="panneau-notifications">
+
+                <div class="entete-panneau">
+
+                    <div>
+
+                        <h2>
+                            Activité récente
+                        </h2>
+
+                        <p>
+                            Les notifications sont générées à partir
+                            de l’activité opérationnelle.
+                        </p>
+
+                    </div>
+
+                    <span
+                        id="nombreResultats"
+                        class="badge-resultats"
+                    >
+                        0 résultat
+                    </span>
+
+                </div>
+
+                <div
+                    id="listeNotifications"
+                    class="liste-notifications"
+                >
+
+                    <div class="etat-vide">
+                        Chargement des notifications...
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/notifications.js"></script>
+
+</body>
+
+</html>

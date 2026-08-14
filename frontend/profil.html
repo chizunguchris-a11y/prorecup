@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mon profil — Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/profil.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>Pro Récup</strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Rôle
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        COMPTE UTILISATEUR
+                    </p>
+
+                    <h1>Mon profil</h1>
+
+                    <p>
+                        Gérez vos informations personnelles
+                        et la sécurité de votre compte.
+                    </p>
+
+                </div>
+
+            </header>
+
+            <div
+                id="erreurProfil"
+                class="alerte alerte-erreur cache"
+            ></div>
+
+            <section class="grille-profil">
+
+                <article class="panneau-profil">
+
+                    <div class="apercu-profil">
+
+                        <div
+                            class="photo-profil"
+                            id="photoProfil"
+                        >
+                            U
+                        </div>
+
+                        <div>
+
+                            <h2 id="nomProfil">
+                                Utilisateur
+                            </h2>
+
+                            <p id="emailProfil">
+                                —
+                            </p>
+
+                            <div class="badges-profil">
+
+                                <span id="roleProfil">
+                                    —
+                                </span>
+
+                                <span id="organisationProfil">
+                                    —
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <form id="formulaireProfil">
+
+                        <div class="champ">
+
+                            <label for="nom">
+                                Nom complet
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nom"
+                                required
+                                maxlength="150"
+                            >
+
+                        </div>
+
+                        <div class="champ">
+
+                            <label for="email">
+                                Adresse e-mail
+                            </label>
+
+                            <input
+                                type="email"
+                                id="email"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="champ">
+
+                            <label for="telephone">
+                                Téléphone
+                            </label>
+
+                            <input
+                                type="tel"
+                                id="telephone"
+                                maxlength="30"
+                                placeholder="+243..."
+                            >
+
+                        </div>
+
+                        <div class="champ">
+
+                            <label for="photoUrl">
+                                URL de la photo
+                            </label>
+
+                            <input
+                                type="url"
+                                id="photoUrl"
+                                placeholder="https://..."
+                            >
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="bouton-principal"
+                            id="boutonEnregistrerProfil"
+                        >
+                            Enregistrer le profil
+                        </button>
+
+                    </form>
+
+                </article>
+
+                <article class="panneau-profil">
+
+                    <div class="titre-panneau">
+
+                        <h2>
+                            Modifier le mot de passe
+                        </h2>
+
+                        <p>
+                            Utilisez un mot de passe d’au
+                            moins huit caractères.
+                        </p>
+
+                    </div>
+
+                    <form id="formulaireMotDePasse">
+
+                        <div class="champ">
+
+                            <label for="ancienMotDePasse">
+                                Ancien mot de passe
+                            </label>
+
+                            <input
+                                type="password"
+                                id="ancienMotDePasse"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="champ">
+
+                            <label for="nouveauMotDePasse">
+                                Nouveau mot de passe
+                            </label>
+
+                            <input
+                                type="password"
+                                id="nouveauMotDePasse"
+                                minlength="8"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="champ">
+
+                            <label for="confirmationMotDePasse">
+                                Confirmer le mot de passe
+                            </label>
+
+                            <input
+                                type="password"
+                                id="confirmationMotDePasse"
+                                minlength="8"
+                                required
+                            >
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="bouton-principal"
+                            id="boutonModifierMotDePasse"
+                        >
+                            Modifier le mot de passe
+                        </button>
+
+                    </form>
+
+                </article>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/profil.js"></script>
+
+</body>
+
+</html>

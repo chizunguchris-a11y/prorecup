@@ -124,8 +124,7 @@ class LotService {
                             ),
 
                         statut_lot:
-                            lot.statut_lot ||
-                            "en_stock"
+    			"en_stock"
                     },
                     client
                 );

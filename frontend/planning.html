@@ -1,0 +1,303 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Planning — Pro Récup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/planning.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Gestionnaire
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        PLANIFICATION
+                    </p>
+
+                    <h1>
+                        Planning des missions
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez les missions par jour, semaine ou mois.
+                    </p>
+
+                </div>
+
+                <div class="actions-entete">
+
+                    <button
+                        type="button"
+                        class="bouton bouton-secondaire"
+                        id="boutonActualiserPlanning"
+                    >
+                        Actualiser
+                    </button>
+
+                    <a
+                        href="./missions.html"
+                        class="bouton bouton-primaire"
+                    >
+                        Nouvelle mission
+                    </a>
+
+                </div>
+
+            </header>
+
+            <div
+                class="alerte-planning cache"
+                id="erreurPlanning"
+                role="alert"
+            ></div>
+
+            <section class="barre-outils-planning">
+
+                <div class="navigation-periode">
+
+                    <button
+                        type="button"
+                        class="bouton-navigation-periode"
+                        id="boutonPeriodePrecedente"
+                        aria-label="Période précédente"
+                    >
+                        ‹
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton-aujourdhui"
+                        id="boutonAujourdhui"
+                    >
+                        Aujourd’hui
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton-navigation-periode"
+                        id="boutonPeriodeSuivante"
+                        aria-label="Période suivante"
+                    >
+                        ›
+                    </button>
+
+                    <h2 id="titrePeriodePlanning">
+                        Planning
+                    </h2>
+
+                </div>
+
+                <div class="selection-vue">
+
+                    <button
+                        type="button"
+                        class="bouton-vue actif"
+                        data-vue="mois"
+                    >
+                        Mois
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton-vue"
+                        data-vue="semaine"
+                    >
+                        Semaine
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton-vue"
+                        data-vue="jour"
+                    >
+                        Jour
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="filtres-planning">
+
+                <div class="groupe-filtre">
+
+                    <label for="recherchePlanning">
+                        Rechercher
+                    </label>
+
+                    <input
+                        type="search"
+                        id="recherchePlanning"
+                        placeholder="Agent, tricycle, date..."
+                    >
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="filtreStatutPlanning">
+                        Statut
+                    </label>
+
+                    <select id="filtreStatutPlanning">
+
+                        <option value="">
+                            Tous les statuts
+                        </option>
+
+                        <option value="planifiee">
+                            Planifiée
+                        </option>
+
+                        <option value="en_cours">
+                            En cours
+                        </option>
+
+                        <option value="terminee">
+                            Terminée
+                        </option>
+
+                        <option value="annulee">
+                            Annulée
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="resume-planning">
+
+                    <span>
+                        Missions affichées
+                    </span>
+
+                    <strong id="nombreMissionsAffichees">
+                        0
+                    </strong>
+
+                </div>
+
+            </section>
+
+            <section class="panneau-planning">
+
+                <div
+                    class="etat-chargement-planning"
+                    id="etatChargementPlanning"
+                >
+                    Chargement du planning...
+                </div>
+
+                <div
+                    class="vue-planning"
+                    id="vuePlanning"
+                ></div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/planning.js"></script>
+
+</body>
+
+</html>

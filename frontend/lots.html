@@ -51,64 +51,10 @@
             </div>
 
             <nav class="navigation">
-
-                <a
-                    href="./dashboard.html"
-                    class="lien-navigation"
-                >
-                    Tableau de bord
-                </a>
-
-                <a
-                    href="./clients.html"
-                    class="lien-navigation"
-                >
-                    Clients
-                </a>
-
-                <a
-                    href="./sites.html"
-                    class="lien-navigation"
-                >
-                    Sites de collecte
-                </a>
-
-                <a
-                    href="./collectes.html"
-                    class="lien-navigation"
-                >
-                    Collectes
-                </a>
-
-                <a
-                    href="./lots.html"
-                    class="lien-navigation actif"
-                >
-                    Lots
-                </a>
-
-                <a
-    		    href="./stocks.html"
-    		    class="lien-navigation"
-		>
-    		    Stocks
-		</a>
-
-                <a
-    		    href="./ventes.html"
-    		    class="lien-navigation"
-		>
-    		    Ventes
-		</a>
-
-                <a
-    		    href="./impact-carbone.html"
-    		    class="lien-navigation"
-		>
-    		    Impact carbone
-		</a>
-
-            </nav>
+    <span class="chargement-navigation">
+        Chargement du menu...
+    </span>
+</nav>
 
             <div class="bas-barre-laterale">
 
@@ -463,19 +409,15 @@
                         </label>
 
                         <select
-                            id="statut_lot"
-                            name="statut_lot"
-                        >
+    			    id="statut_lot"
+    		            name="statut_lot"
+			>
 
-                            <option value="en_stock">
-                                En stock
-                            </option>
+    			<option value="en_stock">
+        		En stock
+    			</option>
 
-                            <option value="transforme">
-                                Transformé
-                            </option>
-
-                        </select>
+			</select>
 
                     </div>
 
@@ -512,7 +454,10 @@
 
     </div>
 
+    <script src="./js/config.js"></script>
+
     <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
     <script src="./js/lots.js"></script>
 
 </body>

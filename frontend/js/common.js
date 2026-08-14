@@ -1,4 +1,9 @@
-﻿const PRORECUP_API_URL = "http://localhost:5000";
+﻿const PRORECUP_API_URL =
+    window.PRORECUP_API_URL ||
+    "http://localhost:5000";
+
+window.PRORECUP_API_URL =
+    PRORECUP_API_URL;
 
 const ProRecup = {
 
@@ -23,7 +28,9 @@ const ProRecup = {
 
         try {
 
-            return JSON.parse(valeur);
+            return JSON.parse(
+                valeur
+            );
 
         } catch (erreur) {
 
@@ -37,15 +44,25 @@ const ProRecup = {
 
     },
 
-    deconnecter() {
+    supprimerSession() {
 
         localStorage.removeItem(
             "prorecup_token"
         );
 
         localStorage.removeItem(
+            "prorecup_refresh_token"
+        );
+
+        localStorage.removeItem(
             "prorecup_utilisateur"
         );
+
+    },
+
+    deconnecter() {
+
+        this.supprimerSession();
 
         window.location.href =
             "./index.html";
@@ -83,56 +100,100 @@ const ProRecup = {
             utilisateur.email ||
             "";
 
-        const initiale =
-            nom.charAt(0).toUpperCase();
+        const role =
+            utilisateur.role_nom ||
+            utilisateur.role ||
+            utilisateur.nom_role ||
+            "Utilisateur";
 
-        const champsNom = [
+        const initiale =
+            nom
+                .charAt(0)
+                .toUpperCase();
+
+        [
             "nomUtilisateur",
             "nomUtilisateurLateral"
-        ];
+        ].forEach(
+            (id) => {
 
-        const champsEmail = [
+                const cible =
+                    document.getElementById(
+                        id
+                    );
+
+                if (cible) {
+
+                    cible.textContent =
+                        nom;
+
+                }
+
+            }
+        );
+
+        [
             "emailUtilisateur",
             "emailUtilisateurLateral"
-        ];
+        ].forEach(
+            (id) => {
 
-        const champsAvatar = [
+                const cible =
+                    document.getElementById(
+                        id
+                    );
+
+                if (cible) {
+
+                    cible.textContent =
+                        email;
+
+                }
+
+            }
+        );
+
+        [
+            "roleUtilisateur",
+            "roleUtilisateurLateral"
+        ].forEach(
+            (id) => {
+
+                const cible =
+                    document.getElementById(
+                        id
+                    );
+
+                if (cible) {
+
+                    cible.textContent =
+                        role;
+
+                }
+
+            }
+        );
+
+        [
             "avatarUtilisateur",
             "initialeUtilisateur"
-        ];
+        ].forEach(
+            (id) => {
 
-        champsNom.forEach((id) => {
+                const cible =
+                    document.getElementById(
+                        id
+                    );
 
-            const element =
-                document.getElementById(id);
+                if (cible) {
 
-            if (element) {
-                element.textContent = nom;
+                    cible.textContent =
+                        initiale;
+
+                }
+
             }
-
-        });
-
-        champsEmail.forEach((id) => {
-
-            const element =
-                document.getElementById(id);
-
-            if (element) {
-                element.textContent = email;
-            }
-
-        });
-
-        champsAvatar.forEach((id) => {
-
-            const element =
-                document.getElementById(id);
-
-            if (element) {
-                element.textContent = initiale;
-            }
-
-        });
+        );
 
     },
 
@@ -163,7 +224,9 @@ const ProRecup = {
             this.obtenirToken();
 
         const entetes = {
-            Accept: "application/json",
+            Accept:
+                "application/json",
+
             ...(options.headers || {})
         };
 
@@ -174,39 +237,114 @@ const ProRecup = {
 
         }
 
-        if (options.body) {
+        if (
+            options.body &&
+            !(
+                options.body instanceof
+                FormData
+            )
+        ) {
 
             entetes["Content-Type"] =
                 "application/json";
 
         }
 
+        const controleur =
+            new AbortController();
+
+        const delai =
+            Number(
+                options.timeout ||
+                20000
+            );
+
+        const minuteur =
+            window.setTimeout(
+                () => {
+
+                    controleur.abort();
+
+                },
+                delai
+            );
+
         let reponse;
 
         try {
 
-            reponse = await fetch(
-                `${PRORECUP_API_URL}${chemin}`,
-                {
-                    ...options,
-                    headers: entetes
-                }
-            );
+            reponse =
+                await fetch(
+                    `${PRORECUP_API_URL}${chemin}`,
+                    {
+                        ...options,
+
+                        headers:
+                            entetes,
+
+                        signal:
+                            options.signal ||
+                            controleur.signal
+                    }
+                );
 
         } catch (erreur) {
 
+            if (
+                erreur.name ===
+                "AbortError"
+            ) {
+
+                throw new Error(
+                    "Le serveur met trop de temps à répondre."
+                );
+
+            }
+
             throw new Error(
                 "Impossible de joindre le serveur. Vérifiez que le backend est démarré."
+            );
+
+        } finally {
+
+            window.clearTimeout(
+                minuteur
             );
 
         }
 
         let resultat = {};
 
+        const typeContenu =
+            reponse.headers.get(
+                "content-type"
+            ) || "";
+
         try {
 
-            resultat =
-                await reponse.json();
+            if (
+                typeContenu.includes(
+                    "application/json"
+                )
+            ) {
+
+                resultat =
+                    await reponse.json();
+
+            } else {
+
+                const texte =
+                    await reponse.text();
+
+                resultat =
+                    texte
+                        ? {
+                            message:
+                                texte
+                        }
+                        : {};
+
+            }
 
         } catch (erreur) {
 
@@ -214,12 +352,59 @@ const ProRecup = {
 
         }
 
-        if (reponse.status === 401) {
+        if (
+            reponse.status === 401
+        ) {
 
-            this.deconnecter();
+            const message =
+                resultat.error ||
+                resultat.message ||
+                "Votre session a expiré.";
+
+            this.supprimerSession();
+
+            window.alert(
+                message
+            );
+
+            window.location.href =
+                "./index.html";
 
             throw new Error(
-                "Votre session a expiré."
+                message
+            );
+
+        }
+
+        if (
+            reponse.status === 403 &&
+            String(
+                resultat.error ||
+                resultat.message ||
+                ""
+            )
+                .toLowerCase()
+                .includes(
+                    "compte est désactivé"
+                )
+        ) {
+
+            const message =
+                resultat.error ||
+                resultat.message ||
+                "Votre compte est désactivé.";
+
+            this.supprimerSession();
+
+            window.alert(
+                message
+            );
+
+            window.location.href =
+                "./index.html";
+
+            throw new Error(
+                message
             );
 
         }
@@ -228,6 +413,7 @@ const ProRecup = {
 
             throw new Error(
                 resultat.error ||
+                resultat.message ||
                 "Une erreur est survenue."
             );
 
@@ -250,7 +436,9 @@ const ProRecup = {
         if (!conteneur) {
 
             conteneur =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
             conteneur.id =
                 "conteneurNotifications";
@@ -265,7 +453,9 @@ const ProRecup = {
         }
 
         const notification =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         notification.className =
             `notification notification-${type}`;
@@ -277,7 +467,7 @@ const ProRecup = {
             notification
         );
 
-        setTimeout(
+        window.setTimeout(
             () => {
 
                 notification.classList.add(
@@ -288,21 +478,52 @@ const ProRecup = {
             20
         );
 
-        setTimeout(
+        window.setTimeout(
             () => {
 
                 notification.classList.remove(
                     "notification-visible"
                 );
 
-                setTimeout(
-                    () => notification.remove(),
+                window.setTimeout(
+                    () => {
+
+                        notification.remove();
+
+                    },
                     300
                 );
 
             },
             3500
         );
+
+    },
+
+    notifierModificationNotifications() {
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "prorecup:notifications-modifiees"
+            )
+        );
+
+    },
+
+    actualiserCompteurNotifications() {
+
+        if (
+            typeof window
+                .actualiserCompteurNotifications ===
+            "function"
+        ) {
+
+            return window
+                .actualiserCompteurNotifications();
+
+        }
+
+        return Promise.resolve();
 
     },
 
@@ -316,7 +537,9 @@ const ProRecup = {
         ).toLocaleString(
             "fr-FR",
             {
-                minimumFractionDigits: 0,
+                minimumFractionDigits:
+                    0,
+
                 maximumFractionDigits:
                     decimales
             }
@@ -324,10 +547,14 @@ const ProRecup = {
 
     },
 
-    formaterDate(date) {
+    formaterDate(
+        date
+    ) {
 
         if (!date) {
+
             return "Non renseignée";
+
         }
 
         const valeur =
@@ -338,7 +565,9 @@ const ProRecup = {
                 valeur.getTime()
             )
         ) {
+
             return date;
+
         }
 
         return valeur.toLocaleString(
@@ -349,4 +578,5 @@ const ProRecup = {
 
 };
 
-window.ProRecup = ProRecup;
+window.ProRecup =
+    ProRecup;

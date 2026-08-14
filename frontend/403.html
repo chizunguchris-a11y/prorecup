@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Accès refusé — Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <style>
+
+        body {
+            display: grid;
+            min-height: 100vh;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .carte-erreur {
+            width: min(520px, 100%);
+            padding: 40px;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            box-shadow:
+                0 24px 60px
+                rgba(15, 23, 42, 0.12);
+        }
+
+        .code-erreur {
+            margin: 0 0 12px;
+            color: #dc2626;
+            font-size: 64px;
+            font-weight: 900;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            color: #0f172a;
+        }
+
+        p {
+            margin: 0 0 24px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .lien-retour {
+            display: inline-flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            color: #ffffff;
+            background: #15803d;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .bouton-deconnexion-403 {
+            min-height: 42px;
+            padding: 10px 16px;
+            color: #b91c1c;
+            background: #ffffff;
+            border: 1px solid #fecaca;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <main class="carte-erreur">
+
+        <p class="code-erreur">
+            403
+        </p>
+
+        <h1>
+            Accès refusé
+        </h1>
+
+        <p>
+            Votre rôle ne vous permet pas d’accéder à ce module.
+            Contactez un administrateur si vous estimez que cet accès
+            est nécessaire.
+        </p>
+
+        <div class="actions">
+
+            <a
+                href="./dashboard.html"
+                class="lien-retour"
+            >
+                Retour au tableau de bord
+            </a>
+
+            <button
+                type="button"
+                class="bouton-deconnexion-403"
+                id="boutonDeconnexion403"
+            >
+                Se déconnecter
+            </button>
+
+        </div>
+
+    </main>
+
+    <script src="./js/common.js"></script>
+
+    <script>
+
+        document
+            .getElementById(
+                "boutonDeconnexion403"
+            )
+            .addEventListener(
+                "click",
+                function () {
+
+                    ProRecup.deconnecter();
+
+                }
+            );
+
+    </script>
+
+</body>
+
+</html>

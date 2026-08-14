@@ -89,22 +89,11 @@ const mettreAJourCompteurs = () => {
             0
         );
 
-    const totalFacteurs =
-        impacts.reduce(
-            (somme, impact) =>
-                somme +
-                Number(
-                    impact.facteur_utilise ||
-                    0
-                ),
-            0
-        );
-
     const moyenne =
-        impacts.length > 0
-            ? totalFacteurs /
-                impacts.length
-            : 0;
+    totalQuantite > 0
+        ? totalCo2 /
+            totalQuantite
+        : 0;
 
     co2eTotal.textContent =
         `${ProRecup.formaterNombre(

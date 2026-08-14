@@ -1,0 +1,252 @@
+﻿.entete-page {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.entete-page h1 {
+    margin: 0 0 8px;
+    font-size: 34px;
+}
+
+.entete-page p:last-child {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.alerte-erreur {
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+}
+
+.zone-filtres {
+    display: grid;
+    grid-template-columns:
+        minmax(260px, 1fr)
+        180px
+        180px;
+    gap: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.zone-filtres input,
+.zone-filtres select {
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+}
+
+.panneau-tableau {
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+}
+
+.tableau-conteneur {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 950px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 13px 11px;
+    text-align: left;
+    border-bottom: 1px solid #edf2f7;
+}
+
+th {
+    color: #64748b;
+    background: #f8fafc;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+td {
+    color: #334155;
+    font-size: 11px;
+}
+
+.identite-utilisateur {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-liste {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    color: #166534;
+    background: #dcfce7;
+    border-radius: 50%;
+    font-weight: 900;
+}
+
+.identite-utilisateur strong,
+.identite-utilisateur span {
+    display: block;
+}
+
+.identite-utilisateur span {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 9px;
+}
+
+.badge {
+    display: inline-flex;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.badge-actif {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.badge-inactif {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.actions-ligne {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.bouton-action {
+    padding: 6px 9px;
+    border-radius: 7px;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.bouton-modifier {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+}
+
+.bouton-statut {
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+}
+
+.etat-vide {
+    padding: 45px;
+    color: #64748b;
+    text-align: center;
+}
+
+.fenetre-modale {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.fond-modale {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+}
+
+.contenu-modale {
+    position: relative;
+    z-index: 1;
+    width: min(720px, 100%);
+    padding: 24px;
+    background: #ffffff;
+    border-radius: 16px;
+}
+
+.entete-modale {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.entete-modale h2 {
+    margin: 0;
+}
+
+.bouton-fermer {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    background: #f8fafc;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.grille-champs {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.champ-large {
+    grid-column: 1 / -1;
+}
+
+.champ label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.champ input,
+.champ select {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+}
+
+@media (max-width: 760px) {
+
+    .entete-page {
+        flex-direction: column;
+    }
+
+    .zone-filtres,
+    .grille-champs {
+        grid-template-columns: 1fr;
+    }
+
+    .champ-large {
+        grid-column: auto;
+    }
+
+}

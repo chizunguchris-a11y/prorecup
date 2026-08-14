@@ -1,0 +1,155 @@
+﻿.entete-page {
+    margin-bottom: 24px;
+}
+
+.entete-page h1 {
+    margin: 0 0 8px;
+    font-size: 34px;
+}
+
+.entete-page p:last-child {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.grille-profil {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.panneau-profil {
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow:
+        0 12px 30px
+        rgba(15, 23, 42, 0.06);
+}
+
+.apercu-profil {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 22px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.photo-profil {
+    display: grid;
+    width: 82px;
+    height: 82px;
+    flex: 0 0 82px;
+    place-items: center;
+    color: #166534;
+    background: #dcfce7;
+    background-position: center;
+    background-size: cover;
+    border-radius: 50%;
+    font-size: 27px;
+    font-weight: 900;
+}
+
+.apercu-profil h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+}
+
+.apercu-profil p {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.badges-profil {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.badges-profil span {
+    padding: 5px 9px;
+    color: #166534;
+    background: #dcfce7;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.titre-panneau {
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.titre-panneau h2 {
+    margin: 0 0 7px;
+    font-size: 20px;
+}
+
+.titre-panneau p {
+    margin: 0;
+    color: #64748b;
+    font-size: 11px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.champ label {
+    display: block;
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.champ input {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+}
+
+.alerte {
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.alerte-erreur {
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
+@media (max-width: 900px) {
+
+    .grille-profil {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .panneau-profil {
+        padding: 18px;
+    }
+
+    .apercu-profil {
+        align-items: flex-start;
+    }
+
+}

@@ -1,0 +1,676 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Missions | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/missions.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+    <span class="chargement-navigation">
+        Chargement du menu...
+    </span>
+</nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        PLANIFICATION TERRAIN
+                    </p>
+
+                    <h1>
+                        Missions
+                    </h1>
+
+                    <p class="sous-titre">
+                        Planifiez les tournées,
+                        affectez les agents et suivez
+                        l’exécution des collectes.
+                    </p>
+
+                </div>
+
+                <div class="actions-entete">
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                    <button
+                        type="button"
+                        id="boutonNouvelleMission"
+                        class="bouton-principal"
+                    >
+                        Nouvelle mission
+                    </button>
+
+                </div>
+
+            </header>
+
+            <section class="cartes-resume">
+
+                <article class="carte-resume">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong id="nombreMissions">
+                        0
+                    </strong>
+
+                    <small>
+                        mission(s) enregistrée(s)
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Planifiées
+                    </span>
+
+                    <strong id="nombrePlanifiees">
+                        0
+                    </strong>
+
+                    <small>
+                        en attente de démarrage
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        En cours
+                    </span>
+
+                    <strong id="nombreEnCours">
+                        0
+                    </strong>
+
+                    <small>
+                        opération(s) active(s)
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Terminées
+                    </span>
+
+                    <strong id="nombreTerminees">
+                        0
+                    </strong>
+
+                    <small>
+                        tournée(s) achevée(s)
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="zone-outils">
+
+                <div class="champ-recherche">
+
+                    <label for="champRecherche">
+                        Rechercher
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Agent, tricycle, date ou statut"
+                    >
+
+                </div>
+
+                <div class="champ-filtre">
+
+                    <label for="filtreStatut">
+                        Statut
+                    </label>
+
+                    <select id="filtreStatut">
+
+                        <option value="">
+                            Tous les statuts
+                        </option>
+
+                        <option value="planifiee">
+                            Planifiée
+                        </option>
+
+                        <option value="en_cours">
+                            En cours
+                        </option>
+
+                        <option value="terminee">
+                            Terminée
+                        </option>
+
+                        <option value="annulee">
+                            Annulée
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="panneau-tableau">
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Date</th>
+                                <th>Agent</th>
+                                <th>Tricycle</th>
+                                <th>Horaires</th>
+                                <th>Statut</th>
+                                <th>Collectes</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauMissions">
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des missions...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Modale création / modification -->
+
+    <div
+        id="fenetreMission"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <div
+            class="contenu-modale"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titreModaleMission"
+        >
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        PLANIFICATION
+                    </p>
+
+                    <h2 id="titreModaleMission">
+                        Nouvelle mission
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerMission"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireMission">
+
+                <input
+                    type="hidden"
+                    id="missionId"
+                >
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-formulaire">
+
+                        <label for="agent_id">
+                            Agent *
+                        </label>
+
+                        <select
+                            id="agent_id"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner un agent
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="tricycle_id">
+                            Tricycle *
+                        </label>
+
+                        <select
+                            id="tricycle_id"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner un tricycle
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="date_prevue">
+                            Date prévue *
+                        </label>
+
+                        <input
+                            type="date"
+                            id="date_prevue"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="heure_depart_prevue">
+                            Heure de départ
+                        </label>
+
+                        <input
+                            type="time"
+                            id="heure_depart_prevue"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="heure_retour_prevue">
+                            Heure de retour
+                        </label>
+
+                        <input
+                            type="time"
+                            id="heure_retour_prevue"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="groupe-formulaire">
+
+                    <label for="observations">
+                        Observations
+                    </label>
+
+                    <textarea
+                        id="observations"
+                        rows="4"
+                        maxlength="2000"
+                        placeholder="Informations complémentaires..."
+                    ></textarea>
+
+                </div>
+
+                <div
+                    id="erreurFormulaireMission"
+                    class="message-formulaire cache"
+                ></div>
+
+                <div class="actions-modale">
+
+                    <button
+                        type="button"
+                        id="boutonAnnulerMission"
+                        class="bouton-secondaire"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrerMission"
+                        class="bouton-principal"
+                    >
+                        Enregistrer la mission
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- Modale collectes -->
+
+    <div
+        id="fenetreCollectesMission"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <div
+            class="contenu-modale contenu-modale-large"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titreCollectesMission"
+        >
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        ITINÉRAIRE
+                    </p>
+
+                    <h2 id="titreCollectesMission">
+                        Collectes de la mission
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerCollectes"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div
+                id="zoneAjoutCollecte"
+                class="zone-ajout-collecte"
+            >
+
+                <div class="groupe-formulaire">
+
+                    <label for="collecte_id">
+                        Collecte en attente
+                    </label>
+
+                    <select id="collecte_id">
+
+                        <option value="">
+                            Sélectionner une collecte
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="groupe-formulaire">
+
+                    <label for="ordre_collecte">
+                        Ordre
+                    </label>
+
+                    <input
+                        type="number"
+                        id="ordre_collecte"
+                        min="1"
+                        value="1"
+                    >
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonAjouterCollecte"
+                    class="bouton-principal"
+                >
+                    Ajouter
+                </button>
+
+            </div>
+
+            <div
+                id="erreurCollectesMission"
+                class="message-formulaire cache"
+            ></div>
+
+            <div class="tableau-conteneur">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Ordre</th>
+                            <th>Client</th>
+                            <th>Site</th>
+                            <th>Matière</th>
+                            <th>Poids estimé</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="corpsCollectesMission">
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="etat-tableau"
+                            >
+                                Aucune collecte chargée.
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Modale événements -->
+
+    <div
+        id="fenetreEvenementsMission"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <div
+            class="contenu-modale contenu-modale-large"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titreEvenementsMission"
+        >
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        SUIVI TERRAIN
+                    </p>
+
+                    <h2 id="titreEvenementsMission">
+                        Événements de la mission
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerEvenements"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div id="listeEvenementsMission">
+
+                <div class="etat-tableau">
+                    Aucun événement chargé.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/missions.js"></script>
+
+</body>
+
+</html>

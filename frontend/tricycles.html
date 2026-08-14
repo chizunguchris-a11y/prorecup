@@ -1,0 +1,510 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Tricycles | Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/tricycles.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Gestion environnementale
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+    <span class="chargement-navigation">
+        Chargement du menu...
+    </span>
+</nav>
+
+            <div class="bas-barre-laterale">
+
+                <div class="utilisateur-lateral">
+
+                    <div
+                        id="initialeUtilisateur"
+                        class="avatar"
+                    >
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong id="nomUtilisateurLateral">
+                            Utilisateur
+                        </strong>
+
+                        <span id="emailUtilisateurLateral">
+                            Chargement...
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonDeconnexion"
+                    class="bouton-deconnexion"
+                >
+                    Se déconnecter
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        LOGISTIQUE TERRAIN
+                    </p>
+
+                    <h1>
+                        Tricycles
+                    </h1>
+
+                    <p class="sous-titre">
+                        Gérez les équipements utilisés
+                        pour les missions de collecte.
+                    </p>
+
+                </div>
+
+                <div class="actions-entete">
+
+                    <button
+                        type="button"
+                        id="boutonActualiser"
+                        class="bouton-secondaire"
+                    >
+                        Actualiser
+                    </button>
+
+                    <button
+                        type="button"
+                        id="boutonNouveauTricycle"
+                        class="bouton-principal"
+                    >
+                        Nouveau tricycle
+                    </button>
+
+                </div>
+
+            </header>
+
+            <section class="cartes-resume">
+
+                <article class="carte-resume">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong id="nombreTricycles">
+                        0
+                    </strong>
+
+                    <small>
+                        tricycle(s) enregistré(s)
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Disponibles
+                    </span>
+
+                    <strong id="nombreDisponibles">
+                        0
+                    </strong>
+
+                    <small>
+                        prêts pour une mission
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Indisponibles
+                    </span>
+
+                    <strong id="nombreIndisponibles">
+                        0
+                    </strong>
+
+                    <small>
+                        en mission, panne ou maintenance
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section class="zone-outils">
+
+                <div class="champ-recherche">
+
+                    <label for="champRecherche">
+                        Rechercher
+                    </label>
+
+                    <input
+                        type="search"
+                        id="champRecherche"
+                        placeholder="Numéro, plaque, marque, modèle ou statut"
+                    >
+
+                </div>
+
+                <div class="champ-filtre">
+
+                    <label for="filtreStatut">
+                        Statut
+                    </label>
+
+                    <select id="filtreStatut">
+
+                        <option value="">
+                            Tous les statuts
+                        </option>
+
+                        <option value="disponible">
+                            Disponible
+                        </option>
+
+                        <option value="en_mission">
+                            En mission
+                        </option>
+
+                        <option value="en_panne">
+                            En panne
+                        </option>
+
+                        <option value="maintenance">
+                            Maintenance
+                        </option>
+
+                        <option value="hors_service">
+                            Hors service
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </section>
+
+            <section class="panneau-tableau">
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Identification</th>
+                                <th>Marque / modèle</th>
+                                <th>Capacité</th>
+                                <th>État</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauTricycles">
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="etat-tableau"
+                                >
+                                    Chargement des tricycles...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="fenetreTricycle"
+        class="modale cache"
+        aria-hidden="true"
+    >
+
+        <div class="fond-modale"></div>
+
+        <div
+            class="contenu-modale"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titreModale"
+        >
+
+            <div class="entete-modale">
+
+                <div>
+
+                    <p class="sur-titre">
+                        ÉQUIPEMENT TERRAIN
+                    </p>
+
+                    <h2 id="titreModale">
+                        Nouveau tricycle
+                    </h2>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="boutonFermerModale"
+                    class="bouton-fermer"
+                    aria-label="Fermer"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="formulaireTricycle">
+
+                <input
+                    type="hidden"
+                    id="tricycleId"
+                >
+
+                <div class="grille-formulaire">
+
+                    <div class="groupe-formulaire">
+
+                        <label for="numero_interne">
+                            Numéro interne *
+                        </label>
+
+                        <input
+                            type="text"
+                            id="numero_interne"
+                            maxlength="50"
+                            required
+                            placeholder="TRI-001"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="plaque_identification">
+                            Plaque ou identification
+                        </label>
+
+                        <input
+                            type="text"
+                            id="plaque_identification"
+                            maxlength="50"
+                            placeholder="PR-001"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="marque">
+                            Marque
+                        </label>
+
+                        <input
+                            type="text"
+                            id="marque"
+                            maxlength="100"
+                            placeholder="TVS"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="modele">
+                            Modèle
+                        </label>
+
+                        <input
+                            type="text"
+                            id="modele"
+                            maxlength="100"
+                            placeholder="King Cargo"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="capacite_kg">
+                            Capacité en kg *
+                        </label>
+
+                        <input
+                            type="number"
+                            id="capacite_kg"
+                            min="0.01"
+                            step="0.01"
+                            required
+                            placeholder="350"
+                        >
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="etat">
+                            État physique
+                        </label>
+
+                        <select id="etat">
+
+                            <option value="bon">
+                                Bon
+                            </option>
+
+                            <option value="moyen">
+                                Moyen
+                            </option>
+
+                            <option value="mauvais">
+                                Mauvais
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="groupe-formulaire">
+
+                        <label for="date_mise_en_service">
+                            Date de mise en service
+                        </label>
+
+                        <input
+                            type="date"
+                            id="date_mise_en_service"
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="groupe-formulaire">
+
+                    <label for="observations">
+                        Observations
+                    </label>
+
+                    <textarea
+                        id="observations"
+                        rows="4"
+                        maxlength="2000"
+                        placeholder="Informations complémentaires..."
+                    ></textarea>
+
+                </div>
+
+                <div
+                    id="erreurFormulaire"
+                    class="message-formulaire cache"
+                ></div>
+
+                <div class="actions-modale">
+
+                    <button
+                        type="button"
+                        id="boutonAnnuler"
+                        class="bouton-secondaire"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="boutonEnregistrer"
+                        class="bouton-principal"
+                    >
+                        Enregistrer
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/tricycles.js"></script>
+
+</body>
+
+</html>

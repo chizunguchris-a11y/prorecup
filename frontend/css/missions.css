@@ -1,0 +1,540 @@
+﻿.entete-page {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.entete-page h1 {
+    margin: 0 0 8px;
+    font-size: 34px;
+    color: #0f172a;
+}
+
+.sous-titre {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.actions-entete {
+    display: flex;
+    gap: 10px;
+}
+
+/* =========================================================
+   CARTES DE RÉSUMÉ
+   ========================================================= */
+
+.cartes-resume {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.carte-resume {
+    padding: 18px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow:
+        0 8px 24px
+        rgba(15, 23, 42, 0.05);
+}
+
+.carte-resume span,
+.carte-resume small {
+    display: block;
+}
+
+.carte-resume span {
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.carte-resume strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 28px;
+    color: #0f172a;
+}
+
+.carte-resume small {
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   OUTILS
+   ========================================================= */
+
+.zone-outils {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) 260px;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.zone-outils label,
+.groupe-formulaire label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.zone-outils input,
+.zone-outils select,
+.groupe-formulaire input,
+.groupe-formulaire select,
+.groupe-formulaire textarea {
+    width: 100%;
+    padding: 11px 12px;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+}
+
+/* =========================================================
+   TABLEAUX
+   ========================================================= */
+
+.panneau-tableau {
+    padding: 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow:
+        0 10px 30px
+        rgba(15, 23, 42, 0.05);
+}
+
+.tableau-conteneur {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+}
+
+th {
+    font-size: 10px;
+    color: #64748b;
+    background: #f8fafc;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+td {
+    font-size: 12px;
+    color: #334155;
+}
+
+.date-mission {
+    color: #0f172a;
+}
+
+.texte-secondaire {
+    display: block;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.etat-tableau {
+    padding: 42px;
+    text-align: center;
+    color: #64748b;
+}
+
+/* =========================================================
+   BADGES DE STATUT
+   ========================================================= */
+
+.etiquette {
+    display: inline-block;
+    padding: 5px 9px;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 20px;
+}
+
+.statut-planifiee {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.statut-en_cours {
+    color: #c2410c;
+    background: #ffedd5;
+}
+
+.statut-terminee {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.statut-annulee {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.actions-ligne {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.bouton-action {
+    padding: 7px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.bouton-action.collectes {
+    color: #6d28d9;
+    background: #ede9fe;
+    border: 1px solid #ddd6fe;
+}
+
+.bouton-action.evenements {
+    color: #0369a1;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+}
+
+.bouton-action.modifier {
+    color: #1d4ed8;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+}
+
+.bouton-action.demarrer {
+    color: #166534;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+}
+
+.bouton-action.terminer {
+    color: #166534;
+    background: #bbf7d0;
+    border: 1px solid #86efac;
+}
+
+.bouton-action.annuler,
+.bouton-action.retirer {
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
+.bouton-action.ordre {
+    color: #c2410c;
+    background: #ffedd5;
+    border: 1px solid #fed7aa;
+}
+
+.bouton-action:hover {
+    filter: brightness(0.98);
+}
+
+/* =========================================================
+   MODALES
+   ========================================================= */
+
+.modale {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.fond-modale {
+    position: absolute;
+    inset: 0;
+    background:
+        rgba(15, 23, 42, 0.6);
+}
+
+.contenu-modale {
+    position: relative;
+    z-index: 1;
+    width: min(700px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 26px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow:
+        0 25px 70px
+        rgba(15, 23, 42, 0.24);
+}
+
+.contenu-modale-large {
+    width: min(1100px, 100%);
+}
+
+.entete-modale {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.entete-modale h2 {
+    margin: 0;
+    color: #0f172a;
+}
+
+.bouton-fermer {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.grille-formulaire {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.groupe-formulaire {
+    margin-bottom: 16px;
+}
+
+.message-formulaire {
+    margin-bottom: 15px;
+    padding: 12px;
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.actions-modale {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 8px;
+}
+
+/* =========================================================
+   COLLECTES D'UNE MISSION
+   ========================================================= */
+
+.zone-ajout-collecte {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) 140px auto;
+    align-items: end;
+    gap: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.zone-ajout-collecte .groupe-formulaire {
+    margin-bottom: 0;
+}
+
+.champ-ordre {
+    width: 74px;
+    padding: 8px 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+/* =========================================================
+   ÉVÉNEMENTS
+   ========================================================= */
+
+#listeEvenementsMission {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.carte-evenement {
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #16a34a;
+    border-radius: 10px;
+}
+
+.entete-evenement {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 10px;
+}
+
+.entete-evenement strong {
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.entete-evenement span {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.contexte-evenement,
+.position-evenement,
+.observations-evenement {
+    margin: 7px 0;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.contexte-evenement {
+    color: #334155;
+    font-weight: 700;
+}
+
+.position-evenement {
+    color: #0369a1;
+}
+
+.observations-evenement {
+    color: #475569;
+}
+
+.carte-evenement small {
+    display: block;
+    margin-top: 10px;
+    color: #94a3b8;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1150px) {
+
+    .cartes-resume {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 780px) {
+
+    .entete-page {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .actions-entete {
+        width: 100%;
+    }
+
+    .actions-entete button {
+        flex: 1;
+    }
+
+    .zone-outils,
+    .grille-formulaire,
+    .zone-ajout-collecte {
+        grid-template-columns: 1fr;
+    }
+
+    .cartes-resume {
+        grid-template-columns: 1fr;
+    }
+
+    .contenu-modale,
+    .contenu-modale-large {
+        padding: 20px;
+    }
+
+    .entete-evenement {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+}
+
+/* =========================================================
+   AMÉLIORATION DE LA TABLE DES MISSIONS
+   ========================================================= */
+
+table {
+    min-width: 980px;
+}
+
+th:last-child,
+td:last-child {
+    min-width: 235px;
+}
+
+.actions-ligne {
+    display: grid;
+    grid-template-columns:
+        repeat(2, max-content);
+    align-items: center;
+    justify-content: start;
+    gap: 7px;
+}
+
+.bouton-action {
+    min-width: 78px;
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+
+    .actions-ligne {
+        grid-template-columns:
+            repeat(2, minmax(80px, 1fr));
+    }
+
+    .bouton-action {
+        width: 100%;
+    }
+
+}

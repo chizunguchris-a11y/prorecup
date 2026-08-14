@@ -52,6 +52,7 @@ class CollecteRepository {
                 c.client_id,
                 c.agent_id,
                 c.type_dechet_id,
+		c.date_collecte,
                 c.poids_estime,
                 c.statut,
 

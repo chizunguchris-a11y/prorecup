@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Rapports — Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/rapports.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Gestionnaire
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        ANALYSE ET EXPORT
+                    </p>
+
+                    <h1>
+                        Rapports
+                    </h1>
+
+                    <p class="sous-titre">
+                        Consultez, filtrez et exportez les données
+                        opérationnelles de votre organisation.
+                    </p>
+
+                </div>
+
+                <div class="actions-entete">
+
+                    <button
+                        type="button"
+                        class="bouton bouton-secondaire"
+                        id="boutonExporterCsv"
+                    >
+                        Exporter en CSV
+                    </button>
+
+                    <button
+                        type="button"
+                        class="bouton bouton-primaire"
+                        id="boutonImprimerRapport"
+                    >
+                        Imprimer / PDF
+                    </button>
+
+                </div>
+
+            </header>
+
+            <div
+                id="erreurRapports"
+                class="alerte-page cache"
+                role="alert"
+            ></div>
+
+            <section class="zone-parametres">
+
+                <div class="groupe-filtre">
+
+                    <label for="typeRapport">
+                        Type de rapport
+                    </label>
+
+                    <select id="typeRapport">
+
+                        <option value="collectes">
+                            Collectes
+                        </option>
+
+                        <option value="missions">
+                            Missions
+                        </option>
+
+                        <option value="stocks">
+                            Stocks
+                        </option>
+
+                        <option value="ventes">
+                            Ventes
+                        </option>
+
+                        <option value="impact">
+                            Impact carbone
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="dateDebutRapport">
+                        Date de début
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dateDebutRapport"
+                    >
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="dateFinRapport">
+                        Date de fin
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dateFinRapport"
+                    >
+
+                </div>
+
+                <div class="groupe-filtre">
+
+                    <label for="rechercheRapport">
+                        Rechercher
+                    </label>
+
+                    <input
+                        type="search"
+                        id="rechercheRapport"
+                        placeholder="Client, agent, matière..."
+                    >
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton bouton-primaire bouton-generer"
+                    id="boutonGenererRapport"
+                >
+                    Générer
+                </button>
+
+            </section>
+
+            <section class="cartes-resume">
+
+                <article class="carte-resume">
+
+                    <span>
+                        Nombre de lignes
+                    </span>
+
+                    <strong id="nombreLignesRapport">
+                        0
+                    </strong>
+
+                    <small>
+                        éléments affichés
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Quantité totale
+                    </span>
+
+                    <strong id="quantiteTotaleRapport">
+                        0 kg
+                    </strong>
+
+                    <small>
+                        quantité calculée
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Valeur totale
+                    </span>
+
+                    <strong id="valeurTotaleRapport">
+                        0
+                    </strong>
+
+                    <small>
+                        montant ou impact calculé
+                    </small>
+
+                </article>
+
+                <article class="carte-resume">
+
+                    <span>
+                        Période
+                    </span>
+
+                    <strong id="periodeRapport">
+                        Toutes
+                    </strong>
+
+                    <small>
+                        période sélectionnée
+                    </small>
+
+                </article>
+
+            </section>
+
+            <section
+                class="panneau-rapport"
+                id="zoneImpressionRapport"
+            >
+
+                <div class="entete-rapport">
+
+                    <div>
+
+                        <p class="marque-rapport">
+                            PRO RÉCUP
+                        </p>
+
+                        <h2 id="titreRapport">
+                            Rapport des collectes
+                        </h2>
+
+                        <p id="descriptionRapport">
+                            Synthèse des collectes enregistrées.
+                        </p>
+
+                    </div>
+
+                    <div class="informations-generation">
+
+                        <span>
+                            Généré le
+                        </span>
+
+                        <strong id="dateGenerationRapport">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead id="enteteTableauRapport"></thead>
+
+                        <tbody id="corpsTableauRapport">
+
+                            <tr>
+
+                                <td
+                                    colspan="8"
+                                    class="etat-vide"
+                                >
+                                    Chargement du rapport...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/rapports.js"></script>
+
+</body>
+
+</html>

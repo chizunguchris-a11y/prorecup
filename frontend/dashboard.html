@@ -10,7 +10,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Tableau de bord | Pro Récup</title>
+    <title>
+        Tableau de bord — Pro Récup
+    </title>
 
     <link
         rel="stylesheet"
@@ -32,7 +34,7 @@
 
             <div class="marque">
 
-                <div class="logo">
+                <div class="logo-marque">
                     PR
                 </div>
 
@@ -43,7 +45,7 @@
                     </strong>
 
                     <span>
-                        Gestion environnementale
+                        Administration
                     </span>
 
                 </div>
@@ -52,83 +54,31 @@
 
             <nav class="navigation">
 
-                <a
-                    href="./dashboard.html"
-                    class="lien-navigation actif"
-                >
-                    Tableau de bord
-                </a>
-
-                <a
-                    href="./clients.html"
-                    class="lien-navigation"
-                >
-                    Clients
-                </a>
-
-                <a
-                    href="./sites.html"
-                    class="lien-navigation"
-                >
-                    Sites de collecte
-                </a>
-
-                <a
-                    href="./collectes.html"
-                    class="lien-navigation"
-                >
-                    Collectes
-                </a>
-
-                <a
-                    href="./lots.html"
-                    class="lien-navigation"
-                >
-                    Lots
-                </a>
-
-                <a
-                    href="./stocks.html"
-                    class="lien-navigation"
-                >
-                    Stocks
-                </a>
-
-                <a
-                    href="./ventes.html"
-                    class="lien-navigation"
-                >
-                    Ventes
-                </a>
-
-                <a
-                    href="./impact-carbone.html"
-                    class="lien-navigation"
-                >
-                    Impact carbone
-                </a>
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
 
             </nav>
 
-            <div class="bas-barre-laterale">
+            <div class="pied-barre-laterale">
 
-                <div class="utilisateur-lateral">
+                <div class="profil-utilisateur">
 
                     <div
-                        id="initialeUtilisateur"
-                        class="avatar"
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
                     >
                         U
                     </div>
 
-                    <div>
+                    <div class="informations-utilisateur">
 
-                        <strong id="nomUtilisateurLateral">
+                        <strong id="nomUtilisateur">
                             Utilisateur
                         </strong>
 
-                        <span id="emailUtilisateurLateral">
-                            Chargement...
+                        <span id="roleUtilisateur">
+                            Gestionnaire
                         </span>
 
                     </div>
@@ -137,24 +87,24 @@
 
                 <button
                     type="button"
-                    id="boutonDeconnexion"
                     class="bouton-deconnexion"
+                    id="boutonDeconnexion"
                 >
-                    Se déconnecter
+                    Déconnexion
                 </button>
 
             </div>
 
         </aside>
 
-        <main class="contenu">
+        <main class="contenu-principal">
 
-            <header class="entete">
+            <header class="entete-page">
 
                 <div>
 
                     <p class="sur-titre">
-                        VUE D'ENSEMBLE
+                        VUE D’ENSEMBLE
                     </p>
 
                     <h1>
@@ -162,362 +112,253 @@
                     </h1>
 
                     <p class="sous-titre">
-                        Suivez les performances opérationnelles,
-                        commerciales et environnementales
-                        de votre organisation.
+                        Suivi de l’activité opérationnelle de votre organisation.
                     </p>
 
                 </div>
 
-                <div class="entete-utilisateur">
+                <div class="actions-entete">
 
-                    <div class="texte-utilisateur">
-
-                        <span>
-                            Connecté en tant que
-                        </span>
-
-                        <strong id="nomUtilisateur">
-                            Utilisateur
-                        </strong>
-
-                    </div>
-
-                    <div
-                        id="avatarUtilisateur"
-                        class="avatar avatar-entete"
+                    <button
+                        type="button"
+                        class="bouton bouton-secondaire"
+                        id="boutonActualiserDashboard"
                     >
-                        U
-                    </div>
+                        Actualiser
+                    </button>
+
+                    <a
+                        href="./missions.html"
+                        class="bouton bouton-primaire"
+                    >
+                        Nouvelle mission
+                    </a>
 
                 </div>
 
             </header>
 
-            <section
-                id="messageErreur"
-                class="message-erreur cache"
-            ></section>
+            <div
+                class="alerte-dashboard cache"
+                id="erreurDashboard"
+                role="alert"
+            ></div>
 
-            <section class="groupe-indicateurs">
+            <section class="grille-indicateurs">
 
-                <div class="entete-section">
+                <article class="carte-indicateur">
+
+                    <div class="icone-indicateur icone-missions">
+                        M
+                    </div>
 
                     <div>
 
-                        <p class="sur-titre">
-                            ACTIVITÉ
-                        </p>
+                        <span class="libelle-indicateur">
+                            Missions du jour
+                        </span>
 
-                        <h2>
-                            Suivi opérationnel
-                        </h2>
+                        <strong id="kpiMissionsJour">
+                            0
+                        </strong>
+
+                        <small id="detailMissionsJour">
+                            0 mission en cours
+                        </small>
 
                     </div>
 
-                </div>
+                </article>
 
-                <div class="cartes-indicateurs">
+                <article class="carte-indicateur">
 
-                    <article class="carte-indicateur">
-
-                        <div class="entete-carte">
-
-                            <span class="etiquette etiquette-client">
-                                Clients
-                            </span>
-
-                            <span class="symbole">
-                                CL
-                            </span>
-
-                        </div>
-
-                        <p class="titre-carte">
-                            Nombre de clients
-                        </p>
-
-                        <div class="valeur-carte">
-
-                            <strong id="nombreClients">
-                                --
-                            </strong>
-
-                        </div>
-
-                        <p class="detail-carte">
-                            Clients enregistrés
-                        </p>
-
-                    </article>
-
-                    <article class="carte-indicateur">
-
-                        <div class="entete-carte">
-
-                            <span class="etiquette etiquette-site">
-                                Sites
-                            </span>
-
-                            <span class="symbole">
-                                ST
-                            </span>
-
-                        </div>
-
-                        <p class="titre-carte">
-                            Sites de collecte
-                        </p>
-
-                        <div class="valeur-carte">
-
-                            <strong id="nombreSites">
-                                --
-                            </strong>
-
-                        </div>
-
-                        <p class="detail-carte">
-                            Implantations enregistrées
-                        </p>
-
-                    </article>
-
-                    <article class="carte-indicateur">
-
-                        <div class="entete-carte">
-
-                            <span class="etiquette etiquette-collecte">
-                                Collectes
-                            </span>
-
-                            <span class="symbole">
-                                CO
-                            </span>
-
-                        </div>
-
-                        <p class="titre-carte">
-                            Nombre de collectes
-                        </p>
-
-                        <div class="valeur-carte">
-
-                            <strong id="nombreCollectes">
-                                --
-                            </strong>
-
-                        </div>
-
-                        <p class="detail-carte">
-                            Opérations enregistrées
-                        </p>
-
-                    </article>
-
-                    <article class="carte-indicateur">
-
-                        <div class="entete-carte">
-
-                            <span class="etiquette etiquette-lot">
-                                Lots
-                            </span>
-
-                            <span class="symbole">
-                                LT
-                            </span>
-
-                        </div>
-
-                        <p class="titre-carte">
-                            Nombre de lots
-                        </p>
-
-                        <div class="valeur-carte">
-
-                            <strong id="nombreLots">
-                                --
-                            </strong>
-
-                        </div>
-
-                        <p class="detail-carte">
-                            Lots créés depuis les collectes
-                        </p>
-
-                    </article>
-
-                </div>
-
-            </section>
-
-            <section class="groupe-indicateurs">
-
-                <div class="entete-section">
+                    <div class="icone-indicateur icone-collectes">
+                        C
+                    </div>
 
                     <div>
 
-                        <p class="sur-titre">
-                            PERFORMANCE
-                        </p>
+                        <span class="libelle-indicateur">
+                            Collectes en attente
+                        </span>
 
-                        <h2>
-                            Résultats clés
-                        </h2>
+                        <strong id="kpiCollectesAttente">
+                            0
+                        </strong>
+
+                        <small id="detailCollectesAttente">
+                            Aucune collecte à planifier
+                        </small>
 
                     </div>
 
-                </div>
+                </article>
 
-                <div class="cartes-indicateurs">
+                <article class="carte-indicateur">
 
-                    <article class="carte-indicateur">
+                    <div class="icone-indicateur icone-agents">
+                        A
+                    </div>
 
-                        <div class="entete-carte">
+                    <div>
 
-                            <span class="etiquette etiquette-stock">
-                                Stock
-                            </span>
+                        <span class="libelle-indicateur">
+                            Agents disponibles
+                        </span>
 
-                            <span class="symbole">
-                                KG
-                            </span>
+                        <strong id="kpiAgentsDisponibles">
+                            0
+                        </strong>
 
-                        </div>
+                        <small id="detailAgentsDisponibles">
+                            Sur 0 agent
+                        </small>
 
-                        <p class="titre-carte">
-                            Quantité totale en stock
-                        </p>
+                    </div>
 
-                        <div class="valeur-carte">
+                </article>
 
-                            <strong id="quantiteStock">
-                                --
-                            </strong>
+                <article class="carte-indicateur">
 
-                            <span>
-                                kg
-                            </span>
+                    <div class="icone-indicateur icone-tricycles">
+                        T
+                    </div>
 
-                        </div>
+                    <div>
 
-                        <p class="detail-carte">
+                        <span class="libelle-indicateur">
+                            Tricycles disponibles
+                        </span>
 
-                            <span id="nombreTypesStock">
-                                --
-                            </span>
+                        <strong id="kpiTricyclesDisponibles">
+                            0
+                        </strong>
 
-                            type(s) de matière disponible(s)
+                        <small id="detailTricyclesDisponibles">
+                            Sur 0 tricycle
+                        </small>
 
-                        </p>
+                    </div>
 
-                    </article>
+                </article>
 
-                    <article class="carte-indicateur">
+                <article class="carte-indicateur">
 
-                        <div class="entete-carte">
+                    <div class="icone-indicateur icone-stock">
+                        S
+                    </div>
 
-                            <span class="etiquette etiquette-vente">
-                                Ventes
-                            </span>
+                    <div>
 
-                            <span class="symbole">
-                                VT
-                            </span>
+                        <span class="libelle-indicateur">
+                            Stock total
+                        </span>
 
-                        </div>
+                        <strong id="kpiStockTotal">
+                            0 kg
+                        </strong>
 
-                        <p class="titre-carte">
-                            Nombre de ventes
-                        </p>
+                        <small>
+                            Matières actuellement disponibles
+                        </small>
 
-                        <div class="valeur-carte">
+                    </div>
 
-                            <strong id="nombreVentes">
-                                --
-                            </strong>
+                </article>
 
-                        </div>
+                <article class="carte-indicateur">
 
-                        <p class="detail-carte">
-                            Ventes confirmées
-                        </p>
+                    <div class="icone-indicateur icone-ventes">
+                        V
+                    </div>
 
-                    </article>
+                    <div>
 
-                    <article class="carte-indicateur">
+                        <span class="libelle-indicateur">
+                            Ventes
+                        </span>
 
-                        <div class="entete-carte">
+                        <strong id="kpiVentes">
+                            0
+                        </strong>
 
-                            <span class="etiquette etiquette-revenu">
-                                Revenus
-                            </span>
+                        <small id="detailVentes">
+                            0 de chiffre d’affaires
+                        </small>
 
-                            <span class="symbole">
-                                CA
-                            </span>
+                    </div>
 
-                        </div>
+                </article>
 
-                        <p class="titre-carte">
-                            Chiffre d'affaires
-                        </p>
+                <article class="carte-indicateur">
 
-                        <div class="valeur-carte valeur-monetaire">
+                    <div class="icone-indicateur icone-impact">
+                        CO₂
+                    </div>
 
-                            <strong id="chiffreAffaires">
-                                --
-                            </strong>
+                    <div>
 
-                        </div>
+                        <span class="libelle-indicateur">
+                            Impact estimé
+                        </span>
 
-                        <p class="detail-carte">
-                            Montant total des ventes confirmées
-                        </p>
+                        <strong id="kpiImpactCarbone">
+                            0 kg CO₂e
+                        </strong>
 
-                    </article>
+                        <small>
+                            Émissions évitées estimées
+                        </small>
 
-                    <article class="carte-indicateur">
+                    </div>
 
-                        <div class="entete-carte">
-
-                            <span class="etiquette etiquette-carbone">
-                                Carbone
-                            </span>
-
-                            <span class="symbole">
-                                CO₂
-                            </span>
-
-                        </div>
-
-                        <p class="titre-carte">
-                            Impact carbone estimé
-                        </p>
-
-                        <div class="valeur-carte">
-
-                            <strong id="impactCarbone">
-                                --
-                            </strong>
-
-                            <span>
-                                kg CO₂e
-                            </span>
-
-                        </div>
-
-                        <p class="detail-carte">
-                            Estimation environnementale interne
-                        </p>
-
-                    </article>
-
-                </div>
+                </article>
 
             </section>
 
-            <section class="grille-secondaire">
+            <section class="grille-graphiques-dashboard">
+
+                <article class="panneau graphique-principal">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <h2>
+                                Évolution des collectes
+                            </h2>
+
+                            <p>
+                                Nombre de collectes enregistrées durant les
+                                30 derniers jours.
+                            </p>
+
+                        </div>
+
+                        <span class="badge-periode">
+                            30 jours
+                        </span>
+
+                    </div>
+
+                    <div class="conteneur-canvas">
+
+                        <canvas
+                            id="graphiqueCollectes"
+                            width="800"
+                            height="320"
+                        ></canvas>
+
+                        <div
+                            class="message-graphique cache"
+                            id="messageGraphiqueCollectes"
+                        >
+                            Aucune collecte enregistrée durant cette période.
+                        </div>
+
+                    </div>
+
+                </article>
 
                 <article class="panneau">
 
@@ -525,23 +366,68 @@
 
                         <div>
 
-                            <p class="sur-titre">
-                                STOCK ACTUEL
-                            </p>
-
                             <h2>
-                                Matières disponibles
+                                Types de déchets
                             </h2>
+
+                            <p>
+                                Répartition des collectes par matière.
+                            </p>
 
                         </div>
 
-                        <button
-                            type="button"
-                            id="boutonActualiser"
-                            class="bouton-secondaire"
+                    </div>
+
+                    <div class="conteneur-canvas conteneur-canvas-circulaire">
+
+                        <canvas
+                            id="graphiqueTypesDechets"
+                            width="420"
+                            height="320"
+                        ></canvas>
+
+                        <div
+                            class="message-graphique cache"
+                            id="messageGraphiqueTypes"
                         >
-                            Actualiser
-                        </button>
+                            Aucun type de déchet disponible.
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="legende-graphique"
+                        id="legendeTypesDechets"
+                    ></div>
+
+                </article>
+
+            </section>
+
+            <section class="grille-contenu">
+
+                <article class="panneau">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <h2>
+                                Stock disponible
+                            </h2>
+
+                            <p>
+                                Quantités disponibles par type de déchet.
+                            </p>
+
+                        </div>
+
+                        <a
+                            href="./stocks.html"
+                            class="lien-panneau"
+                        >
+                            Voir les stocks
+                        </a>
 
                     </div>
 
@@ -555,7 +441,7 @@
                                     <th>Matière</th>
                                     <th>Quantité</th>
                                     <th>Unité</th>
-                                    <th>Dernière mise à jour</th>
+                                    <th>Mise à jour</th>
                                 </tr>
 
                             </thead>
@@ -581,76 +467,159 @@
 
                 </article>
 
-                <article class="panneau panneau-actions">
+                <article class="panneau">
 
-                    <div>
+                    <div class="entete-panneau">
 
-                        <p class="sur-titre">
-                            ACCÈS RAPIDE
-                        </p>
+                        <div>
 
-                        <h2>
-                            Actions principales
-                        </h2>
+                            <h2>
+                                Alertes
+                            </h2>
+
+                            <p>
+                                Points nécessitant votre attention.
+                            </p>
+
+                        </div>
+
+                        <span
+                            class="compteur-alertes"
+                            id="nombreAlertes"
+                        >
+                            0
+                        </span>
 
                     </div>
 
-                    <div class="liste-actions">
+                    <div
+                        class="liste-alertes"
+                        id="listeAlertes"
+                    >
 
-                        <button
-                            type="button"
-                            class="action"
-                            data-action="client"
+                        <div class="etat-vide">
+                            Chargement des alertes...
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+            <section class="grille-contenu">
+
+                <article class="panneau">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <h2>
+                                Missions récentes
+                            </h2>
+
+                            <p>
+                                Dernières missions enregistrées.
+                            </p>
+
+                        </div>
+
+                        <a
+                            href="./missions.html"
+                            class="lien-panneau"
                         >
+                            Voir toutes
+                        </a>
 
-                            <strong>
-                                Nouveau client
-                            </strong>
+                    </div>
 
-                            <span>
-                                Ouvrir la gestion des clients
-                            </span>
+                    <div
+                        class="liste-missions"
+                        id="listeMissionsRecentes"
+                    >
 
-                        </button>
+                        <div class="etat-vide">
+                            Chargement des missions...
+                        </div>
 
-                        <button
-                            type="button"
-                            class="action"
-                            data-action="collecte"
+                    </div>
+
+                </article>
+
+                <article class="panneau">
+
+                    <div class="entete-panneau">
+
+                        <div>
+
+                            <h2>
+                                Accès rapides
+                            </h2>
+
+                            <p>
+                                Opérations fréquentes.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="liste-raccourcis">
+
+                        <a
+                            href="./collectes.html"
+                            class="raccourci"
                         >
-
                             <strong>
                                 Nouvelle collecte
                             </strong>
 
                             <span>
-                                Ouvrir les opérations de collecte
+                                Enregistrer une demande
                             </span>
+                        </a>
 
-                        </button>
-
-                        <button
-                            type="button"
-                            class="action"
-                            data-action="vente"
+                        <a
+                            href="./missions.html"
+                            class="raccourci"
                         >
-
                             <strong>
-                                Nouvelle vente
+                                Organiser une mission
                             </strong>
 
                             <span>
-                                Ouvrir la gestion commerciale
+                                Affecter un agent et un tricycle
                             </span>
+                        </a>
 
-                        </button>
+                        <a
+                            href="./lots.html"
+                            class="raccourci"
+                        >
+                            <strong>
+                                Enregistrer un lot
+                            </strong>
+
+                            <span>
+                                Ajouter des matières au stock
+                            </span>
+                        </a>
+
+                        <a
+                            href="./ventes.html"
+                            class="raccourci"
+                        >
+                            <strong>
+                                Enregistrer une vente
+                            </strong>
+
+                            <span>
+                                Effectuer une sortie de stock
+                            </span>
+                        </a>
 
                     </div>
-
-                    <p class="information-actions">
-                        Les boutons ouvrent directement les modules
-                        correspondants.
-                    </p>
 
                 </article>
 
@@ -660,6 +629,10 @@
 
     </div>
 
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
     <script src="./js/dashboard.js"></script>
 
 </body>

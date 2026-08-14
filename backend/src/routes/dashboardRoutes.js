@@ -1,4 +1,4 @@
-import express from "express";
+ï»¿import express from "express";
 import dashboardController from "../controllers/DashboardController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 
@@ -8,16 +8,16 @@ const router = express.Router();
  * @swagger
  * /api/dashboard:
  *   get:
- *     summary: Tableau de bord de l'organisation connectée
+ *     summary: Tableau de bord de l'organisation connectÃ©e
  *     tags:
  *       - Dashboard
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Tableau de bord récupéré avec succès.
+ *         description: Tableau de bord rÃ©cupÃ©rÃ© avec succÃ¨s.
  *       401:
- *         description: Non authentifié.
+ *         description: Non authentifiÃ©.
  */
 router.get(
     "/",

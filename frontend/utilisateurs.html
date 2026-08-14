@@ -1,0 +1,356 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Utilisateurs — Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/utilisateurs.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Rôle
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        ADMINISTRATION
+                    </p>
+
+                    <h1>
+                        Utilisateurs
+                    </h1>
+
+                    <p>
+                        Gérez les comptes, rôles et états
+                        d’accès de votre organisation.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-principal"
+                    id="boutonNouvelUtilisateur"
+                >
+                    Nouvel utilisateur
+                </button>
+
+            </header>
+
+            <div
+                id="erreurUtilisateurs"
+                class="alerte-erreur cache"
+            ></div>
+
+            <section class="zone-filtres">
+
+                <input
+                    type="search"
+                    id="rechercheUtilisateurs"
+                    placeholder="Rechercher par nom ou e-mail..."
+                >
+
+                <select id="filtreRoleUtilisateur">
+
+                    <option value="">
+                        Tous les rôles
+                    </option>
+
+                </select>
+
+                <select id="filtreStatutUtilisateur">
+
+                    <option value="">
+                        Tous les statuts
+                    </option>
+
+                    <option value="actif">
+                        Actifs
+                    </option>
+
+                    <option value="inactif">
+                        Inactifs
+                    </option>
+
+                </select>
+
+            </section>
+
+            <section class="panneau-tableau">
+
+                <div class="tableau-conteneur">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Contact</th>
+                                <th>Rôle</th>
+                                <th>Statut</th>
+                                <th>Dernier accès</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="corpsTableauUtilisateurs">
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="etat-vide"
+                                >
+                                    Chargement des utilisateurs...
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="modaleUtilisateur"
+        class="fenetre-modale cache"
+    >
+
+        <div
+            class="fond-modale"
+            id="fondModaleUtilisateur"
+        ></div>
+
+        <article class="contenu-modale">
+
+            <header class="entete-modale">
+
+                <h2 id="titreModaleUtilisateur">
+                    Nouvel utilisateur
+                </h2>
+
+                <button
+                    type="button"
+                    id="boutonFermerModaleUtilisateur"
+                    class="bouton-fermer"
+                >
+                    ×
+                </button>
+
+            </header>
+
+            <form id="formulaireUtilisateur">
+
+                <input
+                    type="hidden"
+                    id="utilisateurId"
+                >
+
+                <div class="grille-champs">
+
+                    <div class="champ">
+
+                        <label for="nom">
+                            Nom
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nom"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="champ">
+
+                        <label for="email">
+                            E-mail
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="champ">
+
+                        <label for="telephone">
+                            Téléphone
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="telephone"
+                        >
+
+                    </div>
+
+                    <div class="champ">
+
+                        <label for="roleId">
+                            Rôle
+                        </label>
+
+                        <select
+                            id="roleId"
+                            required
+                        ></select>
+
+                    </div>
+
+                    <div class="champ champ-large">
+
+                        <label for="photoUrl">
+                            URL de la photo
+                        </label>
+
+                        <input
+                            type="url"
+                            id="photoUrl"
+                        >
+
+                    </div>
+
+                    <div
+                        class="champ champ-large"
+                        id="zoneMotDePasse"
+                    >
+
+                        <label for="motDePasse">
+                            Mot de passe initial
+                        </label>
+
+                        <input
+                            type="password"
+                            id="motDePasse"
+                            minlength="8"
+                        >
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="bouton-principal"
+                    id="boutonEnregistrerUtilisateur"
+                >
+                    Enregistrer
+                </button>
+
+            </form>
+
+        </article>
+
+    </div>
+
+    <script src="./js/config.js"></script>
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/utilisateurs.js"></script>
+
+</body>
+
+</html>

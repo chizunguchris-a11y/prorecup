@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Paramètres — Pro Récup</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./css/parametres.css"
+    >
+
+</head>
+
+<body>
+
+    <div class="application">
+
+        <aside class="barre-laterale">
+
+            <div class="marque">
+
+                <div class="logo-marque">
+                    PR
+                </div>
+
+                <div>
+
+                    <strong>
+                        Pro Récup
+                    </strong>
+
+                    <span>
+                        Administration
+                    </span>
+
+                </div>
+
+            </div>
+
+            <nav class="navigation">
+
+                <span class="chargement-navigation">
+                    Chargement du menu...
+                </span>
+
+            </nav>
+
+            <div class="pied-barre-laterale">
+
+                <div class="profil-utilisateur">
+
+                    <div
+                        class="avatar-utilisateur"
+                        id="avatarUtilisateur"
+                    >
+                        U
+                    </div>
+
+                    <div class="informations-utilisateur">
+
+                        <strong id="nomUtilisateur">
+                            Utilisateur
+                        </strong>
+
+                        <span id="roleUtilisateur">
+                            Rôle
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="bouton-deconnexion"
+                    id="boutonDeconnexion"
+                >
+                    Déconnexion
+                </button>
+
+            </div>
+
+        </aside>
+
+        <main class="contenu-principal">
+
+            <header class="entete-page">
+
+                <div>
+
+                    <p class="sur-titre">
+                        CONFIGURATION
+                    </p>
+
+                    <h1>
+                        Paramètres de l’organisation
+                    </h1>
+
+                    <p>
+                        Gérez l’identité, les coordonnées et les
+                        paramètres opérationnels de votre organisation.
+                    </p>
+
+                </div>
+
+            </header>
+
+            <div
+                id="erreurParametres"
+                class="alerte-erreur cache"
+            ></div>
+
+            <section class="grille-parametres">
+
+                <article class="panneau">
+
+                    <div class="apercu-organisation">
+
+                        <div
+                            id="logoOrganisation"
+                            class="logo-organisation"
+                        >
+                            PR
+                        </div>
+
+                        <div>
+
+                            <h2 id="nomOrganisationApercu">
+                                Organisation
+                            </h2>
+
+                            <p id="adresseOrganisationApercu">
+                                Adresse non renseignée
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <form id="formulaireOrganisation">
+
+                        <div class="grille-champs">
+
+                            <div class="champ">
+
+                                <label for="nom">
+                                    Nom
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="nom"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="email">
+                                    E-mail
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                >
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="telephone">
+                                    Téléphone
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    id="telephone"
+                                >
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="ville">
+                                    Ville
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="ville"
+                                >
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="pays">
+                                    Pays
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="pays"
+                                >
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="devise">
+                                    Devise
+                                </label>
+
+                                <select id="devise">
+
+                                    <option value="USD">
+                                        USD
+                                    </option>
+
+                                    <option value="CDF">
+                                        CDF
+                                    </option>
+
+                                    <option value="EUR">
+                                        EUR
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="fuseauHoraire">
+                                    Fuseau horaire
+                                </label>
+
+                                <select id="fuseauHoraire">
+
+                                    <option value="Africa/Kinshasa">
+                                        Africa/Kinshasa
+                                    </option>
+
+                                    <option value="Africa/Lubumbashi">
+                                        Africa/Lubumbashi
+                                    </option>
+
+                                    <option value="UTC">
+                                        UTC
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="champ">
+
+                                <label for="numeroIdentification">
+                                    Numéro d’identification
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="numeroIdentification"
+                                >
+
+                            </div>
+
+                            <div class="champ champ-large">
+
+                                <label for="adresse">
+                                    Adresse
+                                </label>
+
+                                <textarea
+                                    id="adresse"
+                                    rows="3"
+                                ></textarea>
+
+                            </div>
+
+                            <div class="champ champ-large">
+
+                                <label for="logoUrl">
+                                    URL du logo
+                                </label>
+
+                                <input
+                                    type="url"
+                                    id="logoUrl"
+                                >
+
+                            </div>
+
+                            <div class="champ champ-large">
+
+                                <label for="siteWeb">
+                                    Site web
+                                </label>
+
+                                <input
+                                    type="url"
+                                    id="siteWeb"
+                                >
+
+                            </div>
+
+                            <div class="champ champ-large">
+
+                                <label for="description">
+                                    Description
+                                </label>
+
+                                <textarea
+                                    id="description"
+                                    rows="4"
+                                ></textarea>
+
+                            </div>
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="bouton-principal"
+                            id="boutonEnregistrerParametres"
+                        >
+                            Enregistrer les paramètres
+                        </button>
+
+                    </form>
+
+                </article>
+
+            </section>
+
+        </main>
+
+    </div>
+    
+    <script src="./js/config.js"></script>
+
+    <script src="./js/common.js"></script>
+    <script src="./js/sidebar.js"></script>
+    <script src="./js/parametres.js"></script>
+
+</body>
+
+</html>

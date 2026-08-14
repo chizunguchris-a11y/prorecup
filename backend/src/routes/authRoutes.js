@@ -1,47 +1,26 @@
-import express from "express";
-import authController from "../controllers/authController.js";
+﻿import express from "express";
 
-const router = express.Router();
+import authController
+    from "../controllers/authController.js";
+
+import authMiddleware
+    from "../middlewares/authMiddleware.js";
+
+const router =
+    express.Router();
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Cr�er un nouvel utilisateur
+ *     summary: Créer un nouvel utilisateur
  *     tags:
  *       - Authentification
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - nom
- *               - email
- *               - motDePasse
- *               - organisationId
- *             properties:
- *               nom:
- *                 type: string
- *                 example: Christian
- *               email:
- *                 type: string
- *                 example: christian3@prorecup.com
- *               motDePasse:
- *                 type: string
- *                 example: ProRecup2026!
- *               organisationId:
- *                 type: string
- *                 format: uuid
- *                 example: 04fbfede-8cf8-47fc-a9b2-599b766229e2
- *     responses:
- *       201:
- *         description: Utilisateur inscrit avec succ�s.
- *       400:
- *         description: Donn�es invalides ou email d�j� utilis�.
  */
-router.post("/register", authController.inscription);
+router.post(
+    "/register",
+    authController.inscription
+);
 
 /**
  * @swagger
@@ -55,39 +34,122 @@ router.post("/register", authController.inscription);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LoginRequest'
+ *             type: object
+ *             required:
+ *               - email
+ *               - motDePasse
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: christian2@prorecup.com
+ *               motDePasse:
+ *                 type: string
+ *                 format: password
+ *                 example: ProRecup2027!
  *     responses:
  *       200:
- *         description: Connexion r�ussie.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Connexion r�ussie !
- *                 token:
- *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIs...
- *                 utilisateur:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       format: uuid
- *                     nom:
- *                       type: string
- *                       example: Christian
- *                     email:
- *                       type: string
- *                       example: christian2@prorecup.com
+ *         description: Connexion réussie.
  *       400:
- *         description: Email ou mot de passe incorrect.
+ *         description: Identifiants incorrects.
+ *       403:
+ *         description: Compte désactivé ou rôle absent.
  */
-router.post("/login", authController.connexion);
+router.post(
+    "/login",
+    authController.connexion
+);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Consulter le profil connecté
+ *     tags:
+ *       - Profil
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profil récupéré avec succès.
+ *       401:
+ *         description: Token manquant, invalide ou expiré.
+ *       403:
+ *         description: Rôle absent.
+ */
+router.get(
+    "/me",
+    authMiddleware,
+    (
+        req,
+        res
+    ) => {
+
+        return res.status(200).json({
+            success: true,
+
+            message:
+                "Profil récupéré avec succès.",
+
+            data: {
+                id:
+                    req.utilisateur.id,
+
+                email:
+                    req.utilisateur.email,
+
+                organisationId:
+                    req.utilisateur
+                        .organisationId,
+
+                organisation_id:
+                    req.utilisateur
+                        .organisation_id,
+
+                role:
+                    req.utilisateur.role,
+
+                role_nom:
+                    req.utilisateur.role_nom,
+
+                roleId:
+                    req.utilisateur.roleId
+            }
+        });
+
+    }
+);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   put:
+ *     summary: Modifier le profil connecté
+ *     tags:
+ *       - Profil
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put(
+    "/me",
+    authMiddleware,
+    authController.modifierProfil
+);
+
+/**
+ * @swagger
+ * /api/auth/me/password:
+ *   patch:
+ *     summary: Modifier son mot de passe
+ *     tags:
+ *       - Profil
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch(
+    "/me/password",
+    authMiddleware,
+    authController.changerMotDePasse
+);
 
 export default router;

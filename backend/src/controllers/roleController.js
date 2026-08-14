@@ -1,27 +1,52 @@
-import pool from '../config/db.js';
+import roleService
+    from "../services/roleService.js";
+
+import asyncHandler
+    from "../middlewares/asyncHandler.js";
+
+import ApiResponse
+    from "../utils/ApiResponse.js";
 
 const roleController = {
-  create: async (req, res) => {
-    const { nom, description } = req.body;
-    try {
-      const result = await pool.query(
-        'INSERT INTO roles (nom, description) VALUES ($1, $2) RETURNING *',
-        [nom, description]
-      );
-      res.status(201).json({ success: true, data: result.rows[0] });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  },
-  
-  getAll: async (req, res) => {
-    try {
-      const result = await pool.query('SELECT * FROM roles');
-      res.status(200).json(result.rows);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
+
+    create: asyncHandler(
+        async (
+            req,
+            res
+        ) => {
+
+            const role =
+                await roleService.creer(
+                    req.body
+                );
+
+            return ApiResponse.created(
+                res,
+                "Rôle créé avec succès.",
+                role
+            );
+
+        }
+    ),
+
+    getAll: asyncHandler(
+        async (
+            req,
+            res
+        ) => {
+
+            const roles =
+                await roleService.lister();
+
+            return ApiResponse.success(
+                res,
+                "Rôles récupérés avec succès.",
+                roles
+            );
+
+        }
+    )
+
 };
 
 export default roleController;

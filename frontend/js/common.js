@@ -1,6 +1,6 @@
 ﻿const PRORECUP_API_URL =
     window.PRORECUP_API_URL ||
-    "http://localhost:5000";
+    "https://prorecup-backend.onrender.com";
 
 window.PRORECUP_API_URL =
     PRORECUP_API_URL;

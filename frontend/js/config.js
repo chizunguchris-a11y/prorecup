@@ -1,3 +1,3 @@
 ﻿window.PRORECUP_API_URL =
 
-    "http://localhost:5000";
+    "https://prorecup-backend.onrender.com";

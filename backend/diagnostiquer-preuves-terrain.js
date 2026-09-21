@@ -156,12 +156,12 @@ const packageJson =
 
                 {
                     variable:
-                        "SUPABASE_SERVICE_ROLE_KEY",
+                        "SUPABASE_SECRET_KEY",
 
                     presente:
                         ouiNon(
                             process.env
-                                .SUPABASE_SERVICE_ROLE_KEY
+                                .SUPABASE_SECRET_KEY
                         )
                 },
 

@@ -65,6 +65,8 @@ import tricycleRoutes
 
 import missionRoutes
     from "./routes/MissionRoutes.js";
+import terrainRoutes
+    from "./routes/TerrainRoutes.js";
 
 import auditRoutes
     from "./routes/AuditRoutes.js";
@@ -241,6 +243,11 @@ app.use(
 app.use(
     "/api/missions",
     missionRoutes
+);
+
+app.use(
+    "/api/terrain",
+    terrainRoutes
 );
 
 app.use(

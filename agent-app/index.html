@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b6b44"
+    >
+
+    <title>Pro Récup Terrain</title>
+
+    <link
+        rel="stylesheet"
+        href="./css/app.css"
+    >
+</head>
+
+<body>
+
+    <!-- =========================================
+         CHARGEMENT
+    ========================================== -->
+
+    <section
+        id="ecran-chargement"
+        class="ecran ecran-centre"
+    >
+
+        <div class="logo-principal">
+            PR
+        </div>
+
+        <h1>
+            Pro Récup
+        </h1>
+
+        <p class="texte-secondaire">
+            Préparation de votre espace Terrain...
+        </p>
+
+        <div class="spinner"></div>
+
+    </section>
+
+
+    <!-- =========================================
+         CONNEXION
+    ========================================== -->
+
+    <section
+        id="ecran-connexion"
+        class="ecran masque"
+    >
+
+        <div class="connexion-conteneur">
+
+            <div class="connexion-entete">
+
+                <div class="logo-principal">
+                    PR
+                </div>
+
+                <p class="sur-titre">
+                    PRO RÉCUP
+                </p>
+
+                <h1>
+                    Agent Terrain
+                </h1>
+
+                <p class="texte-secondaire">
+                    Collecte • Traçabilité • Impact
+                </p>
+
+            </div>
+
+
+            <form
+                id="form-connexion"
+                class="carte connexion-carte"
+            >
+
+                <div
+                    id="message-connexion"
+                    class="message masque"
+                ></div>
+
+
+                <label
+                    class="champ-label"
+                    for="email"
+                >
+                    Adresse e-mail
+                </label>
+
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autocomplete="username"
+                    placeholder="agent@prorecup.cd"
+                    required
+                >
+
+
+                <label
+                    class="champ-label"
+                    for="mot-de-passe"
+                >
+                    Mot de passe
+                </label>
+
+                <input
+                    id="mot-de-passe"
+                    name="motDePasse"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Votre mot de passe"
+                    required
+                >
+
+
+                <button
+                    id="bouton-connexion"
+                    class="bouton bouton-principal"
+                    type="submit"
+                >
+                    Se connecter
+                </button>
+
+            </form>
+
+
+            <p class="connexion-securite">
+                Accès réservé aux agents de valorisation carbone
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         APPLICATION
+    ========================================== -->
+
+    <section
+        id="ecran-application"
+        class="ecran masque"
+    >
+
+        <header class="barre-haute">
+
+            <div>
+
+                <p class="sur-titre">
+                    PRO RÉCUP TERRAIN
+                </p>
+
+                <h1
+                    id="bonjour-agent"
+                    class="titre-agent"
+                >
+                    Bonjour
+                </h1>
+
+            </div>
+
+            <button
+                id="bouton-deconnexion"
+                class="bouton-icone"
+                type="button"
+                title="Déconnexion"
+            >
+                ↪
+            </button>
+
+        </header>
+
+
+        <main class="contenu">
+
+            <!-- CONNEXION RÉSEAU -->
+
+            <div
+                id="etat-reseau"
+                class="etat-reseau"
+            >
+                ● En ligne
+            </div>
+
+
+            <!-- JOURNÉE -->
+
+            <section class="bloc">
+
+                <div class="bloc-entete">
+
+                    <div>
+
+                        <p class="sur-titre">
+                            AUJOURD'HUI
+                        </p>
+
+                        <h2>
+                            Ma tournée
+                        </h2>
+
+                    </div>
+
+                    <button
+                        id="bouton-actualiser"
+                        class="bouton-secondaire"
+                        type="button"
+                    >
+                        Actualiser
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="resume-journee"
+                    class="grille-statistiques"
+                >
+
+                    <article class="statistique">
+
+                        <strong id="stat-missions">
+                            0
+                        </strong>
+
+                        <span>
+                            Mission
+                        </span>
+
+                    </article>
+
+
+                    <article class="statistique">
+
+                        <strong id="stat-collectes">
+                            0
+                        </strong>
+
+                        <span>
+                            Collectes
+                        </span>
+
+                    </article>
+
+
+                    <article class="statistique">
+
+                        <strong id="stat-terminees">
+                            0
+                        </strong>
+
+                        <span>
+                            Terminées
+                        </span>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- MESSAGE -->
+
+            <div
+                id="message-application"
+                class="message masque"
+            ></div>
+
+
+            <!-- MISSIONS -->
+
+            <section
+                id="liste-missions"
+                class="liste-missions"
+            ></section>
+
+        </main>
+
+
+        <nav class="navigation-bas">
+
+            <button
+                class="navigation-item actif"
+                type="button"
+            >
+                <span class="navigation-icone">
+                    ⌂
+                </span>
+
+                <span>
+                    Accueil
+                </span>
+            </button>
+
+
+            <button
+                class="navigation-item"
+                type="button"
+                disabled
+            >
+                <span class="navigation-icone">
+                    ◎
+                </span>
+
+                <span>
+                    Tournée
+                </span>
+            </button>
+
+
+            <button
+                class="navigation-item"
+                type="button"
+                disabled
+            >
+                <span class="navigation-icone">
+                    !
+                </span>
+
+                <span>
+                    Incident
+                </span>
+            </button>
+
+
+            <button
+                class="navigation-item"
+                type="button"
+                disabled
+            >
+                <span class="navigation-icone">
+                    ○
+                </span>
+
+                <span>
+                    Profil
+                </span>
+            </button>
+
+        </nav>
+
+    </section>
+
+
+    <script src="./js/config.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/app.js"></script>
+
+</body>
+</html>

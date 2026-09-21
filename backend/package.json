@@ -1,15 +1,13 @@
-﻿{
+{
   "name": "backend",
   "version": "1.0.0",
   "type": "module",
   "main": "src/app.js",
-
   "scripts": {
     "start": "node src/server.js",
     "test": "mocha tests/**/*.test.js --exit",
     "db:export": "node scripts/export-database.js"
   },
-
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -17,11 +15,11 @@
     "express": "^4.19.2",
     "express-validator": "^6.15.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
     "pg": "^8.7.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3"
   },
-
   "devDependencies": {
     "mocha": "^9.2.2",
     "supertest": "^6.3.4"

@@ -35,3 +35,4 @@ Desktop.ini
 # Fichiers générés
 dist/
 build/
+backend/terrain-e2e-resultat-*.json

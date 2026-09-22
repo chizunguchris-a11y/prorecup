@@ -893,3 +893,44 @@ input:focus {
     }
 
 }
+
+.saisie-terrain {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.saisie-terrain label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.saisie-terrain input,
+.saisie-terrain select {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px;
+    font: inherit;
+    border: 1px solid #b8c5bc;
+    border-radius: 8px;
+}
+
+.saisie-terrain video {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    background: #111;
+    border-radius: 8px;
+}
+
+.saisie-terrain [hidden] {
+    display: none;
+}
+
+.saisie-terrain [data-message-photo] {
+    margin: 0;
+    font-size: 0.9rem;
+}

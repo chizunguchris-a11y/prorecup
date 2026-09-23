@@ -29,6 +29,12 @@
     function validateBlob(blob) {
         if (!(blob instanceof Blob) || !blob.size || blob.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) throw new Error('Photo invalide : JPEG, PNG ou WebP, 5 Mo maximum.');
     }
+    async function freshBlob(blob) {
+        validateBlob(blob);
+        const copy = new Blob([await blob.arrayBuffer()], { type: blob.type });
+        validateBlob(copy);
+        return copy;
+    }
     // Explicit allowlist: never store the authenticated API response as a whole.
     function snapshot(day) {
         return { missions: (day?.missions || []).map(m => ({
@@ -65,12 +71,15 @@
         return result;
     }
     async function open(name) {
-        const r = indexedDB.open(name, 1);
+        const r = indexedDB.open(name, 2);
         r.onupgradeneeded = () => {
-            const q = r.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
-            q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
-            q.createIndex('operation', 'operation_id', { unique: true });
-            r.result.createObjectStore('state');
+            if (!r.result.objectStoreNames.contains('queue')) {
+                const q = r.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
+                q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
+                q.createIndex('operation', 'operation_id', { unique: true });
+            }
+            if (!r.result.objectStoreNames.contains('state')) r.result.createObjectStore('state');
+            if (!r.result.objectStoreNames.contains('queue_meta')) r.result.createObjectStore('queue_meta');
         };
         const db = await request(r);
         db.onversionchange = () => db.close();
@@ -80,9 +89,18 @@
             try { const value = await fn(tx); await done; return value; }
             catch (e) { try { tx.abort(); } catch {} await done.catch(() => {}); throw e; }
         };
-        const list = () => transact(['queue'], 'readonly', tx => request(tx.objectStore('queue').getAll()));
-        const view = () => transact(['queue', 'state'], 'readonly', async tx => {
-            const q = request(tx.objectStore('queue').getAll()), s = request(tx.objectStore('state').get('day'));
+        const metadata = row => ({ statut: row.statut, retry_count: row.retry_count, last_error: row.last_error, next_attempt_at: row.next_attempt_at });
+        const mergedRows = async tx => {
+            const rows = await request(tx.objectStore('queue').getAll());
+            return Promise.all(rows.map(async row => ({
+                statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0,
+                ...row,
+                ...((await request(tx.objectStore('queue_meta').get(row.id))) || {})
+            })));
+        };
+        const list = () => transact(['queue', 'queue_meta'], 'readonly', mergedRows);
+        const view = () => transact(['queue', 'queue_meta', 'state'], 'readonly', async tx => {
+            const q = mergedRows(tx), s = request(tx.objectStore('state').get('day'));
             return project(await s, await q);
         });
         const saveDay = day => transact(['state'], 'readwrite', tx => request(tx.objectStore('state').put(snapshot(day), 'day')));
@@ -91,24 +109,27 @@
             if (!UUID.test(mission_id) || (['demarrer_mission', 'terminer_mission'].includes(type) ? collecte_id !== '' : !UUID.test(collecte_id))) throw new Error('Contexte invalide.');
             const safe = clean(type, payload);
             if (photo(type)) validateBlob(blob);
-            return transact(['queue'], 'readwrite', async tx => {
+            return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
                 const q = tx.objectStore('queue');
                 const existing = await request(q.index('context').get([mission_id, collecte_id, type]));
-                if (existing) return existing;
-                const row = { type, mission_id, collecte_id, operation_id: safe.operation_id, payload: safe, statut: 'en_attente', created_at: new Date().toISOString(), retry_count: 0, last_error: null, next_attempt_at: 0, ...(photo(type) ? { blob: blob.slice(0, blob.size, blob.type) } : {}) };
-                row.id = await request(q.add(row)); return row;
+                if (existing) return { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, ...existing, ...((await request(tx.objectStore('queue_meta').get(existing.id))) || {}) };
+                const row = { type, mission_id, collecte_id, operation_id: safe.operation_id, payload: safe, created_at: new Date().toISOString(), ...(photo(type) ? { blob: blob.slice(0, blob.size, blob.type) } : {}) };
+                row.id = await request(q.add(row));
+                const meta = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0 };
+                await request(tx.objectStore('queue_meta').put(meta, row.id));
+                return { ...row, ...meta };
             });
         }
-        const update = row => transact(['queue'], 'readwrite', tx => request(tx.objectStore('queue').put(row)));
+        const update = row => transact(['queue_meta'], 'readwrite', tx => request(tx.objectStore('queue_meta').put(metadata(row), row.id)));
         async function send(row, api) {
             const p = clean(row.type, row.payload);
             let url = '/terrain/missions/' + encodeURIComponent(row.mission_id);
             if (row.collecte_id) url += '/collectes/' + encodeURIComponent(row.collecte_id);
             if (photo(row.type)) {
-                validateBlob(row.blob);
+                const blob = await freshBlob(row.blob);
                 const form = new FormData();
                 for (const [key, value] of Object.entries(p)) form.append(key, String(value));
-                form.append('fichier', row.blob, 'preuve.' + ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[row.blob.type]);
+                form.append('fichier', blob, 'preuve.' + ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[blob.type]);
                 return api.post(url + '/preuves', form);
             }
             return api.post(url + '/' + ({ demarrer_mission: 'demarrer', arriver_site: 'arrivee', demarrer_collecte: 'demarrer', terminer_collecte: 'terminer', terminer_mission: 'terminer' })[row.type], p);
@@ -133,11 +154,12 @@
                         return { stopped: auth ? 'auth' : row.statut === 'erreur' ? 'erreur' : 'backoff', at: row.next_attempt_at };
                     }
                     // Atomically advance the durable base and acknowledge the queue entry.
-                    await transact(['queue', 'state'], 'readwrite', async tx => {
+                    await transact(['queue', 'queue_meta', 'state'], 'readwrite', async tx => {
                         const state = tx.objectStore('state');
                         const day = await request(state.get('day'));
                         state.put(snapshot(project(day, [row])), 'day');
                         tx.objectStore('queue').delete(row.id);
+                        tx.objectStore('queue_meta').delete(row.id);
                     });
                     notify();
                 }
@@ -147,10 +169,10 @@
             return running;
         }
         // Explicit operator recovery only: the rejected action and its dependent successors.
-        const discardRejected = () => transact(['queue'], 'readwrite', async tx => {
-            const q = tx.objectStore('queue'), rows = await request(q.getAll());
+        const discardRejected = () => transact(['queue', 'queue_meta'], 'readwrite', async tx => {
+            const q = tx.objectStore('queue'), rows = await mergedRows(tx);
             const first = rows.find(r => r.statut === 'erreur');
-            if (first) for (const r of rows) if (r.id >= first.id) q.delete(r.id);
+            if (first) for (const r of rows) if (r.id >= first.id) { q.delete(r.id); tx.objectStore('queue_meta').delete(r.id); }
         });
         return { list, view, saveDay, enqueue, sync, discardRejected, close: () => db.close() };
     }

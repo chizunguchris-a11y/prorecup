@@ -11,6 +11,26 @@ document.getElementById('run').onclick = async () => {
     const day = { agent_id: 'INTERDIT', token: 'INTERDIT', missions: [{ id: mission, statut: 'planifiee', agent_id: 'INTERDIT', collectes: [{ id: collecte, progression: {}, preuves: [] }] }] };
     const names = []; let store;
     async function fresh() { const name = 'terrain-test-' + crypto.randomUUID(); names.push(name); return O.open(name); }
+    async function legacyPhoto() {
+        const name = 'terrain-test-' + crypto.randomUUID(); names.push(name);
+        const db = await new Promise((resolve, reject) => {
+            const opening = indexedDB.open(name, 1);
+            opening.onupgradeneeded = () => {
+                const q = opening.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
+                q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
+                q.createIndex('operation', 'operation_id', { unique: true });
+                opening.result.createObjectStore('state');
+            };
+            opening.onsuccess = () => resolve(opening.result); opening.onerror = () => reject(opening.error);
+        });
+        const p = payload('avant_collecte');
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction('queue', 'readwrite');
+            tx.objectStore('queue').add({ type: 'avant_collecte', mission_id: mission, collecte_id: collecte, operation_id: p.operation_id, payload: O.clean('avant_collecte', p), statut: 'envoi', created_at: new Date().toISOString(), retry_count: 0, last_error: null, next_attempt_at: 0, blob: new Blob(['photo-v1'], { type: 'image/jpeg' }) });
+            tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); tx.onerror = () => {};
+        });
+        db.close(); return { name, operation_id: p.operation_id };
+    }
     try {
         store = await fresh(); await store.saveDay(day);
         const order = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
@@ -30,6 +50,16 @@ document.getElementById('run').onclick = async () => {
         check(sent.length === 7 && sent[0].url.endsWith('/demarrer') && sent[1].url.endsWith('/arrivee') && sent[3].url.endsWith('/preuves') && sent[4].url.endsWith('/terminer'), 'ordre métier respecté');
         check(sent[3].body instanceof FormData && await sent[3].body.get('fichier').text() === 'photo-fictive', 'FormData reconstruit avec photo');
         check((await store.list()).length === 0 && (await store.view()).missions[0].statut === 'terminee', 'acquittement atomique et progression durable');
+        store.close();
+        const legacy = await legacyPhoto();
+        store = await O.open(legacy.name);
+        const legacyRows = await store.list(); let legacySent = 0;
+        check(legacyRows.length === 1 && legacyRows[0].statut === 'envoi' && legacyRows[0].operation_id === legacy.operation_id, 'ligne photo version 1 relue après mise à niveau');
+        await store.sync({ post: async (url, form) => {
+            if (!url.endsWith('/preuves') || await form.get('fichier').text() !== 'photo-v1') throw new Error('Photo version 1 perdue');
+            legacySent++;
+        } }, () => true);
+        check(legacySent === 1 && !(await store.list()).length, 'photo version 1 en statut envoi synchronisée puis acquittée');
         store.close();
         for (const error of [{ code: 'NETWORK_ERROR' }, { status: 500 }, { status: 408 }, { status: 425 }, { status: 429 }, { status: 400 }, { status: 401 }, { status: 403 }]) {
             store = await fresh(); await store.saveDay(day);
@@ -98,16 +128,29 @@ document.getElementById('reload-test').onclick = async () => {
     if (!name || !/^terrain-reload-[a-f0-9-]+$/.test(name)) return;
     const store = await window.ProRecup.offline.open(name);
     const rows = await store.list(); let sent = 0;
-    await store.sync({ post: async (url, form) => {
-        if (form.get('operation_id') !== rows[0].operation_id || await form.get('fichier').text() !== 'durable-reload') throw new Error('Photo perdue');
-        sent++;
-    } }, () => true);
-    document.getElementById('result').textContent = sent === 1 && !(await store.list()).length ? 'PASS rechargement réel de page, Blob et operation_id conservés, envoi après reprise' : 'FAIL reprise';
-    store.close(); indexedDB.deleteDatabase(name);
+    const originalPut = IDBObjectStore.prototype.put;
+    const originalArrayBuffer = Blob.prototype.arrayBuffer;
+    let arrayBufferCalls = 0;
+    IDBObjectStore.prototype.put = function (value, key) {
+        if (value?.blob instanceof Blob) throw new Error('Le Blob relu a été réécrit pendant un changement de statut');
+        return originalPut.call(this, value, key);
+    };
+    Blob.prototype.arrayBuffer = function () { arrayBufferCalls++; return originalArrayBuffer.call(this); };
+    try {
+        await store.sync({ post: async (url, form) => {
+            if (form.get('operation_id') !== rows[0].operation_id || await form.get('fichier').text() !== 'durable-reload') throw new Error('Photo perdue');
+            sent++;
+        } }, () => true);
+        document.getElementById('result').textContent = sent === 1 && arrayBufferCalls >= 1 && !(await store.list()).length ? 'PASS Safari-compat : rechargement réel, aucun Blob réécrit, Blob frais envoyé après reprise' : 'FAIL reprise Safari-compat';
+    } finally {
+        IDBObjectStore.prototype.put = originalPut;
+        Blob.prototype.arrayBuffer = originalArrayBuffer;
+        store.close(); indexedDB.deleteDatabase(name);
+    }
 })().catch(e => { document.getElementById('result').textContent = 'FAIL ' + e.message; });
 document.getElementById('cache-test').onclick = async () => {
     try {
-        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-1', { scope: '/agent-app/' });
+        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-2', { scope: '/agent-app/' });
         const worker = reg.installing || reg.waiting;
         if (worker && !['installed', 'activated'].includes(worker.state)) {
             await new Promise((resolve, reject) => {
@@ -118,7 +161,7 @@ document.getElementById('cache-test').onclick = async () => {
                 });
             });
         }
-        const cache = await caches.open('prorecup-terrain-shell-v1-1');
+        const cache = await caches.open('prorecup-terrain-shell-v1-2');
         const urls = (await cache.keys()).map(r => r.url);
         document.getElementById('result').textContent = urls.length === 10 && !urls.some(u => u.includes('/api/')) ? 'PASS 10 fichiers du shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.' : 'FAIL cache : ' + urls.join(', ');
     } catch (e) { document.getElementById('result').textContent = 'FAIL ' + e.message; }

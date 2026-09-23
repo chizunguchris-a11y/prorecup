@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'prorecup-terrain-shell-v1-1';
+const CACHE = 'prorecup-terrain-shell-v1-2';
 const SHELL = ['./', './index.html', './css/app.css', './js/config.js', './js/api.js', './js/auth.js', './js/offline.js', './js/app.js', './manifest.webmanifest', './icon.svg'];
 const urls = new Set(SHELL.map(p => new URL(p, self.registration.scope).href));
 self.addEventListener('install', event => {

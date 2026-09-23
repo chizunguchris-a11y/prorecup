@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "Pro Récup — Agent Terrain",
+  "short_name": "Terrain",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#176b45",
+  "icons": [{ "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

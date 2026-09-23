@@ -934,3 +934,21 @@ input:focus {
     margin: 0;
     font-size: 0.9rem;
 }
+
+.synchronisation {
+    position: sticky;
+    bottom: 69px;
+    z-index: 20;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px 20px;
+    background: white;
+    border-top: 2px solid var(--vert);
+}
+
+.synchronisation button {
+    min-height: 44px;
+    padding: 10px;
+}

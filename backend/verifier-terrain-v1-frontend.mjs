@@ -1,6 +1,8 @@
 /**
  * Vérifications Terrain sans réseau. Usage : node verifier-terrain-v1-frontend.mjs [racine du dépôt]
  * Charge les fonctions de l'application en mémoire, sans modifier leur source.
+ * Simule uniquement le stockage pour vérifier la préparation des actions.
+ * Retry HTTP/queue réelle : terrain-offline-tests.js et E2E --offline.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,7 +21,7 @@ const refreshCode = source.slice(source.indexOf('    const chargerJournee ='), s
 assert.ok(helperCode && actionCode && refreshCode);
 
 function harness() {
-    const cache = new Map(), calls = [], messages = [];
+    const cache = new Map(), calls = [], messages = [], queued = [];
     const user = { id: randomUUID() };
     const controls = [{ disabled: false }, { disabled: true }];
     const refreshButton = { disabled: false }, logoutButton = { disabled: false };
@@ -45,21 +47,30 @@ function harness() {
         },
         auth: { obtenirUtilisateur: () => user, deconnexion: () => { state.loggedOut = true; } },
         afficherEcran: () => {}, connexion: {},
-        navigator: { geolocation: { getCurrentPosition(ok, error, options) {
+        navigator: { onLine: true, geolocation: { getCurrentPosition(ok, error, options) {
             state.gpsCalls++;
             state.gpsOptions = options;
             state.now += 1500;
             if (state.gpsError) error(state.gpsError);
             else ok({ coords: state.coords || { latitude: -4.32, longitude: 15.31, accuracy: 8 } });
         } } },
-        api: {
-            async post(url, body) {
-                const payload = body instanceof TestFormData ? Object.fromEntries(body) : { ...body };
-                calls.push({ url, payload });
+        synchronisation: null,
+        synchroniser: () => { state.syncCalls = (state.syncCalls || 0) + 1; },
+        updateQueueUI: async () => {},
+        window: { ProRecup: { offline: { retryable: e => e.code === 'NETWORK_ERROR' } } },
+        terrainStore: {
+            async enqueue(context, payload, blob) {
+                calls.push({ context: { ...context }, payload: { ...payload }, blob });
                 if (state.pendingRequest) await state.pendingRequest;
                 if (state.fail) throw state.fail;
-                return { success: true };
+                if (!queued.some(r => JSON.stringify(r.context) === JSON.stringify(context)))
+                    queued.push(calls.at(-1));
             },
+            async view() { return { missions: [] }; },
+            async saveDay() {}
+        },
+        api: {
+            async post() { assert.fail('executerAction ne doit pas envoyer de POST.'); },
             async get(url) {
                 assert.equal(url, '/terrain/journee');
                 state.refreshCalls++;
@@ -81,7 +92,7 @@ function harness() {
         ' obtenirGps, preparerPhoto, chargerJournee, setJournee: value => { journeeCourante = value; },' +
         ' setPhoto: (form, photo) => photosFormulaires.set(form, photo),' +
         ' setDocument: value => { document = value; }, setMedia: value => { navigator.mediaDevices = value; } };', context);
-    return { ...context.exposed, cache, calls, state, controls, messages, user, refreshButton, logoutButton, context };
+    return { ...context.exposed, cache, calls, queued, state, controls, messages, user, refreshButton, logoutButton, context };
 }
 const mission = () => ({ id: randomUUID() });
 const step = action => ({ action, ...(['demarrer_mission','terminer_mission'].includes(action) ? {} : { collecte: { id: randomUUID() } }) });
@@ -92,7 +103,7 @@ const photo = content => new File([content], 'preuve.png', { type: 'image/png', 
 let passed = 0;
 async function test(name, fn) { await fn(); passed++; console.log('OK — ' + name); }
 
-await test('retry réseau : UUID, données et instant au clic inchangés, sans nouveau GPS', async () => {
+await test('échec du stockage : UUID, données et instant au clic inchangés, sans nouveau GPS', async () => {
     const h = harness(), m = mission(), e = step('arriver_site');
     const instant = new Date(h.state.now).toISOString();
     h.state.fail = networkError();
@@ -106,33 +117,6 @@ await test('retry réseau : UUID, données et instant au clic inchangés, sans n
     h.state.fail = null;
     await h.executerAction(m, e);
     assert.equal(h.cache.size, 0);
-});
-await test('HTTP 400/401/403/404/409/413/415/422 : nouvelle saisie et nouvel UUID après refus', async () => {
-    for (const status of [400,401,403,404,409,413,415,422]) {
-        const h = harness(), m = mission(), e = step('terminer_collecte'), f = form();
-        h.state.fail = Object.assign(new Error('Refus définitif'), { status });
-        await assert.rejects(h.executerAction(m, e, f));
-        assert.equal(h.cache.size, 0);
-        const first = h.calls[0].payload;
-        h.state.fail = null;
-        h.state.now += 30000;
-        f.values.poids_reel = '20';
-        await h.executerAction(m, e, f);
-        const second = h.calls[1].payload;
-        assert.notEqual(first.operation_id, second.operation_id);
-        assert.notEqual(first.survenu_le, second.survenu_le);
-        assert.equal(second.poids_reel, 20);
-    }
-});
-await test('HTTP 408/425/429/500/502/503 : tentative conservée par précaution', async () => {
-    for (const status of [408,425,429,500,502,503]) {
-        const h = harness(), m = mission(), e = step('demarrer_mission');
-        h.state.fail = Object.assign(new Error('Résultat incertain'), { status });
-        await assert.rejects(h.executerAction(m, e));
-        await assert.rejects(h.executerAction(m, e));
-        assert.deepEqual(h.calls[0], h.calls[1]);
-        assert.equal(h.cache.size, 1);
-    }
 });
 await test('isolation utilisateur/mission/collecte/action et rejet d’une enveloppe déplacée', async () => {
     const h = harness(), m = mission(), e = step('arriver_site');
@@ -167,7 +151,7 @@ await test('filtrage JSON restauré : aucun agent_id, secret, ni champ inattendu
     ].sort());
     assert.equal(h.calls[1].payload.poids_reel, 10);
 });
-await test('preuve : sept champs, retry identique, autre fichier refusé, reprise après rechargement', async () => {
+await test('preuve : payload et Blob séparés, reprise après échec du stockage', async () => {
     const h = harness(), m = mission(), e = step('avant_collecte'), f = {};
     const captureTime = new Date(h.state.now - 5000).toISOString();
     h.setPhoto(f, { fichier: photo('original'), pris_le: captureTime });
@@ -177,9 +161,10 @@ await test('preuve : sept champs, retry identique, autre fichier refusé, repris
     await assert.rejects(h.executerAction(m, e, f));
     assert.deepEqual(h.calls[0], h.calls[1]);
     assert.equal(h.calls[1].payload.pris_le, captureTime);
+    assert.equal(await h.calls[1].blob.text(), 'original');
     assert.equal(h.state.gpsCalls, 1);
     assert.deepEqual(Object.keys(h.calls[0].payload).sort(),
-        ['fichier','type_preuve','operation_id','pris_le','latitude','longitude','precision_gps'].sort());
+        ['type_preuve','operation_id','pris_le','latitude','longitude','precision_gps'].sort());
     h.setPhoto(f, { fichier: photo('autre photo'), pris_le: new Date(h.state.now).toISOString() });
     await assert.rejects(h.executerAction(m, e, f), /photo d’origine/);
     assert.equal(h.calls.length, 2);
@@ -190,20 +175,6 @@ await test('preuve : sept champs, retry identique, autre fichier refusé, repris
     await fresh.executerAction(m, e, f);
     assert.equal(fresh.calls[0].payload.operation_id, h.calls[0].payload.operation_id);
     assert.equal(fresh.calls[0].payload.pris_le, captureTime);
-});
-await test('nouvelle photo après refus définitif : nouveau fichier, UUID et date réelle', async () => {
-    const h = harness(), m = mission(), e = step('apres_collecte'), f = {};
-    h.setPhoto(f, { fichier: photo('première'), pris_le: new Date(h.state.now).toISOString() });
-    h.state.fail = Object.assign(new Error('Refus'), { status: 422 });
-    await assert.rejects(h.executerAction(m, e, f));
-    assert.equal(h.cache.size, 0);
-    h.state.now += 10000;
-    h.setPhoto(f, { fichier: photo('seconde'), pris_le: new Date(h.state.now).toISOString() });
-    h.state.fail = null;
-    await h.executerAction(m, e, f);
-    assert.notEqual(h.calls[0].payload.operation_id, h.calls[1].payload.operation_id);
-    assert.notEqual(h.calls[0].payload.pris_le, h.calls[1].payload.pris_le);
-    assert.equal(await h.calls[1].payload.fichier.text(), 'seconde');
 });
 await test('photo importée : date explicite obligatoire, lastModified jamais utilisé', async () => {
     const h = harness(), m = mission(), e = step('avant_collecte'), f = {};
@@ -274,7 +245,7 @@ await test('résultat/poids/motif : onze cas, vide et non fini refusés', async 
         else { await assert.rejects(operation); assert.equal(h.calls.length, 0); }
     }
 });
-await test('erreur POST : état exact des boutons restauré, Actualiser compris', async () => {
+await test('erreur enqueue : état exact des boutons restauré, Actualiser compris', async () => {
     const h = harness();
     h.state.fail = networkError();
     await h.lancer(mission(), step('arriver_site'));
@@ -282,20 +253,45 @@ await test('erreur POST : état exact des boutons restauré, Actualiser compris'
     assert.equal(h.refreshButton.disabled, false);
     assert.equal(h.logoutButton.disabled, false);
 });
-await test('POST réussi + GET échoué : succès/avertissement, UI disponible, pas de second POST', async () => {
-    const h = harness(), m = mission(), e = step('demarrer_mission');
-    h.state.refreshError = new Error('Erreur refresh');
-    await h.lancer(m, e);
-    assert.equal(h.state.refreshCalls, 1);
+await test('enregistrement local : aucun POST/GET, tentative effacée après enqueue, sync demandée', async () => {
+    const h = harness();
+    await h.lancer(mission(), step('demarrer_mission'));
+    assert.equal(h.queued.length, 1);
+    assert.equal(h.cache.size, 0);
+    assert.equal(h.state.refreshCalls, 0);
+    assert.equal(h.state.syncCalls, 1);
+    assert.match(h.messages.at(-1).message, /En attente de synchronisation/);
     assert.deepEqual(h.controls.map(c => c.disabled), [false, true]);
     assert.equal(h.refreshButton.disabled, false);
-    assert.equal(h.messages.at(-1).type, 'succes');
-    assert.match(h.messages.at(-1).message, /Actualiser/);
-    await h.lancer(m, e);
-    assert.equal(h.calls.length, 1);
-    assert.equal(h.state.refreshCalls, 2);
+    assert.equal(h.logoutButton.disabled, false);
 });
-await test('double clic neutralisé ; rechargement après succès', async () => {
+await test('actualisation hors ligne : tournée locale sans appel réseau', async () => {
+    const h = harness(); h.context.navigator.onLine = false;
+    const day = await h.chargerJournee();
+    assert.equal(day.missions.length, 0);
+    assert.equal(h.state.refreshCalls, 0);
+    assert.match(h.messages.at(-1).message, /Tournée locale/);
+});
+await test('sept actions : contexte, champs autorisés et Blob séparé transmis à enqueue', async () => {
+    for (const action of ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte',
+        'terminer_collecte', 'apres_collecte', 'terminer_mission']) {
+        const h = harness(), m = mission(), e = step(action), f = form();
+        const isPhoto = ['avant_collecte', 'apres_collecte'].includes(action);
+        if (isPhoto) h.setPhoto(f, { fichier: photo('pixels'), pris_le: new Date(h.state.now).toISOString() });
+        await h.executerAction(m, e, f);
+        const row = h.queued[0];
+        assert.equal(row.context.action, action);
+        assert.equal(row.context.mission, m.id);
+        assert.equal(row.context.collecte, e.collecte?.id || null);
+        const keys = ['operation_id', 'latitude', 'longitude', 'precision_gps', isPhoto ? 'pris_le' : 'survenu_le'];
+        if (isPhoto) keys.push('type_preuve');
+        if (action === 'terminer_collecte') keys.push('poids_reel', 'resultat_terrain', 'motif_terrain');
+        assert.deepEqual(Object.keys(row.payload).sort(), keys.sort());
+        assert.equal(row.blob instanceof Blob, isPhoto);
+        assert.equal(h.cache.size, 0);
+    }
+});
+await test('double clic neutralisé pendant enqueue ; synchronisation après succès', async () => {
     const h = harness(), m = mission();
     let release;
     h.state.pendingRequest = new Promise(resolve => { release = resolve; });
@@ -308,7 +304,8 @@ await test('double clic neutralisé ; rechargement après succès', async () => 
     assert.equal(h.calls.length, 1);
     release();
     await first;
-    assert.equal(h.state.refreshCalls, 1);
+    assert.equal(h.state.refreshCalls, 0);
+    assert.equal(h.state.syncCalls, 1);
 });
 await test('CSS ajouté : absence des + parasites et propriétés valides', async () => {
     const added = css.slice(css.indexOf('.saisie-terrain {'));

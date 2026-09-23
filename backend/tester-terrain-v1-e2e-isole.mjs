@@ -1,10 +1,13 @@
 /**
  * E2E API Terrain isolé. Ne modifie ni le code de l'application ni les anciens tests.
+ * Mode queue réelle : ajouter --offline (Playwright requis, voir terrain-offline-e2e-browser.mjs).
+ * TERRAIN_E2E_OUTPUT permet de placer le rapport hors dépôt ; aucun identifiant agent ni secret dans le rapport.
  * Usage : node backend/tester-terrain-v1-e2e-isole.mjs C:\ProRecup
  * Nécessite l'accès réseau à la base et au Storage configurés dans backend/.env.
  * Le GPS est une donnée synthétique explicite du test, pas une mesure d'appareil.
  */
 import fs from 'node:fs';
+import { readWithRetry } from './terrain-e2e-read-retry.mjs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -12,13 +15,14 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
 
 const repo = path.resolve(process.argv[2] || 'C:\\ProRecup');
+const offlineMode = process.argv.includes('--offline');
 const backend = path.join(repo, 'backend');
 const require = createRequire(path.join(backend, 'package.json'));
 const dotenv = require('dotenv');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 dotenv.config({ path: path.join(backend, '.env'), quiet: true });
-const output = path.dirname(fileURLToPath(import.meta.url));
+const output = process.env.TERRAIN_E2E_OUTPUT || path.dirname(fileURLToPath(import.meta.url));
 const runId = randomUUID();
 const reportPath = path.join(output, 'terrain-e2e-resultat-' + runId + '.json');
 const ids = Object.fromEntries(['org','user','agent','tricycle','client','site','collecte','mission','association'].map(k => [k, randomUUID()]));
@@ -28,12 +32,35 @@ const steps = [];
 const plannedSteps = ['préconditions', 'fixtures', 'connexion Terrain', 'démarrer mission', 'arrivée',
     'démarrer collecte', 'preuve avant', 'terminer collecte', 'preuve après', 'terminer mission',
     'état PostgreSQL final', 'nettoyage'];
-const report = { runId, ids, steps, syntheticGps: true, status: 'EN_COURS' };
+const report = { runId, mode: offlineMode ? 'offline-browser' : 'api', steps, syntheticGps: true, status: 'EN_COURS' };
 const gps = { latitude: -4.321, longitude: 15.312, precision_gps: 5 };
 const email = 'terrain-e2e-' + runId + '@example.invalid';
 const password = randomBytes(32).toString('base64url');
 const label = 'terrain-e2e-' + runId;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 10000, max: 3 });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 30000, max: 3 });
+// Dedicated test-only read pool: no mutation can execute here, even through a SELECT function.
+// Per attempt: 15s connection, 20s server statement, 25s client query timeout.
+// Three attempts + 1s/2s backoff: at most about 123s per validation read.
+const validationPool = new Pool({ connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }, max: 1, connectionTimeoutMillis: 15000,
+    statement_timeout: 20000, query_timeout: 25000,
+    options: '-c default_transaction_read_only=on' });
+report.readRetries = [];
+validationPool.on('error', error => {
+    report.readRetries.push({ step: currentStep, idleConnection: true, code: error.code || 'IDLE_CONNECTION_ERROR' });
+});
+async function finalRead(sql, values = []) {
+    return readWithRetry(validationPool, sql, values, { onRetry: detail => {
+        report.readRetries.push({ step: currentStep, ...detail });
+        console.log('Reprise lecture PostgreSQL — ' + currentStep + ' — tentative ' + detail.nextAttempt + '/3');
+        save();
+    } });
+}
+async function finalOne(sql, values = []) {
+    const result = await finalRead(sql, values);
+    assert.equal(result.rows.length, 1, 'Une ligne PostgreSQL attendue.');
+    return result.rows[0];
+}
 let fixtureAttempted = false;
 let fixtureCommitted = false;
 let server;
@@ -42,6 +69,7 @@ let origin;
 let token;
 let currentStep;
 let config;
+let offlineBrowser;
 
 function save() {
     report.operationIds = [...operations.values()].map(o => o.operation_id);
@@ -51,8 +79,8 @@ function save() {
 function safeError(error) {
     // Never log raw HTTP requests, tokens, connection strings or signed URLs.
     return { name: error.name, code: error.code || error.cause?.code || null,
-        message: error.code === 'EACCES' ? 'Accès réseau refusé (EACCES).' :
-            String(error.message || 'Échec sans message').replace(/https?:\/\/\S+/g, '[URL masquée]') };
+        location: String(error.stack || '').split('\n').filter(line => /^\s+at /.test(line)).slice(0, 2),
+        message: 'Échec de validation à l’étape : ' + currentStep };
 }
 async function step(name, fn) {
     currentStep = name;
@@ -110,9 +138,9 @@ async function refresh(expectedAction) {
 }
 const missionBase = () => '/api/terrain/missions/' + ids.mission;
 const collecteBase = () => missionBase() + '/collectes/' + ids.collecte;
-async function eventAction(name, suffix, eventType, extra, nextAction) {
+async function eventAction(name, suffix, eventType, extra, nextAction, queuedPayload) {
     return step(name, async () => {
-        const payload = { operation_id: randomUUID(), survenu_le: new Date().toISOString(), ...gps, ...extra };
+        const payload = queuedPayload || { operation_id: randomUUID(), survenu_le: new Date().toISOString(), ...gps, ...extra };
         operations.set(name, payload);
         save();
         assert.equal('agent_id' in payload, false);
@@ -135,9 +163,9 @@ async function eventAction(name, suffix, eventType, extra, nextAction) {
 }
 // A real tiny PNG fixture; both proof records are independent even with the same pixels.
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64');
-async function proofAction(name, type, nextAction) {
+async function proofAction(name, type, nextAction, queuedPayload, queuedBody) {
     return step(name, async () => {
-        const payload = { operation_id: randomUUID(), pris_le: new Date().toISOString(), type_preuve: type, ...gps };
+        const payload = queuedPayload || { operation_id: randomUUID(), pris_le: new Date().toISOString(), type_preuve: type, ...gps };
         operations.set(name, payload);
         const objectPath = [ids.org, ids.mission, ids.collecte, type, payload.operation_id + '.png'].join('/');
         storagePaths.add(objectPath); // register before upload, including uncertain responses
@@ -148,9 +176,9 @@ async function proofAction(name, type, nextAction) {
             form.append('fichier', new Blob([png], { type: 'image/png' }), 'preuve-e2e.png');
             return form;
         }
-        const first = await api('POST', collecteBase() + '/preuves', body());
+        const first = await api('POST', collecteBase() + '/preuves', queuedBody || body());
         assert.equal(first.data.deja_traitee, false);
-        const repeat = await api('POST', collecteBase() + '/preuves', body());
+        const repeat = await api('POST', collecteBase() + '/preuves', queuedBody || body());
         assert.equal(repeat.data.deja_traitee, true);
         assert.equal(first.data.preuve.id, repeat.data.preuve.id);
         const proof = await one('SELECT * FROM preuves_collecte WHERE operation_id=$1', [payload.operation_id]);
@@ -263,7 +291,7 @@ async function cleanup() {
         ['mission_evenements','mission_id',ids.mission], ['preuves_collecte','mission_id',ids.mission]
     ];
     for (const [table, key, id] of checks) {
-        const result = await one('SELECT count(*)::int AS n FROM ' + table + ' WHERE ' + key + '=$1', [id]);
+        const result = await finalOne('SELECT count(*)::int AS n FROM ' + table + ' WHERE ' + key + '=$1', [id]);
         assert.equal(result.n, 0, 'Données temporaires restantes dans ' + table);
     }
     return { deletedRows, remainingFixtureRows: 0, remainingStorageObjects: 0 };
@@ -272,6 +300,10 @@ async function cleanup() {
 save();
 try {
     await step('préconditions', async () => {
+        if (offlineMode) {
+            const { openOfflineBrowser } = await import('./terrain-offline-e2e-browser.mjs');
+            offlineBrowser = await openOfflineBrowser(repo);
+        }
         assert.ok(process.env.DATABASE_URL, 'DATABASE_URL requise.');
         await pool.query('SELECT 1');
         assert.ok(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY && process.env.SUPABASE_STORAGE_BUCKET,
@@ -299,6 +331,45 @@ try {
         await refresh('demarrer_mission');
         return { loginHttp: 200, terrainMeHttp: 200, realJwt: true };
     });
+    if (offlineMode) {
+        await step('queue offline, reload et synchronisation', async () => {
+            const specs = [
+                ['démarrer mission', 'demarrer_mission', 'mission_demarree', 'arriver_site', missionBase() + '/demarrer'],
+                ['arrivée', 'arriver_site', 'arrivee_site', 'demarrer_collecte', collecteBase() + '/arrivee'],
+                ['démarrer collecte', 'demarrer_collecte', 'collecte_demarree', 'terminer_collecte', collecteBase() + '/demarrer'],
+                ['preuve avant', 'avant_collecte', null, 'terminer_collecte', collecteBase() + '/preuves'],
+                ['terminer collecte', 'terminer_collecte', 'collecte_terminee', 'terminer_mission', collecteBase() + '/terminer'],
+                ['preuve après', 'apres_collecte', null, 'terminer_mission', collecteBase() + '/preuves'],
+                ['terminer mission', 'terminer_mission', 'mission_terminee', 'aucune', missionBase() + '/terminer']
+            ];
+            const entries = specs.map(([name, action, event, next, suffix]) => {
+                const photo = !event;
+                const payload = { operation_id: randomUUID(),
+                    [photo ? 'pris_le' : 'survenu_le']: new Date().toISOString(), ...gps,
+                    ...(photo ? { type_preuve: action } : {}),
+                    ...(action === 'terminer_collecte' ? { resultat_terrain: 'collectee', poids_reel: 12.5, motif_terrain: null } : {}) };
+                operations.set(name, payload);
+                return { name, event, next, suffix, photo, payload, url: suffix.slice(4),
+                    context: { action, mission: ids.mission, collecte: action.includes('mission') ? null : ids.collecte } };
+            });
+            const day = (await api('GET', '/api/terrain/journee')).data;
+            return offlineBrowser.run({ entries, day, png,
+                checkOffline: async () => {
+                    for (const table of ['mission_evenements', 'preuves_collecte'])
+                        assert.equal((await one('SELECT count(*)::int AS n FROM ' + table + ' WHERE mission_id=$1', [ids.mission])).n, 0);
+                    assert.equal((await one('SELECT statut FROM missions WHERE id=$1', [ids.mission])).statut, 'planifiee');
+                },
+                send: async (entry, body) => {
+                    if (entry.photo) await proofAction(entry.name, entry.context.action, entry.next, entry.payload, body);
+                    else await eventAction(entry.name, entry.suffix, entry.event, {}, entry.next, body);
+                    if (entry.context.action === 'demarrer_mission') {
+                        assert.equal((await one('SELECT statut FROM missions WHERE id=$1', [ids.mission])).statut, 'en_cours');
+                        assert.equal((await one('SELECT disponible FROM agents WHERE id=$1', [ids.agent])).disponible, false);
+                    }
+                }
+            });
+        });
+    } else {
     await eventAction('démarrer mission', missionBase() + '/demarrer', 'mission_demarree', {}, 'arriver_site');
     const started = await one('SELECT statut FROM missions WHERE id=$1', [ids.mission]);
     assert.equal(started.statut, 'en_cours');
@@ -311,32 +382,62 @@ try {
         { resultat_terrain: 'collectee', poids_reel: 12.5, motif_terrain: null }, 'terminer_mission');
     await proofAction('preuve après', 'apres_collecte', 'terminer_mission');
     await eventAction('terminer mission', missionBase() + '/terminer', 'mission_terminee', {}, 'aucune');
+    }
     await step('état PostgreSQL final', async () => {
-        const mission = await one('SELECT * FROM missions WHERE id=$1', [ids.mission]);
+        const mission = await finalOne('SELECT * FROM missions WHERE id=$1', [ids.mission]);
         assert.equal(mission.statut, 'terminee');
         assert.equal(new Date(mission.heure_depart_reelle).toISOString(), operations.get('démarrer mission').survenu_le);
         assert.equal(new Date(mission.heure_retour_reelle).toISOString(), operations.get('terminer mission').survenu_le);
-        const collecte = await one('SELECT * FROM collectes WHERE id=$1', [ids.collecte]);
+        const collecte = await finalOne('SELECT * FROM collectes WHERE id=$1', [ids.collecte]);
         assert.equal(collecte.resultat_terrain, 'collectee');
         assert.equal(Number(collecte.poids_reel), 12.5);
         assert.equal(collecte.poids_reel_saisi_par, ids.user);
-        const agent = await one('SELECT disponible FROM agents WHERE id=$1', [ids.agent]);
+        const agent = await finalOne('SELECT disponible FROM agents WHERE id=$1', [ids.agent]);
         assert.equal(agent.disponible, true);
-        const tricycle = await one('SELECT statut FROM tricycles WHERE id=$1', [ids.tricycle]);
+        const tricycle = await finalOne('SELECT statut FROM tricycles WHERE id=$1', [ids.tricycle]);
         assert.equal(tricycle.statut, 'disponible');
-        const events = await one('SELECT count(*)::int AS n FROM mission_evenements WHERE mission_id=$1', [ids.mission]);
-        const proofs = await one('SELECT count(*)::int AS n FROM preuves_collecte WHERE mission_id=$1', [ids.mission]);
+        const events = await finalOne('SELECT count(*)::int AS n FROM mission_evenements WHERE mission_id=$1', [ids.mission]);
+        const proofs = await finalOne('SELECT count(*)::int AS n FROM preuves_collecte WHERE mission_id=$1', [ids.mission]);
         assert.equal(events.n, 5);
         assert.equal(proofs.n, 2);
         assert.equal(new Set([...operations.values()].map(o => o.operation_id)).size, 7);
-        return { mission: 'terminee', poids: 12.5, events: 5, proofs: 2, uniqueOperationIds: 7, agentAvailable: true, tricycleAvailable: true };
+        const eventRows = (await finalRead('SELECT operation_id, type_evenement FROM mission_evenements WHERE mission_id=$1', [ids.mission])).rows;
+        const expectedEvents = [
+            ['démarrer mission', 'mission_demarree'], ['arrivée', 'arrivee_site'],
+            ['démarrer collecte', 'collecte_demarree'], ['terminer collecte', 'collecte_terminee'],
+            ['terminer mission', 'mission_terminee']
+        ].map(([name, type]) => ({ operation_id: operations.get(name).operation_id, type_evenement: type }));
+        const byOperation = rows => [...rows].sort((a,b) => a.operation_id.localeCompare(b.operation_id));
+        assert.deepEqual(byOperation(eventRows), byOperation(expectedEvents));
+        const proofRows = (await finalRead('SELECT operation_id, type_preuve, storage_path FROM preuves_collecte WHERE mission_id=$1', [ids.mission])).rows;
+        const expectedProofs = [['preuve avant', 'avant_collecte'], ['preuve après', 'apres_collecte']].map(([name, type]) => {
+            const operation_id = operations.get(name).operation_id;
+            return { operation_id, type_preuve: type,
+                storage_path: [ids.org, ids.mission, ids.collecte, type, operation_id + '.png'].join('/') };
+        });
+        assert.deepEqual(byOperation(proofRows), byOperation(expectedProofs));
+        for (const proof of proofRows) {
+            const slash = proof.storage_path.lastIndexOf('/');
+            const listing = await storage('POST', '/object/list/' + encodeURIComponent(config.bucket),
+                { prefix: proof.storage_path.slice(0, slash), limit: 100 });
+            assert.equal(listing.length, 1);
+            assert.equal(listing[0].name, proof.storage_path.slice(slash + 1));
+        }
+        return { mission: 'terminee', resultat: 'collectee', poids: 12.5, events: 5, proofs: 2,
+            expectedEvents: true, uniqueOperationIds: 7, operationIdsPreservedInDatabase: true,
+            storageObjectsAtFinalCheck: 2, agentAvailable: true, tricycleAvailable: true };
     });
     report.status = 'OK';
 } catch (error) {
     report.status = currentStep === 'préconditions' ? 'BLOQUE_AVANT_CREATION' : 'ECHEC';
     report.error = safeError(error);
+    save();
     process.exitCode = 1;
 } finally {
+    if (offlineBrowser) {
+        try { await offlineBrowser.close(); }
+        catch { report.status = 'FERMETURE_NAVIGATEUR_INCOMPLETE'; process.exitCode = 1; }
+    }
     if (server) {
         server.closeIdleConnections?.();
         await new Promise(resolve => server.close(resolve));
@@ -344,6 +445,7 @@ try {
     if (appPool) await appPool.end();
     try { await step('nettoyage', cleanup); }
     catch (error) { report.status = 'NETTOYAGE_INCOMPLET'; report.cleanupError = safeError(error); process.exitCode = 1; }
+    await validationPool.end();
     await pool.end();
     for (const name of plannedSteps) if (!steps.some(s => s.name === name)) steps.push({ name, status: 'NON_EXECUTE' });
     save();

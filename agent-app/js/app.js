@@ -184,6 +184,58 @@
         };
 
 
+    let terrainStore = null;
+    let terrainOwner = null;
+    let syncTimer = null;
+    let synchronisation = null;
+    let reconnexionRequise = false;
+    const syncStatus = document.getElementById('statut-synchronisation');
+    const syncButton = document.getElementById('bouton-synchroniser');
+    const rejectButton = document.getElementById('bouton-refus');
+    const authorized = () => !reconnexionRequise && terrainOwner && auth.obtenirUtilisateur()?.id === terrainOwner &&
+        !!localStorage.getItem(window.ProRecup.config.TOKEN_KEY);
+    const updateQueueUI = async () => {
+        if (!terrainStore) return;
+        const rows = await terrainStore.list();
+        syncStatus.textContent = rows.length + ' action(s) en attente' +
+            (rows.some(r => r.statut === 'erreur') ? ' — refus à résoudre' : rows.some(r => r.statut === 'envoi') ? ' — envoi' : '');
+        syncButton.hidden = !rows.length;
+        syncButton.disabled = !rows.length || !navigator.onLine || !!synchronisation;
+        rejectButton.hidden = !rows.some(r => r.statut === 'erreur');
+    };
+    const synchroniser = async () => {
+        if (!terrainStore || !authorized() || synchronisation || actionEnCours) return;
+        clearTimeout(syncTimer);
+        const store = terrainStore;
+        const avaitDesActions = (await store.list()).length > 0;
+        synchronisation = store.sync(api, authorized, () => { updateQueueUI().catch(() => {}); });
+        try {
+            const result = await synchronisation;
+            if (result.stopped === 'auth' && navigator.onLine) {
+                reconnexionRequise = true;
+                afficherMessage(messageConnexion, 'Reconnectez-vous pour envoyer vos actions conservées sur cet appareil.', 'erreur');
+                afficherEcran(connexion);
+            } else if (result.stopped === 'erreur') {
+                afficherMessage(messageApplication, 'Une action a été refusée. La suite est conservée et bloquée. Vérifiez la tournée avant de recommencer.', 'erreur');
+            } else if (result.stopped === 'backoff' && navigator.onLine) {
+                syncTimer = setTimeout(synchroniser, Math.max(1000, result.at - Date.now()));
+            } else if (!result.stopped && avaitDesActions) {
+                afficherMessage(messageApplication, 'Synchronisation terminée. Toutes les actions ont été envoyées.', 'succes');
+            }
+            if (authorized()) afficherJournee(await store.view());
+        } catch (e) { afficherMessage(messageApplication, 'Synchronisation interrompue : ' + e.message, 'erreur'); }
+        finally { synchronisation = null; await updateQueueUI(); }
+    };
+    syncButton.addEventListener('click', synchroniser);
+    rejectButton.addEventListener('click', async () => {
+        if (synchronisation || actionEnCours || !navigator.onLine) return;
+        if (!confirm('Retirer l’action refusée et toutes les actions suivantes, y compris leurs photos ? Vous devrez les saisir à nouveau.')) return;
+        try {
+            await terrainStore.discardRejected();
+            await chargerJournee();
+            await updateQueueUI();
+        } catch (e) { afficherMessage(messageApplication, e.message, 'erreur'); }
+    });
     let journeeCourante = null;
     let actionEnCours = false;
     let chargementJournee = null;
@@ -206,6 +258,7 @@
             !item.progression?.collecte_terminee ||
             !preuvePresente(item, "apres_collecte")
         );
+        if (mission.bloquee) return { action: "aucune" };
         if (mission.statut === "planifiee") return { action: "demarrer_mission" };
         if (mission.statut !== "en_cours") return { action: "aucune" };
         if (!collecte) return { action: "terminer_mission" };
@@ -611,20 +664,30 @@
 
 
     const chargerJournee = async ({ pendantAction = false, silencieux = false } = {}) => {
-        if (actionEnCours && !pendantAction) return null;
+        if ((actionEnCours && !pendantAction) || synchronisation) return null;
         if (chargementJournee) return chargementJournee;
         if (!silencieux) masquerMessage(messageApplication);
         chargementJournee = (async () => {
             try {
+                if (!navigator.onLine) throw Object.assign(new Error('Hors ligne'), { code: 'NETWORK_ERROR' });
                 const reponse = await api.get("/terrain/journee");
                 const journee = reponse?.data || reponse;
                 listeMissions.querySelectorAll(".saisie-terrain").forEach(formulaire =>
                     fermerCameras.get(formulaire)?.());
-                afficherJournee(journee);
-                return journee;
+                await terrainStore.saveDay(journee);
+                const locale = await terrainStore.view();
+                afficherJournee(locale);
+                return locale;
             } catch (erreur) {
+                if (terrainStore && window.ProRecup.offline.retryable(erreur)) {
+                    const locale = await terrainStore.view();
+                    afficherJournee(locale);
+                    if (!silencieux) afficherMessage(messageApplication, 'Tournée locale — les nouvelles actions seront conservées sur cet appareil.', 'succes');
+                    return locale;
+                }
                 if (!silencieux) afficherMessage(messageApplication, erreur.message, "erreur");
                 if (erreur.status === 401 || erreur.status === 403) {
+                    clearTimeout(syncTimer);
                     auth.deconnexion();
                     afficherEcran(connexion);
                 }
@@ -662,7 +725,20 @@
             );
 
 
+            const owner = auth.obtenirUtilisateur()?.id;
+            reconnexionRequise = false;
+            if (terrainOwner !== owner) {
+                terrainStore?.close();
+                terrainOwner = owner;
+                // Account association stays with the existing session storage, outside IndexedDB.
+                const key = 'terrain-vault-v1:' + owner;
+                let vault = localStorage.getItem(key);
+                if (!vault) { vault = crypto.randomUUID(); localStorage.setItem(key, vault); }
+                terrainStore = await window.ProRecup.offline.open('terrain-v1-' + vault);
+            }
             await chargerJournee();
+            await updateQueueUI();
+            await synchroniser();
 
         };
 
@@ -751,6 +827,8 @@
             "click",
             function () {
 
+                if (synchronisation || actionEnCours) return;
+                clearTimeout(syncTimer);
                 auth.deconnexion();
 
                 afficherEcran(
@@ -811,7 +889,7 @@
 
             mettreAJourReseau();
 
-            chargerJournee();
+            synchroniser();
 
         }
     );
@@ -1005,33 +1083,11 @@
             tentative = enregistrerTentative(contexte, donnees, empreinte);
         }
         if (photo) fichiersTentatives.set(cle, fichier);
-        const base = "/terrain/missions/" + encodeURIComponent(contexte.mission);
-        const collecteBase = base + "/collectes/" + encodeURIComponent(contexte.collecte);
-        const payload = filtrerPayload(contexte.action, tentative.payload);
-        try {
-            if (photo) {
-                const corps = new FormData();
-                // Exactement les sept champs du contrat preuve.
-                for (const nom of ["type_preuve", "operation_id", "pris_le", "latitude", "longitude", "precision_gps"])
-                    corps.append(nom, String(payload[nom]));
-                corps.append("fichier", fichier);
-                await api.post(collecteBase + "/preuves", corps);
-            } else {
-                const chemins = { arriver_site: "arrivee", demarrer_collecte: "demarrer", terminer_collecte: "terminer" };
-                const chemin = actionsMission.includes(contexte.action)
-                    ? base + (contexte.action === "demarrer_mission" ? "/demarrer" : "/terminer")
-                    : collecteBase + "/" + chemins[contexte.action];
-                await api.post(chemin, payload);
-            }
-        } catch (erreur) {
-            if (erreurHttpDefinitive(erreur)) effacerTentative(contexte);
-            throw erreur;
-        }
-        // Empêche de renvoyer un POST si la journée n'a pas encore pu être rafraîchie.
-        actionsAcquittees.add(cle);
-        try { effacerTentative(contexte); } catch {
-            // La réponse du serveur est acquittée même si le stockage local est indisponible.
-        }
+        await terrainStore.enqueue(contexte, filtrerPayload(contexte.action, tentative.payload), fichier);
+        effacerTentative(contexte);
+        afficherJournee(await terrainStore.view());
+        await updateQueueUI();
+
     };
 
     listeMissions.addEventListener("click", async evenement => {
@@ -1063,7 +1119,7 @@
     });
 
     const lancer = async (mission, etape, formulaire) => {
-        if (actionEnCours || chargementJournee) return;
+        if (actionEnCours || chargementJournee || synchronisation) return;
         if (formulaire && preparationsPhoto.has(formulaire)) {
             afficherMessage(messageApplication, "Terminez la prise de photo avant d’enregistrer.", "erreur");
             return;
@@ -1082,12 +1138,7 @@
         try {
             await requete;
             fermerCameras.get(formulaire)?.();
-            const journee = await chargerJournee({ pendantAction: true, silencieux: true });
-            afficherMessage(messageApplication,
-                journee
-                    ? libelleEtape(etape.action) + " : enregistré."
-                    : "Action enregistrée avec succès. La tournée n’a pas pu être actualisée ; utilisez Actualiser.",
-                "succes");
+            afficherMessage(messageApplication, 'Action et photo éventuelle enregistrées sur cet appareil. En attente de synchronisation.', 'succes');
         } catch (erreur) {
             const incertaine = erreur.code === "NETWORK_ERROR" || erreur.status >= 500 ||
                 [408, 425, 429].includes(erreur.status);
@@ -1098,6 +1149,7 @@
         } finally {
             etatsInitiaux.forEach(([element, disabled]) => { element.disabled = disabled; });
             actionEnCours = false;
+            synchroniser();
         }
     };
 
@@ -1130,6 +1182,11 @@
         };
 
 
-    demarrer();
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+        navigator.serviceWorker.register('./sw.js?v=1-1').catch(() => {
+            afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
+        });
+    }
+    demarrer().catch(e => { afficherEcran(connexion); afficherMessage(messageConnexion, e.message, 'erreur'); });
 
 })();

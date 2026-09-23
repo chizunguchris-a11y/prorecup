@@ -1,6 +1,6 @@
 'use strict';
-const CACHE = 'prorecup-terrain-shell-v1-3';
-const SHELL = ['./', './index.html', './css/app.css?v=1-3', './js/config.js?v=1-3', './js/api.js?v=1-3', './js/auth.js?v=1-3', './js/offline.js?v=1-3', './js/app.js?v=1-3', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'prorecup-terrain-shell-v1-4';
+const SHELL = ['./', './index.html', './css/app.css?v=1-4', './js/config.js?v=1-4', './js/api.js?v=1-4', './js/auth.js?v=1-4', './js/offline.js?v=1-4', './js/app.js?v=1-4', './manifest.webmanifest', './icon.svg'];
 const urls = new Set(SHELL.map(p => new URL(p, self.registration.scope).href));
 self.addEventListener('install', event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

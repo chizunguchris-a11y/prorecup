@@ -15,6 +15,7 @@ import { createRequire } from 'node:module';
 const root = path.resolve(process.argv[2] || path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const source = fs.readFileSync(path.join(root, 'agent-app/js/app.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'agent-app/css/app.css'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'agent-app/index.html'), 'utf8');
 const helperCode = source.slice(source.indexOf('    let journeeCourante'), source.indexOf('    const afficherJournee ='));
 const actionCode = source.slice(source.indexOf('    const fermerSaisie ='), source.indexOf('    const demarrer ='));
 const refreshCode = source.slice(source.indexOf('    const chargerJournee ='), source.indexOf('    const entrerApplication ='));
@@ -328,5 +329,13 @@ await test('CSS ajouté : absence des + parasites et propriétés valides', asyn
         for (const declaration of added.split(/\r?\n/).filter(l => l.includes(':')))
             assert.match(declaration.trim(), /^[a-z-]+:\s*[^;{}]+;$/);
     }
+});
+await test('récupération photo : message non sensible, sélection ciblée et cache v1-4', async () => {
+    assert.match(html, /id="bouton-remplacer-preuve"/);
+    assert.match(html, /Reprenez-la ou sélectionnez une nouvelle photo pour cette action uniquement/);
+    assert.match(html, /\.\/js\/offline\.js\?v=1-4/);
+    assert.match(source, /last_error === 'BLOB_ILLISIBLE'/);
+    assert.match(source, /replaceUnreadablePhoto/);
+    assert.equal(source.includes('erreur.response?.data'), false);
 });
 console.log('\n' + passed + ' groupes réussis. Aucun accès réseau ou changement de données réelles.');

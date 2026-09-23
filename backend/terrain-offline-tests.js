@@ -88,10 +88,64 @@ document.getElementById('run').onclick = async () => {
             };
             opening.onerror = () => reject(opening.error);
         });
-        check(raw.row.statut === 'envoi' && raw.row.blob instanceof Blob && raw.meta.statut === 'en_attente' && raw.meta.retry_count === 0 && raw.meta.last_error === null && raw.meta.next_attempt_at === 0, 'double rechargement : Blob historique intact et queue_meta incohérent réparé');
+        check(raw.row.statut === 'envoi' && raw.row.blob instanceof Blob && raw.meta.statut === 'en_attente' && raw.meta.retry_count === 0 && raw.meta.last_error === null && raw.meta.next_attempt_at === 0 && raw.meta.post_initiated === false, 'double rechargement : Blob historique intact et queue_meta incohérent réparé');
         let reloadedSent = 0;
         await store.sync({ post: async () => reloadedSent++ }, () => true);
         check(reloadedSent === 1 && !(await store.list()).length, 'double rechargement : reprise réelle de la photo historique');
+        store.close();
+        store = await fresh(); await store.saveDay(day);
+        const brokenPhoto = payload('avant_collecte');
+        await store.enqueue(context('avant_collecte'), brokenPhoto, new Blob(['ancien-blob'], { type: 'image/jpeg' }));
+        await store.enqueue(context('terminer_collecte'), payload('terminer_collecte'));
+        store.close();
+        store = await O.open(names.at(-1));
+        const originalArrayBuffer = Blob.prototype.arrayBuffer;
+        let unreadableReads = 1, unreadablePosts = 0;
+        Blob.prototype.arrayBuffer = function () {
+            if (unreadableReads-- > 0) return Promise.reject(new Error('WebKit Blob read failure'));
+            return originalArrayBuffer.call(this);
+        };
+        let unreadableResult;
+        try {
+            unreadableResult = await store.sync({ post: async () => unreadablePosts++ }, () => true);
+        } finally {
+            Blob.prototype.arrayBuffer = originalArrayBuffer;
+        }
+        let brokenRows = await store.list();
+        check(unreadableResult.stopped === 'recuperation' && unreadablePosts === 0 && brokenRows.length === 2 && brokenRows[0].statut === 'recuperation' && brokenRows[0].last_error === 'BLOB_ILLISIBLE' && brokenRows[0].post_initiated === false, 'Blob historique illisible : aucun POST et récupération requise');
+        await store.sync({ post: async () => unreadablePosts++ }, () => true);
+        check(unreadablePosts === 0 && (await store.list()).length === 2, 'Blob illisible : file et action suivante bloquées sans boucle');
+        store.close();
+        store = await O.open(names.at(-1));
+        store.close();
+        store = await O.open(names.at(-1));
+        brokenRows = await store.list();
+        check(brokenRows[0].statut === 'recuperation' && brokenRows[0].operation_id === brokenPhoto.operation_id, 'double rechargement : récupération et operation_id conservés');
+        const replacementDate = '2026-09-22T11:00:00.000Z';
+        const replaced = await store.replaceUnreadablePhoto(new Blob(['nouvelle-photo'], { type: 'image/jpeg' }), replacementDate);
+        brokenRows = await store.list();
+        check(replaced.operation_id === brokenPhoto.operation_id && brokenRows[0].payload.pris_le === replacementDate && await brokenRows[0].blob.text() === 'nouvelle-photo' && brokenRows[0].statut === 'en_attente', 'remplacement ciblé : données métier et operation_id sûr conservés');
+        const recoveryOrder = [];
+        await store.sync({ post: async (url, body) => recoveryOrder.push({ url, body }) }, () => true);
+        check(recoveryOrder.length === 2 && recoveryOrder[0].url.endsWith('/preuves') && recoveryOrder[1].url.endsWith('/terminer') && !(await store.list()).length, 'remplacement, reprise upload puis action suivante dans l’ordre');
+        store.close();
+        store = await fresh();
+        await store.enqueue(context('avant_collecte'), payload('avant_collecte'), new Blob(['preuve-incertaine'], { type: 'image/jpeg' }));
+        const uncertainId = (await store.list())[0].id;
+        await new Promise((resolve, reject) => {
+            const opening = indexedDB.open(names.at(-1));
+            opening.onsuccess = () => {
+                const db = opening.result, tx = db.transaction('queue_meta', 'readwrite');
+                tx.objectStore('queue_meta').put({ statut: 'recuperation', retry_count: 1, last_error: 'BLOB_ILLISIBLE', next_attempt_at: 0, post_initiated: true }, uncertainId);
+                tx.oncomplete = () => { db.close(); resolve(); };
+                tx.onabort = () => reject(tx.error); tx.onerror = () => {};
+            };
+            opening.onerror = () => reject(opening.error);
+        });
+        let uncertainReplacementBlocked = false;
+        try { await store.replaceUnreadablePhoto(new Blob(['autre-preuve'], { type: 'image/jpeg' }), replacementDate); }
+        catch (error) { uncertainReplacementBlocked = /déjà pu commencer/.test(error.message); }
+        check(uncertainReplacementBlocked && (await store.list())[0].operation_id !== null, 'POST déjà initié : remplacement local refusé, aucune nouvelle operation_id');
         store.close();
         for (const error of [{ code: 'NETWORK_ERROR' }, { status: 500 }, { status: 408 }, { status: 425 }, { status: 429 }, { status: 400 }, { status: 401 }, { status: 403 }]) {
             store = await fresh(); await store.saveDay(day);
@@ -123,6 +177,17 @@ document.getElementById('run').onclick = async () => {
             }
             store.close();
         }
+        store = await fresh();
+        await store.enqueue(context('demarrer_mission'), payload('demarrer_mission'));
+        let forcedCalls = 0;
+        const failNetwork = async () => { forcedCalls++; throw { code: 'NETWORK_ERROR' }; };
+        await store.sync({ post: failNetwork }, () => true);
+        await store.sync({ post: failNetwork }, () => true);
+        check(forcedCalls === 1, 'backoff normal : aucune tentative immédiate supplémentaire');
+        const forced = await store.sync({ post: failNetwork }, () => true, () => {}, { forceBackoff: true });
+        await store.sync({ post: failNetwork }, () => true);
+        check(forcedCalls === 2 && forced.stopped === 'backoff', 'synchronisation manuelle : backoff ignoré pour une seule tentative');
+        store.close();
         store = await fresh();
         Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
         await store.enqueue(context('demarrer_mission'), payload('demarrer_mission'));
@@ -182,7 +247,7 @@ document.getElementById('reload-test').onclick = async () => {
 })().catch(e => { document.getElementById('result').textContent = 'FAIL ' + e.message; });
 document.getElementById('cache-test').onclick = async () => {
     try {
-        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-3', { scope: '/agent-app/' });
+        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-4', { scope: '/agent-app/' });
         const worker = reg.installing || reg.waiting;
         if (worker && !['installed', 'activated'].includes(worker.state)) {
             await new Promise((resolve, reject) => {
@@ -193,7 +258,7 @@ document.getElementById('cache-test').onclick = async () => {
                 });
             });
         }
-        const cache = await caches.open('prorecup-terrain-shell-v1-3');
+        const cache = await caches.open('prorecup-terrain-shell-v1-4');
         const urls = (await cache.keys()).map(r => r.url);
         document.getElementById('result').textContent = urls.length === 10 && !urls.some(u => u.includes('/api/')) ? 'PASS 10 fichiers du shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.' : 'FAIL cache : ' + urls.join(', ');
     } catch (e) { document.getElementById('result').textContent = 'FAIL ' + e.message; }

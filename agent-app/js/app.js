@@ -192,6 +192,9 @@
     const syncStatus = document.getElementById('statut-synchronisation');
     const syncButton = document.getElementById('bouton-synchroniser');
     const rejectButton = document.getElementById('bouton-refus');
+    const replaceProofButton = document.getElementById('bouton-remplacer-preuve');
+    const replaceProofForm = document.getElementById('remplacement-preuve');
+    const cancelReplaceProof = document.getElementById('annuler-remplacement-preuve');
     const authorized = () => !reconnexionRequise && terrainOwner && auth.obtenirUtilisateur()?.id === terrainOwner &&
         !!localStorage.getItem(window.ProRecup.config.TOKEN_KEY);
     const updateQueueUI = async () => {
@@ -199,20 +202,26 @@
         const rows = await terrainStore.list();
         const first = rows[0];
         const firstType = first && ({ avant_collecte: 'photo avant collecte', apres_collecte: 'photo après collecte' }[first.type] || 'action ' + first.type.replaceAll('_', ' '));
-        const firstState = first && (first.statut === 'erreur' ? 'refusée' : first.statut === 'envoi' ? 'envoi en cours' :
-            first.last_error === 'RECONNEXION' ? 'reconnexion requise' : first.last_error === 'RESEAU_OU_SERVEUR' ? 'nouvel essai prévu' : 'prête');
+        const firstState = first && (first.last_error === 'BLOB_ILLISIBLE' ?
+            first.post_initiated ? 'preuve locale illisible, vérification requise avant remplacement' : 'preuve locale illisible, remplacement requis' :
+            first.statut === 'erreur' ? 'refusée' : first.statut === 'envoi' ? 'envoi en cours' :
+            first.last_error === 'RECONNEXION' ? 'reconnexion requise' : first.last_error === 'UPLOAD_RESEAU' ? 'réseau indisponible, nouvel essai prévu' :
+            ['ERREUR_SERVEUR', 'RESEAU_OU_SERVEUR'].includes(first.last_error) ? 'serveur indisponible, nouvel essai prévu' :
+            first.next_attempt_at > Date.now() ? 'nouvel essai différé' : 'prête');
         syncStatus.textContent = rows.length + ' action(s) en attente' +
             (first ? ' — première : ' + firstType + ', ' + firstState : '');
         syncButton.hidden = !rows.length;
-        syncButton.disabled = !rows.length || !navigator.onLine || !!synchronisation;
+        syncButton.disabled = !rows.length || !navigator.onLine || !!synchronisation || first?.statut === 'recuperation';
+        replaceProofButton.hidden = first?.statut !== 'recuperation' || first?.last_error !== 'BLOB_ILLISIBLE' || first?.post_initiated === true;
+        if (first?.statut !== 'recuperation') replaceProofForm.hidden = true;
         rejectButton.hidden = !rows.some(r => r.statut === 'erreur');
     };
-    const synchroniser = async () => {
+    const synchroniser = async ({ forceBackoff = false } = {}) => {
         if (!terrainStore || !authorized() || synchronisation || actionEnCours) return;
         clearTimeout(syncTimer);
         const store = terrainStore;
         const avaitDesActions = (await store.list()).length > 0;
-        synchronisation = store.sync(api, authorized, () => { updateQueueUI().catch(() => {}); });
+        synchronisation = store.sync(api, authorized, () => { updateQueueUI().catch(() => {}); }, { forceBackoff });
         try {
             const result = await synchronisation;
             if (result.stopped === 'auth' && navigator.onLine) {
@@ -221,6 +230,10 @@
                 afficherEcran(connexion);
             } else if (result.stopped === 'erreur') {
                 afficherMessage(messageApplication, 'Une action a été refusée. La suite est conservée et bloquée. Vérifiez la tournée avant de recommencer.', 'erreur');
+            } else if (result.stopped === 'recuperation') {
+                afficherMessage(messageApplication, result.replacementAllowed
+                    ? 'La preuve photo locale est illisible. Remplacez uniquement cette photo pour reprendre la synchronisation.'
+                    : 'La preuve photo locale est illisible, mais un envoi a déjà pu commencer. Faites vérifier cette preuve avant tout remplacement.', 'erreur');
             } else if (result.stopped === 'backoff' && navigator.onLine) {
                 syncTimer = setTimeout(synchroniser, Math.max(1000, result.at - Date.now()));
             } else if (!result.stopped && avaitDesActions) {
@@ -230,7 +243,41 @@
         } catch (e) { afficherMessage(messageApplication, 'Synchronisation interrompue : ' + e.message, 'erreur'); }
         finally { synchronisation = null; await updateQueueUI(); }
     };
-    syncButton.addEventListener('click', synchroniser);
+    syncButton.addEventListener('click', () => synchroniser({ forceBackoff: true }));
+    replaceProofButton.addEventListener('click', () => {
+        replaceProofForm.hidden = false;
+        replaceProofForm.querySelector('[name="fichier-remplacement"]').click();
+    });
+    cancelReplaceProof.addEventListener('click', () => {
+        replaceProofForm.reset();
+        replaceProofForm.hidden = true;
+    });
+    replaceProofForm.querySelector('[name="fichier-remplacement"]').addEventListener('change', () => {
+        const date = replaceProofForm.querySelector('[name="pris-le-remplacement"]');
+        if (!date.value) {
+            const now = new Date();
+            date.value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+        }
+    });
+    replaceProofForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!terrainStore || synchronisation || actionEnCours) return;
+        const file = replaceProofForm.querySelector('[name="fichier-remplacement"]').files?.[0];
+        const localDate = replaceProofForm.querySelector('[name="pris-le-remplacement"]').value;
+        try {
+            validerPhoto(file);
+            const instant = new Date(localDate);
+            if (!Number.isFinite(instant.getTime())) throw new Error('Indiquez la date et l’heure réelles de prise de la photo.');
+            await terrainStore.replaceUnreadablePhoto(file, instant.toISOString());
+            replaceProofForm.reset();
+            replaceProofForm.hidden = true;
+            afficherMessage(messageApplication, 'Nouvelle preuve enregistrée. La synchronisation reprend.', 'succes');
+            await updateQueueUI();
+            await synchroniser({ forceBackoff: true });
+        } catch (e) {
+            afficherMessage(messageApplication, e.message, 'erreur');
+        }
+    });
     rejectButton.addEventListener('click', async () => {
         if (synchronisation || actionEnCours || !navigator.onLine) return;
         if (!confirm('Retirer l’action refusée et toutes les actions suivantes, y compris leurs photos ? Vous devrez les saisir à nouveau.')) return;
@@ -1187,7 +1234,7 @@
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-3').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-4').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

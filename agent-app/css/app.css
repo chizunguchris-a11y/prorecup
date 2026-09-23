@@ -952,3 +952,34 @@ input:focus {
     min-height: 44px;
     padding: 10px;
 }
+
+.remplacement-preuve {
+    flex: 1 0 100%;
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    background: #fff7ed;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+}
+
+.remplacement-preuve[hidden] {
+    display: none;
+}
+
+.remplacement-preuve p {
+    margin: 0;
+}
+
+.remplacement-preuve label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.remplacement-preuve input {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px;
+    font: inherit;
+}

@@ -4,6 +4,7 @@
     const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
     const photo = type => ['avant_collecte', 'apres_collecte'].includes(type);
     const retryable = e => e.code === 'NETWORK_ERROR' || [408, 425, 429].includes(e.status) || e.status >= 500;
+    const safeErrors = ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'UPLOAD_RESEAU', 'ERREUR_SERVEUR', 'REFUS_DEFINITIF', 'BLOB_ILLISIBLE'];
     const request = r => new Promise((resolve, reject) => {
         r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error);
     });
@@ -30,10 +31,17 @@
         if (!(blob instanceof Blob) || !blob.size || blob.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) throw new Error('Photo invalide : JPEG, PNG ou WebP, 5 Mo maximum.');
     }
     async function freshBlob(blob) {
-        validateBlob(blob);
-        const copy = new Blob([await blob.arrayBuffer()], { type: blob.type });
-        validateBlob(copy);
-        return copy;
+        try {
+            validateBlob(blob);
+            const copy = new Blob([await blob.arrayBuffer()], { type: blob.type });
+            validateBlob(copy);
+            return copy;
+        } catch (cause) {
+            const error = new Error('La preuve photo locale est illisible.');
+            error.code = 'BLOB_ILLISIBLE';
+            error.cause = cause;
+            throw error;
+        }
     }
     // Explicit allowlist: never store the authenticated API response as a whole.
     function snapshot(day) {
@@ -92,8 +100,9 @@
                     meta.put({
                         statut: row.statut === 'erreur' ? 'erreur' : 'en_attente',
                         retry_count: Number.isSafeInteger(row.retry_count) && row.retry_count >= 0 ? row.retry_count : 0,
-                        last_error: ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'REFUS_DEFINITIF'].includes(row.last_error) ? row.last_error : null,
-                        next_attempt_at: Number.isFinite(row.next_attempt_at) && row.next_attempt_at > 0 ? row.next_attempt_at : 0
+                        last_error: safeErrors.includes(row.last_error) ? row.last_error : null,
+                        next_attempt_at: Number.isFinite(row.next_attempt_at) && row.next_attempt_at > 0 ? row.next_attempt_at : 0,
+                        post_initiated: row.post_initiated === true
                     }, row.id);
                     cursor.result.continue();
                 };
@@ -107,15 +116,17 @@
             try { const value = await fn(tx); await done; return value; }
             catch (e) { try { tx.abort(); } catch {} await done.catch(() => {}); throw e; }
         };
-        const metadata = row => ({ statut: row.statut, retry_count: row.retry_count, last_error: row.last_error, next_attempt_at: row.next_attempt_at });
+        const metadata = row => ({ statut: row.statut, retry_count: row.retry_count, last_error: row.last_error, next_attempt_at: row.next_attempt_at, post_initiated: row.post_initiated === true });
         const safeMetadata = (row, meta, interrupted = false) => {
             const source = meta || row || {};
             const rejected = source.statut === 'erreur';
+            const recovery = source.statut === 'recuperation' || source.last_error === 'BLOB_ILLISIBLE';
             return {
-                statut: rejected ? 'erreur' : interrupted || source.statut !== 'envoi' ? 'en_attente' : 'envoi',
+                statut: recovery ? 'recuperation' : rejected ? 'erreur' : interrupted || source.statut !== 'envoi' ? 'en_attente' : 'envoi',
                 retry_count: Number.isSafeInteger(source.retry_count) && source.retry_count >= 0 ? source.retry_count : 0,
-                last_error: ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'REFUS_DEFINITIF'].includes(source.last_error) ? source.last_error : null,
-                next_attempt_at: Number.isFinite(source.next_attempt_at) && source.next_attempt_at > 0 ? source.next_attempt_at : 0
+                last_error: safeErrors.includes(source.last_error) ? source.last_error : null,
+                next_attempt_at: Number.isFinite(source.next_attempt_at) && source.next_attempt_at > 0 ? source.next_attempt_at : 0,
+                post_initiated: source.post_initiated === true
             };
         };
         // Also repairs databases that were already opened once by v2 before this fix.
@@ -150,16 +161,16 @@
             return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
                 const q = tx.objectStore('queue');
                 const existing = await request(q.index('context').get([mission_id, collecte_id, type]));
-                if (existing) return { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, ...existing, ...((await request(tx.objectStore('queue_meta').get(existing.id))) || {}) };
+                if (existing) return { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false, ...existing, ...((await request(tx.objectStore('queue_meta').get(existing.id))) || {}) };
                 const row = { type, mission_id, collecte_id, operation_id: safe.operation_id, payload: safe, created_at: new Date().toISOString(), ...(photo(type) ? { blob: blob.slice(0, blob.size, blob.type) } : {}) };
                 row.id = await request(q.add(row));
-                const meta = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0 };
+                const meta = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false };
                 await request(tx.objectStore('queue_meta').put(meta, row.id));
                 return { ...row, ...meta };
             });
         }
         const update = row => transact(['queue_meta'], 'readwrite', tx => request(tx.objectStore('queue_meta').put(metadata(row), row.id)));
-        async function send(row, api) {
+        async function prepare(row) {
             const p = clean(row.type, row.payload);
             let url = '/terrain/missions/' + encodeURIComponent(row.mission_id);
             if (row.collecte_id) url += '/collectes/' + encodeURIComponent(row.collecte_id);
@@ -168,25 +179,41 @@
                 const form = new FormData();
                 for (const [key, value] of Object.entries(p)) form.append(key, String(value));
                 form.append('fichier', blob, 'preuve.' + ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[blob.type]);
-                return api.post(url + '/preuves', form);
+                return { url: url + '/preuves', body: form };
             }
-            return api.post(url + '/' + ({ demarrer_mission: 'demarrer', arriver_site: 'arrivee', demarrer_collecte: 'demarrer', terminer_collecte: 'terminer', terminer_mission: 'terminer' })[row.type], p);
+            return { url: url + '/' + ({ demarrer_mission: 'demarrer', arriver_site: 'arrivee', demarrer_collecte: 'demarrer', terminer_collecte: 'terminer', terminer_mission: 'terminer' })[row.type], body: p };
         }
-        function sync(api, authorized, notify = () => {}) {
+        function sync(api, authorized, notify = () => {}, options = {}) {
             if (running) return running;
             const run = async () => {
+                let forceBackoff = options.forceBackoff === true;
                 for (const row of await list()) {
                     if (!navigator.onLine || !authorized()) return { stopped: 'auth' };
                     if (row.statut === 'erreur') return { stopped: 'erreur' };
-                    if (row.next_attempt_at > Date.now()) return { stopped: 'backoff', at: row.next_attempt_at };
+                    if (row.statut === 'recuperation') return { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                    if (row.next_attempt_at > Date.now() && !forceBackoff) return { stopped: 'backoff', at: row.next_attempt_at };
+                    forceBackoff = false;
                     row.statut = 'envoi'; await update(row); notify();
-                    try { await send(row, api); }
+                    try {
+                        const prepared = await prepare(row);
+                        // This durable flag separates a local read failure from an uncertain HTTP attempt.
+                        row.post_initiated = true;
+                        await update(row);
+                        await api.post(prepared.url, prepared.body);
+                    }
                     catch (e) {
+                        if (e.code === 'BLOB_ILLISIBLE') {
+                            row.statut = 'recuperation';
+                            row.last_error = 'BLOB_ILLISIBLE';
+                            row.next_attempt_at = 0;
+                            await update(row); notify();
+                            return { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                        }
                         row.retry_count++;
                         const auth = e.status === 401 || e.status === 403;
                         row.statut = auth || retryable(e) ? 'en_attente' : 'erreur';
                         // Never persist server messages, which may contain personal data or credentials.
-                        row.last_error = auth ? 'RECONNEXION' : retryable(e) ? 'RESEAU_OU_SERVEUR' : 'REFUS_DEFINITIF';
+                        row.last_error = auth ? 'RECONNEXION' : e.code === 'NETWORK_ERROR' ? 'UPLOAD_RESEAU' : retryable(e) ? 'ERREUR_SERVEUR' : 'REFUS_DEFINITIF';
                         row.next_attempt_at = auth ? 0 : Date.now() + Math.min(300000, 2000 * 2 ** Math.min(row.retry_count - 1, 8));
                         await update(row); notify();
                         return { stopped: auth ? 'auth' : row.statut === 'erreur' ? 'erreur' : 'backoff', at: row.next_attempt_at };
@@ -213,13 +240,34 @@
             running = locked.finally(() => { running = null; });
             return running;
         }
+        const replaceUnreadablePhoto = async (blob, prisLe) => {
+            const replacement = await freshBlob(blob);
+            if (typeof prisLe !== 'string' || !Number.isFinite(Date.parse(prisLe)) || Date.parse(prisLe) > Date.now() + 5000)
+                throw new Error('Date de prise de photo invalide.');
+            return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
+                const q = tx.objectStore('queue'), metaStore = tx.objectStore('queue_meta');
+                const rows = await request(q.getAll());
+                const first = rows[0];
+                if (!first) throw new Error('Aucune preuve à remplacer.');
+                const meta = safeMetadata(first, await request(metaStore.get(first.id)));
+                if (!photo(first.type) || meta.last_error !== 'BLOB_ILLISIBLE' || meta.statut !== 'recuperation')
+                    throw new Error('Cette action ne demande pas de remplacement de photo.');
+                if (meta.post_initiated)
+                    throw new Error('Un envoi a déjà pu commencer. La preuve doit être vérifiée avant remplacement.');
+                const payload = clean(first.type, { ...first.payload, pris_le: prisLe });
+                await request(q.put({ ...first, payload, blob: replacement }));
+                const reset = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false };
+                await request(metaStore.put(reset, first.id));
+                return { ...first, payload, blob: replacement, ...reset };
+            });
+        };
         // Explicit operator recovery only: the rejected action and its dependent successors.
         const discardRejected = () => transact(['queue', 'queue_meta'], 'readwrite', async tx => {
             const q = tx.objectStore('queue'), rows = await mergedRows(tx);
             const first = rows.find(r => r.statut === 'erreur');
             if (first) for (const r of rows) if (r.id >= first.id) { q.delete(r.id); tx.objectStore('queue_meta').delete(r.id); }
         });
-        return { list, view, saveDay, enqueue, sync, discardRejected, close: () => db.close() };
+        return { list, view, saveDay, enqueue, sync, replaceUnreadablePhoto, discardRejected, close: () => db.close() };
     }
     window.ProRecup.offline = { open, clean, snapshot, project, retryable };
 })();

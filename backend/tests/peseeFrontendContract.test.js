@@ -31,4 +31,11 @@ describe("Interfaces pesée et balances", function () {
         assert.match(offlineJs, /p\.est_courante = false/);
         assert.match(offlineJs, /est_courante: true/);
     });
+
+    it("envoie l'instant terrain ISO sous survenu_le et le mappe explicitement côté API", function () {
+        const controller = lire("../src/controllers/TerrainPeseeController.js");
+        assert.match(terrainJs, /const instantAction = new Date\(\)\.toISOString\(\)/);
+        assert.match(offlineJs, /dateKey = photo\(type\) \? 'pris_le' : 'survenu_le'/);
+        assert.match(controller, /date_heure: req\.body\?\.survenu_le/);
+    });
 });

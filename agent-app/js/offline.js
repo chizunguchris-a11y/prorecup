@@ -102,7 +102,7 @@
         return result;
     }
     async function open(name) {
-        const r = indexedDB.open(name, 2);
+        const r = indexedDB.open(name, 3);
         r.onupgradeneeded = event => {
             if (!r.result.objectStoreNames.contains('queue')) {
                 const q = r.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
@@ -128,6 +128,31 @@
                         post_initiated: row.post_initiated === true
                     }, row.id);
                     cursor.result.continue();
+                };
+            }
+            // v2 envoyait déjà le bon instant ISO sous `survenu_le`, mais l'API de
+            // pesée lisait `date_heure`. Réarmer une seule fois cette action permet
+            // de reprendre le run sans modifier son UUID, son GPS ni son instant.
+            if (event.oldVersion === 2) {
+                const queue = event.target.transaction.objectStore('queue');
+                const cursor = queue.openCursor();
+                cursor.onsuccess = () => {
+                    if (!cursor.result) return;
+                    const row = cursor.result.value;
+                    if (row.type !== 'enregistrer_pesee' ||
+                        typeof row.payload?.survenu_le !== 'string' ||
+                        !Number.isFinite(Date.parse(row.payload.survenu_le))) {
+                        cursor.result.continue();
+                        return;
+                    }
+                    const current = meta.get(row.id);
+                    current.onsuccess = () => {
+                        if (current.result?.statut === 'erreur') meta.put({
+                            statut: 'en_attente', retry_count: 0, last_error: null,
+                            next_attempt_at: 0, post_initiated: false
+                        }, row.id);
+                        cursor.result.continue();
+                    };
                 };
             }
         };

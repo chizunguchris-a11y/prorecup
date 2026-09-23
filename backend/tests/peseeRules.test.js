@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { calculerEcartRelatif, calculerPoidsNet, doitSuperseder, respectePrecision }
+import { calculerEcartRelatif, calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision }
     from "../src/services/PeseeRules.js";
 
 describe("Règles de pesée V1", function () {
@@ -27,5 +27,18 @@ describe("Règles de pesée V1", function () {
         assert.equal(doitSuperseder("2026-09-23T10:01:00Z", "2026-09-23T10:00:00Z"), true);
         assert.equal(doitSuperseder("2026-09-23T10:00:00Z", "2026-09-23T10:00:00Z"), true);
         assert.equal(doitSuperseder("2026-09-23T09:59:00Z", "2026-09-23T10:00:00Z"), false);
+    });
+
+    it("normalise les instants ISO 8601 UTC et avec décalage explicite", function () {
+        assert.equal(normaliserInstantIso("2026-09-23T10:00:00.123Z"), "2026-09-23T10:00:00.123Z");
+        assert.equal(normaliserInstantIso("2026-09-23T12:00:00+02:00"), "2026-09-23T10:00:00.000Z");
+        assert.equal(normaliserInstantIso("2026-09-23T11:00:00+01:00"), "2026-09-23T10:00:00.000Z");
+    });
+
+    it("refuse un datetime-local sans fuseau et les valeurs invalides", function () {
+        assert.equal(normaliserInstantIso("2026-09-23T12:00:00"), null);
+        assert.equal(normaliserInstantIso("date-invalide"), null);
+        assert.equal(normaliserInstantIso("2026-99-99T25:00:00Z"), null);
+        assert.equal(normaliserInstantIso("2026-02-31T12:00:00Z"), null);
     });
 });

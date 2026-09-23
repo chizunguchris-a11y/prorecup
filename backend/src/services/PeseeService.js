@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 import peseeRepository from "../repositories/PeseeRepository.js";
 import ApiError from "../utils/ApiError.js";
-import { calculerPoidsNet, doitSuperseder, respectePrecision } from "./PeseeRules.js";
+import { calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision } from "./PeseeRules.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -24,8 +24,8 @@ class PeseeService {
         const precision = Number(balance.precision_kg);
         if (!respectePrecision(poidsBrut, precision) || !respectePrecision(tare, precision))
             throw new ApiError(400, `Les poids doivent respecter la précision de ${precision} kg de la balance.`);
-        const dateHeure = new Date(donnees.date_heure);
-        if (!donnees.date_heure || Number.isNaN(dateHeure.getTime()) || dateHeure.getTime() > Date.now() + 5 * 60 * 1000)
+        const dateHeure = normaliserInstantIso(donnees.date_heure);
+        if (!dateHeure || new Date(dateHeure).getTime() > Date.now() + 5 * 60 * 1000)
             throw new ApiError(400, "La date et l'heure de pesée sont invalides.");
         const latitude = donnees.latitude === undefined || donnees.latitude === null ? null : Number(donnees.latitude);
         const longitude = donnees.longitude === undefined || donnees.longitude === null ? null : Number(donnees.longitude);
@@ -37,7 +37,7 @@ class PeseeService {
             (precisionGps !== null && (!Number.isFinite(precisionGps) || precisionGps < 0)))
             throw new ApiError(400, "Les coordonnées GPS sont invalides.");
         return { poidsBrut, tare, poidsNet,
-            dateHeure: donnees.date_heure, latitude, longitude, precisionGps };
+            dateHeure, latitude, longitude, precisionGps };
     }
 
     async listerBalances(organisationId) {

@@ -31,6 +31,36 @@ document.getElementById('run').onclick = async () => {
         });
         db.close(); return { name, operation_id: p.operation_id };
     }
+    async function rejectedV2Pesee() {
+        const name = 'terrain-test-' + crypto.randomUUID(); names.push(name);
+        const p = payload('enregistrer_pesee');
+        const db = await new Promise((resolve, reject) => {
+            const opening = indexedDB.open(name, 2);
+            opening.onupgradeneeded = () => {
+                const q = opening.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
+                q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
+                q.createIndex('operation', 'operation_id', { unique: true });
+                opening.result.createObjectStore('state');
+                opening.result.createObjectStore('queue_meta');
+            };
+            opening.onsuccess = () => resolve(opening.result); opening.onerror = () => reject(opening.error);
+        });
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(['queue', 'queue_meta'], 'readwrite');
+            const add = tx.objectStore('queue').add({
+                type: 'enregistrer_pesee', mission_id: mission, collecte_id: collecte,
+                operation_id: p.operation_id, payload: O.clean('enregistrer_pesee', p),
+                created_at: new Date().toISOString()
+            });
+            add.onsuccess = () => tx.objectStore('queue_meta').put({
+                statut: 'erreur', retry_count: 1, last_error: 'REFUS_DEFINITIF',
+                next_attempt_at: 0, post_initiated: true
+            }, add.result);
+            tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); tx.onerror = () => {};
+        });
+        db.close();
+        return { name, operation_id: p.operation_id, survenu_le: p.survenu_le };
+    }
     try {
         store = await fresh(); await store.saveDay(day);
         const order = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
@@ -68,6 +98,17 @@ document.getElementById('run').onclick = async () => {
             legacySent++;
         } }, () => true);
         check(legacySent === 1 && !(await store.list()).length, 'photo version 1 en statut envoi synchronisée puis acquittée');
+        store.close();
+        const rejectedPesee = await rejectedV2Pesee();
+        store = await O.open(rejectedPesee.name);
+        const resumed = (await store.list())[0];
+        check(resumed.statut === 'en_attente' && resumed.operation_id === rejectedPesee.operation_id &&
+            resumed.payload.survenu_le === rejectedPesee.survenu_le,
+        'migration version 2 : pesée refusée réarmée avec UUID et instant inchangés');
+        let resumedBody;
+        await store.sync({ post: async (_url, body) => { resumedBody = body; } }, () => true);
+        check(resumedBody.survenu_le === rejectedPesee.survenu_le && !(await store.list()).length,
+            'pesée réarmée envoyée puis acquittée après rechargement');
         store.close();
         const legacyReload = await legacyPhoto();
         store = await O.open(legacyReload.name);

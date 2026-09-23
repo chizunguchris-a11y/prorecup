@@ -8,8 +8,9 @@ const terrainPeseeController = {
         await peseeService.listerBalances(req.agentTerrain.organisation_id)
     )),
     creer: asyncHandler(async (req, res) => {
+        const donnees = { ...(req.body || {}), date_heure: req.body?.survenu_le };
         const resultat = await peseeService.enregistrer(
-            req.params.id, req.params.collecteId, req.agentTerrain, req.body || {}, "terrain");
+            req.params.id, req.params.collecteId, req.agentTerrain, donnees, "terrain");
         return ApiResponse.success(res, resultat.deja_traitee
             ? "Cette pesée avait déjà été enregistrée."
             : "Pesée terrain enregistrée avec succès.", resultat);

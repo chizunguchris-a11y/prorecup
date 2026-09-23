@@ -19,6 +19,22 @@ export const calculerEcartRelatif = (poidsTerrain, poidsDepot, seuilPourcent = 5
     return { pourcentage, anomalie: pourcentage > seuilPourcent };
 };
 
+const INSTANT_ISO_AVEC_FUSEAU =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|([+-])(\d{2}):(\d{2}))$/;
+
+export const normaliserInstantIso = valeur => {
+    if (typeof valeur !== "string") return null;
+    const morceaux = valeur.match(INSTANT_ISO_AVEC_FUSEAU);
+    if (!morceaux) return null;
+    const [, annee, mois, jour, heure, minute, seconde, signe, heureFuseau, minuteFuseau] = morceaux;
+    const joursDansMois = new Date(Date.UTC(Number(annee), Number(mois), 0)).getUTCDate();
+    if (Number(mois) < 1 || Number(mois) > 12 || Number(jour) < 1 || Number(jour) > joursDansMois ||
+        Number(heure) > 23 || Number(minute) > 59 || Number(seconde) > 59 ||
+        (signe && (Number(heureFuseau) > 23 || Number(minuteFuseau) > 59))) return null;
+    const instant = new Date(valeur);
+    return Number.isFinite(instant.getTime()) ? instant.toISOString() : null;
+};
+
 export const doitSuperseder = (dateNouvelle, dateCourante) => {
     if (!dateCourante) return true;
     const nouvelle = new Date(dateNouvelle).getTime();

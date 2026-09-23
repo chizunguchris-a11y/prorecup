@@ -20,7 +20,7 @@ const peseeController = {
     }),
     listerBalances: asyncHandler(async (req, res) => ApiResponse.success(
         res, "Balances récupérées avec succès.",
-        await peseeService.listerBalances(organisationId(req))
+        await peseeService.listerBalances(organisationId(req), "depot")
     ))
 };
 

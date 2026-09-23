@@ -1,14 +1,17 @@
 import pool from "../config/db.js";
 
 class PeseeRepository {
-    async listerBalances(organisationId, connexion = pool) {
+    async listerBalances(organisationId, usage = null, connexion = pool) {
         const resultat = await connexion.query(`
             SELECT id, numero_interne, type, capacite_max_kg, precision_kg,
                    statut, date_calibrage, prochain_calibrage, tricycle_id, site_id
             FROM balances
             WHERE organisation_id = $1 AND statut = 'active'
+              AND ($2::text IS NULL
+                   OR ($2 = 'terrain' AND site_id IS NULL)
+                   OR ($2 = 'depot' AND tricycle_id IS NULL))
             ORDER BY numero_interne;
-        `, [organisationId]);
+        `, [organisationId, usage]);
         return resultat.rows;
     }
 

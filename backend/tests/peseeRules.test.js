@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { calculerEcartRelatif, calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision }
+import { balanceCompatibleAvecUsage, calculerEcartRelatif, calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision }
     from "../src/services/PeseeRules.js";
 
 describe("Règles de pesée V1", function () {
@@ -40,5 +40,20 @@ describe("Règles de pesée V1", function () {
         assert.equal(normaliserInstantIso("date-invalide"), null);
         assert.equal(normaliserInstantIso("2026-99-99T25:00:00Z"), null);
         assert.equal(normaliserInstantIso("2026-02-31T12:00:00Z"), null);
+    });
+
+    it("sépare les balances affectées au terrain et au dépôt", function () {
+        const contexte = { tricycle_id: "tri-1", site_id: "site-1" };
+        const terrain = { tricycle_id: "tri-1", site_id: null };
+        const depot = { tricycle_id: null, site_id: "site-1" };
+        const partagee = { tricycle_id: null, site_id: null };
+        assert.equal(balanceCompatibleAvecUsage(terrain, contexte, "terrain"), true);
+        assert.equal(balanceCompatibleAvecUsage(terrain, contexte, "depot"), false);
+        assert.equal(balanceCompatibleAvecUsage(depot, contexte, "depot"), true);
+        assert.equal(balanceCompatibleAvecUsage(depot, contexte, "terrain"), false);
+        assert.equal(balanceCompatibleAvecUsage(partagee, contexte, "terrain"), true);
+        assert.equal(balanceCompatibleAvecUsage(partagee, contexte, "depot"), true);
+        assert.equal(balanceCompatibleAvecUsage({ ...terrain, tricycle_id: "tri-2" }, contexte, "terrain"), false);
+        assert.equal(balanceCompatibleAvecUsage({ ...depot, site_id: "site-2" }, contexte, "depot"), false);
     });
 });

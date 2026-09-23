@@ -41,3 +41,12 @@ export const doitSuperseder = (dateNouvelle, dateCourante) => {
     const courante = new Date(dateCourante).getTime();
     return Number.isFinite(nouvelle) && Number.isFinite(courante) && nouvelle >= courante;
 };
+
+export const balanceCompatibleAvecUsage = (balance, contexte, type) => {
+    if (!balance || !contexte || !["terrain", "depot"].includes(type)) return false;
+    if (type === "terrain")
+        return !balance.site_id &&
+            (!balance.tricycle_id || balance.tricycle_id === contexte.tricycle_id);
+    return !balance.tricycle_id &&
+        (!balance.site_id || balance.site_id === contexte.site_id);
+};

@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 import peseeRepository from "../repositories/PeseeRepository.js";
 import ApiError from "../utils/ApiError.js";
-import { calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision } from "./PeseeRules.js";
+import { balanceCompatibleAvecUsage, calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision } from "./PeseeRules.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -40,8 +40,8 @@ class PeseeService {
             dateHeure, latitude, longitude, precisionGps };
     }
 
-    async listerBalances(organisationId) {
-        return peseeRepository.listerBalances(organisationId);
+    async listerBalances(organisationId, type) {
+        return peseeRepository.listerBalances(organisationId, type);
     }
 
     async enregistrer(missionId, collecteId, identite, donnees, type = "terrain") {
@@ -71,10 +71,10 @@ class PeseeService {
                 throw new ApiError(409, "La mission doit être en cours pour enregistrer la pesée terrain.");
             const balance = await peseeRepository.trouverBalance(donnees.balance_id, identite.organisation_id, connexion);
             if (!balance || balance.statut !== "active") throw new ApiError(409, "Cette balance n'est pas disponible.");
-            if (balance.tricycle_id && balance.tricycle_id !== contexte.tricycle_id)
-                throw new ApiError(409, "Cette balance est affectée à un autre tricycle.");
-            if (balance.site_id && balance.site_id !== contexte.site_id)
-                throw new ApiError(409, "Cette balance est affectée à un autre site.");
+            if (!balanceCompatibleAvecUsage(balance, contexte, type))
+                throw new ApiError(409, type === "terrain"
+                    ? "Cette balance n'est pas disponible pour la pesée terrain."
+                    : "Cette balance n'est pas disponible pour la pesée dépôt.");
             const valeurs = this.normaliser(donnees, balance, type);
             if (type === "terrain") {
                 if (!contexte.collecte_demarree_le)

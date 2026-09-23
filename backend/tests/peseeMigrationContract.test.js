@@ -27,4 +27,9 @@ describe("Contrat SQL pesée et re-pesée", function () {
         assert.match(finCollecte, /trouverDerniere\([\s\S]*"terrain"/);
         assert.match(finCollecte, /doit correspondre à la dernière pesée terrain/);
     });
+
+    it("filtre les balances selon l'usage terrain ou dépôt", function () {
+        assert.match(repository, /\$2 = 'terrain' AND site_id IS NULL/);
+        assert.match(repository, /\$2 = 'depot' AND tricycle_id IS NULL/);
+    });
 });

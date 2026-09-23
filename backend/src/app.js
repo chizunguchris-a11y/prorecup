@@ -67,6 +67,8 @@ import missionRoutes
     from "./routes/MissionRoutes.js";
 import terrainRoutes
     from "./routes/TerrainRoutes.js";
+import balanceRoutes
+    from "./routes/BalanceRoutes.js";
 
 import auditRoutes
     from "./routes/AuditRoutes.js";
@@ -248,6 +250,11 @@ app.use(
 app.use(
     "/api/terrain",
     terrainRoutes
+);
+
+app.use(
+    "/api/balances",
+    balanceRoutes
 );
 
 app.use(

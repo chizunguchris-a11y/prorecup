@@ -15,6 +15,9 @@ import validationMiddleware
 import collecteValidator
     from "../validators/collecteValidator.js";
 
+import peseeController
+    from "../controllers/PeseeController.js";
+
 const router = express.Router();
 
 /**
@@ -36,6 +39,26 @@ router.get(
     "/",
     authMiddleware,
     collecteController.lister
+);
+
+router.get(
+    "/balances",
+    authMiddleware,
+    roleMiddleware(["manager", "admin"]),
+    peseeController.listerBalances
+);
+
+router.post(
+    "/:id/pesees",
+    authMiddleware,
+    roleMiddleware(["manager", "admin"]),
+    peseeController.creerDepot
+);
+
+router.get(
+    "/:id/preuves/:preuveId/url",
+    authMiddleware,
+    collecteController.urlPreuve
 );
 
 /**

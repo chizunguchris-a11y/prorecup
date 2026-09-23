@@ -283,6 +283,15 @@ const collecteController = {
         }
     ),
 
+    urlPreuve: asyncHandler(async (req, res) => {
+        const resultat = await collecteService.obtenirUrlPreuve(
+            req.params.id,
+            req.params.preuveId,
+            obtenirOrganisationId(req)
+        );
+        return ApiResponse.success(res, "URL de preuve générée avec succès.", resultat);
+    }),
+
     valider: asyncHandler(
         async (
             req,

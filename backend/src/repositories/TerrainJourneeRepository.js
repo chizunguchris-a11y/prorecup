@@ -283,7 +283,35 @@ class TerrainJourneeRepository {
                                     c.id
                         ),
                         '[]'::jsonb
-                    ) AS preuves
+                    ) AS preuves,
+
+                    COALESCE(
+                        (
+                            SELECT jsonb_agg(jsonb_build_object(
+                                'id', p.id,
+                                'type', p.type,
+                                'poids_brut', p.poids_brut,
+                                'tare', p.tare,
+                                'poids_net', p.poids_net,
+                                'date_heure', p.date_heure,
+                                'balance_id', p.balance_id,
+                                'remplace_pesee_id', p.remplace_pesee_id,
+                                'est_courante', p.id = (
+                                    SELECT px.id FROM pesees px
+                                    WHERE px.collecte_id = p.collecte_id
+                                      AND px.organisation_id = p.organisation_id
+                                      AND px.type = p.type
+                                    ORDER BY px.date_heure DESC, px.cree_le DESC, px.id DESC
+                                    LIMIT 1
+                                )
+                            ) ORDER BY p.date_heure ASC, p.cree_le ASC)
+                            FROM pesees p
+                            WHERE p.organisation_id = $2
+                              AND p.mission_id = mc.mission_id
+                              AND p.collecte_id = c.id
+                        ),
+                        '[]'::jsonb
+                    ) AS pesees
 
                 FROM missions_collectes mc
 
@@ -368,6 +396,20 @@ class TerrainJourneeRepository {
 
         return resultat.rows;
 
+    }
+
+    async listerBalances(
+        organisationId,
+        connexion = pool
+    ) {
+        const resultat = await connexion.query(`
+            SELECT id, numero_interne, type, capacite_max_kg, precision_kg,
+                   statut, date_calibrage, prochain_calibrage, tricycle_id, site_id
+            FROM balances
+            WHERE organisation_id = $1 AND statut = 'active'
+            ORDER BY numero_interne;
+        `, [organisationId]);
+        return resultat.rows;
     }
 
 }

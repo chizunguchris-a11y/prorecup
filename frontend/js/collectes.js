@@ -99,6 +99,37 @@ let collectes = [];
 let clients = [];
 let sites = [];
 let typesDechets = [];
+let collectePeseeDepot = null;
+
+const roleCourant = String(ProRecup.obtenirUtilisateur()?.role || ProRecup.obtenirUtilisateur()?.role_nom || "").toLowerCase();
+const peutPeserDepot = ["admin", "manager"].includes(roleCourant);
+const fenetrePeseeDepot = document.getElementById("fenetrePeseeDepot");
+const formulairePeseeDepot = document.getElementById("formulairePeseeDepot");
+
+const fermerPeseeDepot = () => {
+    collectePeseeDepot = null;
+    formulairePeseeDepot.reset();
+    fenetrePeseeDepot.classList.add("cache");
+    fenetrePeseeDepot.setAttribute("aria-hidden", "true");
+};
+
+const ouvrirPeseeDepot = async collecte => {
+    collectePeseeDepot = collecte;
+    const reponse = await ProRecup.requete("/api/collectes/balances");
+    const balancesDepot = Array.isArray(reponse.data) ? reponse.data : [];
+    const select = document.getElementById("balance_depot_id");
+    select.innerHTML = '<option value="">Sélectionnez une balance</option>';
+    balancesDepot.forEach(balance => {
+        const option = document.createElement("option");
+        option.value = balance.id;
+        option.textContent = `${balance.numero_interne} — max ${balance.capacite_max_kg} kg, précision ${balance.precision_kg} kg`;
+        select.appendChild(option);
+    });
+    const maintenant = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+    document.getElementById("date_heure_depot").value = maintenant;
+    fenetrePeseeDepot.classList.remove("cache");
+    fenetrePeseeDepot.setAttribute("aria-hidden", "false");
+};
 
 const afficherErreurFormulaire = (
     message
@@ -329,7 +360,7 @@ const afficherCollectes = (
         const cellule =
             document.createElement("td");
 
-        cellule.colSpan = 7;
+        cellule.colSpan = 8;
 
         cellule.className =
             "etat-tableau";
@@ -379,6 +410,48 @@ const afficherCollectes = (
                 )
             );
 
+            const cellulePesee = document.createElement("td");
+            cellulePesee.className = "cellule-pesee";
+            const pesees = Array.isArray(collecte.pesees) ? collecte.pesees : [];
+            if (!pesees.length) {
+                cellulePesee.textContent = "Non pesée";
+                cellulePesee.classList.add("texte-vide");
+            } else {
+                pesees.forEach(pesee => {
+                    const lignePesee = document.createElement("div");
+                    lignePesee.className = "detail-pesee";
+                    lignePesee.textContent = `${pesee.type === "depot" ? "Dépôt" : "Terrain"} : ${ProRecup.formaterNombre(pesee.poids_net)} kg net · ${pesee.balance_numero || "balance non renseignée"} · ${pesee.agent_nom || "opérateur"} · ${new Date(pesee.date_heure).toLocaleString("fr-FR")}${pesee.latitude == null ? "" : ` · GPS ${Number(pesee.latitude).toFixed(5)}, ${Number(pesee.longitude).toFixed(5)}`} · ${pesee.est_courante ? "mesure courante" : "historique remplacé"}`;
+                    cellulePesee.appendChild(lignePesee);
+                });
+                if (collecte.ecart_terrain_depot_pct != null) {
+                    const ecart = document.createElement("strong");
+                    ecart.className = collecte.anomalie_pesee ? "ecart-pesee anomalie" : "ecart-pesee";
+                    ecart.textContent = `Écart terrain/dépôt : ${ProRecup.formaterNombre(collecte.ecart_terrain_depot_pct)} %${collecte.anomalie_pesee ? " — anomalie" : ""}`;
+                    cellulePesee.appendChild(ecart);
+                }
+                (collecte.tickets_balance || []).forEach(ticket => {
+                    const boutonPreuve = document.createElement("button");
+                    boutonPreuve.type = "button";
+                    boutonPreuve.className = "bouton-valider bouton-preuve";
+                    boutonPreuve.textContent = "Voir le ticket";
+                    boutonPreuve.addEventListener("click", async () => {
+                        boutonPreuve.disabled = true;
+                        try {
+                            const reponse = await ProRecup.requete(`/api/collectes/${encodeURIComponent(collecte.id)}/preuves/${encodeURIComponent(ticket.id)}/url`);
+                            const url = reponse?.data?.url;
+                            if (!url) throw new Error("URL de preuve indisponible.");
+                            window.open(url, "_blank", "noopener,noreferrer");
+                        } catch (erreur) {
+                            ProRecup.afficherNotification(erreur.message, "erreur");
+                        } finally {
+                            boutonPreuve.disabled = false;
+                        }
+                    });
+                    cellulePesee.appendChild(boutonPreuve);
+                });
+            }
+            ligne.appendChild(cellulePesee);
+
             ligne.appendChild(
                 creerCellule(
                     collecte.agent_nom,
@@ -414,6 +487,17 @@ const afficherCollectes = (
 
             const celluleAction =
                 document.createElement("td");
+
+            const missionId = [...pesees].reverse().find(pesee => pesee.mission_id)?.mission_id;
+            if (peutPeserDepot && missionId) {
+                const boutonDepot = document.createElement("button");
+                boutonDepot.type = "button";
+                boutonDepot.className = "bouton-valider bouton-depot";
+                boutonDepot.textContent = pesees.some(pesee => pesee.type === "depot") ? "Re-peser au dépôt" : "Pesée dépôt";
+                boutonDepot.addEventListener("click", () => ouvrirPeseeDepot(collecte)
+                    .catch(erreur => ProRecup.afficherNotification(erreur.message, "erreur")));
+                celluleAction.appendChild(boutonDepot);
+            }
 
             if (
                 collecte.statut ===
@@ -522,7 +606,7 @@ const afficherEtatChargement = () => {
     corpsTableauCollectes.innerHTML = `
         <tr>
             <td
-                colspan="7"
+                colspan="8"
                 class="etat-tableau"
             >
                 <span
@@ -568,7 +652,7 @@ const chargerCollectes = async () => {
         corpsTableauCollectes.innerHTML = `
             <tr>
                 <td
-                    colspan="7"
+                    colspan="8"
                     class="etat-tableau"
                 >
                     Impossible de charger les collectes.
@@ -587,6 +671,35 @@ const chargerCollectes = async () => {
     }
 
 };
+
+formulairePeseeDepot.addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+    const pesees = collectePeseeDepot?.pesees || [];
+    const missionId = [...pesees].reverse().find(pesee => pesee.mission_id)?.mission_id;
+    if (!collectePeseeDepot || !missionId) return;
+    const bouton = document.getElementById("boutonEnregistrerPeseeDepot");
+    bouton.disabled = true;
+    try {
+        await ProRecup.requete(`/api/collectes/${encodeURIComponent(collectePeseeDepot.id)}/pesees`, {
+            method: "POST",
+            body: JSON.stringify({
+                operation_id: crypto.randomUUID(), mission_id: missionId,
+                balance_id: document.getElementById("balance_depot_id").value,
+                poids_brut: Number(document.getElementById("poids_brut_depot").value),
+                tare: Number(document.getElementById("tare_depot").value),
+                date_heure: new Date(document.getElementById("date_heure_depot").value).toISOString()
+            })
+        });
+        ProRecup.afficherNotification("Pesée dépôt enregistrée.", "succes");
+        fermerPeseeDepot();
+        await chargerCollectes();
+    } catch (erreur) {
+        const zone = document.getElementById("erreurPeseeDepot");
+        zone.textContent = erreur.message; zone.classList.remove("cache");
+    } finally { bouton.disabled = false; }
+});
+document.getElementById("boutonFermerPeseeDepot").addEventListener("click", fermerPeseeDepot);
+document.getElementById("boutonAnnulerPeseeDepot").addEventListener("click", fermerPeseeDepot);
 
 const ouvrirModale = async () => {
 

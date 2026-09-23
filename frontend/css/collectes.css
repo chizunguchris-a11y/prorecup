@@ -636,3 +636,27 @@ th {
     }
 
 }
+.cellule-pesee {
+    min-width: 260px;
+}
+
+.detail-pesee {
+    margin-bottom: 6px;
+    line-height: 1.35;
+}
+
+.ecart-pesee {
+    display: block;
+    margin-top: 8px;
+    color: #166534;
+}
+
+.ecart-pesee.anomalie {
+    color: #b91c1c;
+}
+
+.bouton-preuve {
+    margin-top: 8px;
+}
+
+.bouton-depot { display: block; margin-bottom: 8px; }

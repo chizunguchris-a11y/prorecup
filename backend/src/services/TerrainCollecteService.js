@@ -4,6 +4,9 @@
 import terrainCollecteRepository
     from "../repositories/TerrainCollecteRepository.js";
 
+import peseeRepository
+    from "../repositories/PeseeRepository.js";
+
 import ApiError
     from "../utils/ApiError.js";
 
@@ -1087,7 +1090,7 @@ class TerrainCollecteService {
         }
 
 
-        const poidsReel =
+        let poidsReel =
             Number(
                 donnees.poids_reel
             );
@@ -1346,6 +1349,41 @@ class TerrainCollecteService {
                     409,
                     "La fin de collecte ne peut pas être antérieure à son démarrage."
                 );
+
+            }
+
+
+            const dernierePeseeTerrain =
+                await peseeRepository.trouverDerniere(
+                    collecteId,
+                    agentTerrain.organisation_id,
+                    "terrain",
+                    connexion
+                );
+
+
+            if (dernierePeseeTerrain) {
+
+                const poidsPese =
+                    Number(
+                        dernierePeseeTerrain.poids_net
+                    );
+
+                if (
+                    Math.abs(
+                        poidsPese - poidsReel
+                    ) > 0.0005
+                ) {
+
+                    throw new ApiError(
+                        409,
+                        "Le poids réel doit correspondre à la dernière pesée terrain. Actualisez la tournée."
+                    );
+
+                }
+
+                poidsReel =
+                    poidsPese;
 
             }
 

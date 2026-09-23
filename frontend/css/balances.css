@@ -1,0 +1,17 @@
+.tableau-conteneur { overflow-x: auto; }
+.tableau-conteneur table { width: 100%; border-collapse: collapse; }
+.tableau-conteneur th, .tableau-conteneur td { padding: 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+.badge-balance { display: inline-block; padding: 5px 9px; border-radius: 999px; background: #e5e7eb; }
+.badge-balance.active { color: #166534; background: #dcfce7; }
+.actions-balance { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions-balance button { border: 0; border-radius: 7px; padding: 7px 10px; cursor: pointer; }
+.modale { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .55); }
+.modale.cache, .cache { display: none; }
+.contenu-modale { width: min(720px, 100%); max-height: 90vh; overflow: auto; padding: 24px; border-radius: 14px; background: white; }
+.entete-modale, .actions-modale { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.entete-modale button { border: 0; background: none; font-size: 28px; cursor: pointer; }
+.grille-formulaire { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
+.grille-formulaire label { display: grid; gap: 7px; font-weight: 600; }
+.grille-formulaire input, .grille-formulaire select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.erreur-formulaire { color: #b91c1c; }
+@media (max-width: 720px) { .grille-formulaire { grid-template-columns: 1fr; } }

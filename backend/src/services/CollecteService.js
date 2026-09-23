@@ -4,6 +4,9 @@
 import ApiError
     from "../utils/ApiError.js";
 
+import terrainStorageService
+    from "./TerrainStorageService.js";
+
 class CollecteService {
 
     validerDonneesCreation(
@@ -100,9 +103,14 @@ class CollecteService {
 
         }
 
+        const seuil = Number(
+            process.env.PESEE_ECART_SEUIL_POURCENT || 5
+        );
+
         return collecteRepository
             .listerParOrganisation(
-                organisationId
+                organisationId,
+                Number.isFinite(seuil) && seuil >= 0 ? seuil : 5
             );
 
     }
@@ -136,6 +144,21 @@ class CollecteService {
                 organisationId
             );
 
+    }
+
+    async obtenirUrlPreuve(
+        collecteId,
+        preuveId,
+        organisationId
+    ) {
+        const preuve = await collecteRepository.trouverPreuvePourOrganisation(
+            collecteId, preuveId, organisationId
+        );
+        if (!preuve) throw new ApiError(404, "Preuve introuvable pour cette organisation.");
+        const signature = await terrainStorageService.creerUrlSignee(preuve.storage_path, 300);
+        return { preuve: { id: preuve.id, type_preuve: preuve.type_preuve,
+            mime_type: preuve.mime_type, pris_le: preuve.pris_le },
+            url: signature.url, expire_dans_secondes: signature.expire_dans_secondes };
     }
 
     async valider(

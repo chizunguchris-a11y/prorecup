@@ -297,8 +297,8 @@
     const fermerCameras = new WeakMap();
     const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const actionsMission = ["demarrer_mission", "terminer_mission"];
-    const actionsCollecte = ["arriver_site", "demarrer_collecte", "terminer_collecte"];
-    const typesPhoto = ["avant_collecte", "apres_collecte"];
+    const actionsCollecte = ["arriver_site", "demarrer_collecte", "enregistrer_pesee", "terminer_collecte"];
+    const typesPhoto = ["avant_collecte", "apres_collecte", "ticket_balance"];
     const estPhoto = action => typesPhoto.includes(action);
 
     const preuvePresente = (collecte, type) =>
@@ -321,6 +321,8 @@
             return { action: "demarrer_collecte", collecte };
         if (!preuvePresente(collecte, "avant_collecte"))
             return { action: "avant_collecte", collecte };
+        if (!(collecte.pesees || []).some(pesee => pesee.type === "terrain"))
+            return { action: "enregistrer_pesee", collecte };
         return { action: "terminer_collecte", collecte };
     };
 
@@ -358,6 +360,22 @@
         return { resultat_terrain: resultat, poids_reel: poids, motif_terrain: motif || null };
     };
 
+    const validerPesee = donnees => {
+        const balance = (journeeCourante?.balances || []).find(item => item.id === donnees.balance_id);
+        if (!balance) throw new Error("Choisissez une balance disponible.");
+        const brut = Number(donnees.poids_brut);
+        const tare = Number(donnees.tare);
+        if (![brut, tare].every(Number.isFinite) || brut < 0 || tare < 0 || tare > brut)
+            throw new Error("Le poids brut et la tare sont invalides.");
+        if (brut > Number(balance.capacite_max_kg))
+            throw new Error("Le poids dépasse la capacité maximale de cette balance.");
+        const precision = Number(balance.precision_kg);
+        const aligne = valeur => Math.abs(valeur / precision - Math.round(valeur / precision)) < 1e-7;
+        if (!aligne(brut) || !aligne(tare))
+            throw new Error(`Respectez la précision de ${precision} kg de la balance.`);
+        return { balance_id: balance.id, poids_brut: brut, tare, poids_net: Math.round((brut - tare) * 1000) / 1000 };
+    };
+
     // Une liste fermée de champs est appliquée aussi aux données restaurées.
     const filtrerPayload = (action, donnees) => {
         const photo = estPhoto(action);
@@ -383,6 +401,8 @@
             payload.survenu_le = date;
             if (action === "terminer_collecte")
                 Object.assign(payload, validerResultat(donnees));
+            if (action === "enregistrer_pesee")
+                Object.assign(payload, validerPesee(donnees));
         }
         return payload;
     };
@@ -478,6 +498,7 @@
 
     const libelleEtape = action => ({
         avant_collecte: "Prendre la photo avant collecte",
+        enregistrer_pesee: "Peser la matière",
         apres_collecte: "Prendre la photo après collecte"
     })[action] || libelleAction(action);
 
@@ -683,6 +704,17 @@
 
 
                                     <div class="mission-action">
+
+                                        ${etape.action === "terminer_collecte" && (etape.collecte?.pesees || []).some(pesee => pesee.type === "terrain") ? `
+                                        <button
+                                            type="button"
+                                            class="bouton bouton-secondaire bouton-mission"
+                                            data-mission-id="${nettoyer(mission.id)}"
+                                            data-collecte-id="${nettoyer(etape.collecte.id)}"
+                                            data-action="corriger_pesee"
+                                        >
+                                            Corriger la pesée
+                                        </button>` : ""}
 
                                         <button
                                             type="button"
@@ -1052,11 +1084,12 @@
         });
     };
 
-    const ouvrirSaisie = (carte, action) => {
+    const ouvrirSaisie = (carte, action, mission, etape) => {
         fermerSaisie(carte.querySelector(".saisie-terrain"));
         const formulaire = document.createElement("form");
         formulaire.className = "saisie-terrain";
         if (action === "terminer_collecte") {
+            const pesee = [...(etape.collecte?.pesees || [])].reverse().find(item => item.type === "terrain");
             formulaire.innerHTML = [
                 '<label>Résultat<select name="resultat_terrain" required>',
                 '<option value="collectee">Collectée</option>',
@@ -1064,8 +1097,21 @@
                 '<option value="aucune_matiere">Aucune matière</option>',
                 '<option value="non_collectee">Non collectée</option>',
                 '</select></label>',
-                '<label>Poids réel (kg)<input name="poids_reel" type="number" min="0" step="any" inputmode="decimal" required></label>',
+                `<label>Poids réel (kg)<input name="poids_reel" type="number" min="0" step="any" inputmode="decimal" value="${nettoyer(pesee?.poids_net ?? "")}" ${pesee ? "readonly" : ""} required></label>`,
                 '<label>Motif (obligatoire si non collectée)<input name="motif_terrain" type="text"></label>'
+            ].join("");
+        } else if (action === "enregistrer_pesee") {
+            const balances = (journeeCourante?.balances || []).filter(balance =>
+                (!balance.tricycle_id || balance.tricycle_id === mission.tricycle?.id) &&
+                (!balance.site_id || balance.site_id === etape.collecte?.site?.id));
+            formulaire.innerHTML = [
+                '<label>Balance<select name="balance_id" required><option value="">Choisir…</option>',
+                ...balances.map(balance => `<option value="${nettoyer(balance.id)}">${nettoyer(balance.numero_interne)} — max ${Number(balance.capacite_max_kg)} kg, précision ${Number(balance.precision_kg)} kg</option>`),
+                '</select></label>',
+                '<label>Poids affiché / brut (kg)<input name="poids_brut" type="number" min="0" step="any" inputmode="decimal" required></label>',
+                '<label>Tare — contenant vide (kg)<input name="tare" type="number" min="0" step="any" inputmode="decimal" value="0" required></label>',
+                '<p>Le poids net sera calculé automatiquement : poids affiché − tare.</p>',
+                '<label>Ticket de balance (optionnel, recommandé)<input name="ticket_balance" type="file" accept="image/jpeg,image/png,image/webp"></label>'
             ].join("");
         } else {
             formulaire.innerHTML = [
@@ -1104,6 +1150,11 @@
                 if (await empreintePhoto(fichier) !== tentative.empreinte)
                     throw new Error("Cette tentative attend la photo d’origine. Resélectionnez-la pour réessayer, ou actualisez la tournée.");
             }
+            if (contexte.action === "enregistrer_pesee") {
+                const ticket = formulaire?.elements.ticket_balance?.files?.[0];
+                if (ticket?.size) validerPhoto(ticket);
+                fichier = ticket?.size ? ticket : null;
+            }
         } else {
             let donnees;
             let empreinte;
@@ -1129,12 +1180,32 @@
                         motif_terrain: champs.motif_terrain
                     }));
                 }
+                if (contexte.action === "enregistrer_pesee") {
+                    const champs = Object.fromEntries(new FormData(formulaire));
+                    Object.assign(donnees, validerPesee(champs));
+                    const ticket = formulaire.elements.ticket_balance?.files?.[0];
+                    if (ticket?.size) validerPhoto(ticket);
+                    fichier = ticket?.size ? ticket : null;
+                }
             }
             Object.assign(donnees, await obtenirGps());
             tentative = enregistrerTentative(contexte, donnees, empreinte);
         }
         if (photo) fichiersTentatives.set(cle, fichier);
         await terrainStore.enqueue(contexte, filtrerPayload(contexte.action, tentative.payload), fichier);
+        if (contexte.action === "enregistrer_pesee" && fichier) {
+            const ticketContexte = { ...contexte, action: "ticket_balance" };
+            const ticketPayload = {
+                operation_id: crypto.randomUUID(),
+                pesee_operation_id: tentative.payload.operation_id,
+                type_preuve: "ticket_balance",
+                pris_le: instantAction,
+                latitude: tentative.payload.latitude,
+                longitude: tentative.payload.longitude,
+                precision_gps: tentative.payload.precision_gps
+            };
+            await terrainStore.enqueue(ticketContexte, ticketPayload, fichier);
+        }
         effacerTentative(contexte);
         afficherJournee(await terrainStore.view());
         await updateQueueUI();
@@ -1146,7 +1217,13 @@
         if (!bouton || bouton.disabled || actionEnCours || chargementJournee) return;
         const mission = journeeCourante?.missions?.find(item => item.id === bouton.dataset.missionId);
         if (!mission) return;
-        const etape = etapeMission(mission);
+        let etape = etapeMission(mission);
+        if (bouton.dataset.action === "corriger_pesee") {
+            const collecte = (mission.collectes || []).find(
+                item => item.id === bouton.dataset.collecteId);
+            if (!collecte || collecte.progression?.collecte_terminee) return;
+            etape = { action: "enregistrer_pesee", collecte };
+        }
         if (etape.action === "aucune") return;
         try {
             const cle = cleOperation(contexteOperation(mission, etape));
@@ -1155,8 +1232,8 @@
                 return;
             }
             const carte = bouton.closest(".mission-carte");
-            if (["terminer_collecte", ...typesPhoto].includes(etape.action)) {
-                const formulaire = ouvrirSaisie(carte, etape.action);
+            if (["terminer_collecte", "enregistrer_pesee", ...typesPhoto].includes(etape.action)) {
+                const formulaire = ouvrirSaisie(carte, etape.action, mission, etape);
                 formulaire.addEventListener("submit", async event => {
                     event.preventDefault();
                     await lancer(mission, etape, formulaire);
@@ -1234,7 +1311,7 @@
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-4').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-6').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

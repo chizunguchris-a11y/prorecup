@@ -1,8 +1,8 @@
 (function () {
     'use strict';
     const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
-    const photo = type => ['avant_collecte', 'apres_collecte'].includes(type);
+    const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
+    const photo = type => ['avant_collecte', 'apres_collecte', 'ticket_balance'].includes(type);
     const retryable = e => e.code === 'NETWORK_ERROR' || [408, 425, 429].includes(e.status) || e.status >= 500;
     const safeErrors = ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'UPLOAD_RESEAU', 'ERREUR_SERVEUR', 'REFUS_DEFINITIF', 'BLOB_ILLISIBLE'];
     const request = r => new Promise((resolve, reject) => {
@@ -18,12 +18,24 @@
         if (typeof p[dateKey] !== 'string' || !Number.isFinite(Date.parse(p[dateKey]))) throw new Error('Date invalide.');
         if (![p.latitude, p.longitude, p.precision_gps].every(Number.isFinite) || Math.abs(p.latitude) > 90 || Math.abs(p.longitude) > 180 || p.precision_gps < 0) throw new Error('GPS invalide.');
         const out = { operation_id: p.operation_id, [dateKey]: p[dateKey], latitude: p.latitude, longitude: p.longitude, precision_gps: p.precision_gps };
-        if (photo(type)) out.type_preuve = type;
+        if (photo(type)) {
+            out.type_preuve = type;
+            if (type === 'ticket_balance' && p.pesee_operation_id) {
+                if (!UUID.test(p.pesee_operation_id)) throw new Error('Référence de pesée invalide.');
+                out.pesee_operation_id = p.pesee_operation_id;
+            }
+        }
         if (type === 'terminer_collecte') {
             if (!['collectee', 'partielle', 'aucune_matiere', 'non_collectee'].includes(p.resultat_terrain) || !Number.isFinite(p.poids_reel) || (['collectee', 'partielle'].includes(p.resultat_terrain) ? p.poids_reel <= 0 : p.poids_reel !== 0)) throw new Error('Résultat invalide.');
             const motif = typeof p.motif_terrain === 'string' ? p.motif_terrain.trim() : '';
             if (motif.length > 2000 || (p.resultat_terrain === 'non_collectee' && !motif)) throw new Error('Motif invalide (2000 caractères maximum).');
             Object.assign(out, { resultat_terrain: p.resultat_terrain, poids_reel: p.poids_reel, motif_terrain: motif || null });
+        }
+        if (type === 'enregistrer_pesee') {
+            if (!UUID.test(p.balance_id || '') || !Number.isFinite(p.poids_brut) ||
+                !Number.isFinite(p.tare) || p.poids_brut < 0 || p.tare < 0 || p.tare > p.poids_brut)
+                throw new Error('Pesée invalide.');
+            Object.assign(out, { balance_id: p.balance_id, poids_brut: p.poids_brut, tare: p.tare });
         }
         return out;
     }
@@ -45,13 +57,18 @@
     }
     // Explicit allowlist: never store the authenticated API response as a whole.
     function snapshot(day) {
-        return { missions: (day?.missions || []).map(m => ({
+        return { balances: (day?.balances || []).map(b => ({
+            id: b.id, numero_interne: String(b.numero_interne || ''),
+            capacite_max_kg: Number(b.capacite_max_kg), precision_kg: Number(b.precision_kg),
+            tricycle_id: b.tricycle_id || null, site_id: b.site_id || null
+        })), missions: (day?.missions || []).map(m => ({
             id: m.id, statut: m.statut,
-            tricycle: { numero: String(m.tricycle?.numero || '') },
+            tricycle: { id: m.tricycle?.id || null, numero: String(m.tricycle?.numero || '') },
             collectes: (m.collectes || []).map(c => ({
-                id: c.id, site: { nom: String(c.site?.nom || '') },
+                id: c.id, site: { id: c.site?.id || null, nom: String(c.site?.nom || '') },
                 progression: { arrivee: !!c.progression?.arrivee, collecte_demarree: !!c.progression?.collecte_demarree, collecte_terminee: !!c.progression?.collecte_terminee },
-                preuves: (c.preuves || []).filter(p => photo(p.type_preuve)).map(p => ({ type_preuve: p.type_preuve }))
+                preuves: (c.preuves || []).filter(p => photo(p.type_preuve)).map(p => ({ type_preuve: p.type_preuve })),
+                pesees: (c.pesees || []).map(p => ({ id: p.id || null, type: p.type, poids_brut: Number(p.poids_brut), tare: Number(p.tare), poids_net: Number(p.poids_net), balance_id: p.balance_id }))
             }))
         })) };
     }
@@ -69,6 +86,12 @@
                 const key = { arriver_site: 'arrivee', demarrer_collecte: 'collecte_demarree', terminer_collecte: 'collecte_terminee' }[r.type];
                 if (key) c.progression[key] = true;
                 if (photo(r.type) && !c.preuves.some(p => p.type_preuve === r.type)) c.preuves.push({ type_preuve: r.type });
+                if (r.type === 'enregistrer_pesee' && !c.pesees.some(p => p.operation_id === r.operation_id)) {
+                    c.pesees.filter(p => p.type === 'terrain').forEach(p => { p.est_courante = false; });
+                    c.pesees.push({ operation_id: r.operation_id, type: 'terrain', poids_brut: r.payload.poids_brut,
+                        tare: r.payload.tare, poids_net: r.payload.poids_brut - r.payload.tare,
+                        balance_id: r.payload.balance_id, date_heure: r.payload.survenu_le, est_courante: true });
+                }
             }
         }
         for (const m of result.missions) {
@@ -181,7 +204,7 @@
                 form.append('fichier', blob, 'preuve.' + ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[blob.type]);
                 return { url: url + '/preuves', body: form };
             }
-            return { url: url + '/' + ({ demarrer_mission: 'demarrer', arriver_site: 'arrivee', demarrer_collecte: 'demarrer', terminer_collecte: 'terminer', terminer_mission: 'terminer' })[row.type], body: p };
+            return { url: url + '/' + ({ demarrer_mission: 'demarrer', arriver_site: 'arrivee', demarrer_collecte: 'demarrer', enregistrer_pesee: 'pesees', terminer_collecte: 'terminer', terminer_mission: 'terminer' })[row.type], body: p };
         }
         function sync(api, authorized, notify = () => {}, options = {}) {
             if (running) return running;

@@ -5,10 +5,10 @@ document.getElementById('run').onclick = async () => {
     const check = (condition, name) => { if (!condition) throw new Error(name); output.textContent += 'PASS ' + name + '\n'; passed++; };
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     const O = window.ProRecup.offline;
-    const mission = crypto.randomUUID(), collecte = crypto.randomUUID();
+    const mission = crypto.randomUUID(), collecte = crypto.randomUUID(), balance = crypto.randomUUID();
     const context = action => ({ action, mission, collecte: action.includes('mission') ? null : collecte, agent_id: 'INTERDIT' });
-    const payload = action => ({ operation_id: crypto.randomUUID(), survenu_le: '2026-09-22T10:00:00.000Z', pris_le: '2026-09-22T10:00:00.000Z', latitude: 0, longitude: 0, precision_gps: 1, resultat_terrain: 'collectee', poids_reel: 1, token: 'INTERDIT', agent_id: 'INTERDIT', secret: 'INTERDIT' });
-    const day = { agent_id: 'INTERDIT', token: 'INTERDIT', missions: [{ id: mission, statut: 'planifiee', agent_id: 'INTERDIT', collectes: [{ id: collecte, progression: {}, preuves: [] }] }] };
+    const payload = action => ({ operation_id: crypto.randomUUID(), survenu_le: '2026-09-22T10:00:00.000Z', pris_le: '2026-09-22T10:00:00.000Z', latitude: 0, longitude: 0, precision_gps: 1, resultat_terrain: 'collectee', poids_reel: 11.8, balance_id: balance, poids_brut: 12, tare: 0.2, token: 'INTERDIT', agent_id: 'INTERDIT', secret: 'INTERDIT' });
+    const day = { agent_id: 'INTERDIT', token: 'INTERDIT', balances: [{ id: balance, numero_interne: 'BAL-01', capacite_max_kg: 150, precision_kg: 0.1 }], missions: [{ id: mission, statut: 'planifiee', agent_id: 'INTERDIT', tricycle: {}, collectes: [{ id: collecte, site: {}, progression: {}, preuves: [], pesees: [] }] }] };
     const names = []; let store;
     async function fresh() { const name = 'terrain-test-' + crypto.randomUUID(); names.push(name); return O.open(name); }
     async function legacyPhoto() {
@@ -33,13 +33,19 @@ document.getElementById('run').onclick = async () => {
     }
     try {
         store = await fresh(); await store.saveDay(day);
-        const order = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
+        const order = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
         const blob = new Blob(['photo-fictive'], { type: 'image/jpeg' });
-        for (const action of order) await store.enqueue(context(action), payload(action), action.includes('avant') || action.includes('apres') ? blob : undefined);
+        let peseeOperationId;
+        for (const action of order) {
+            const donnees = payload(action);
+            if (action === 'enregistrer_pesee') peseeOperationId = donnees.operation_id;
+            if (action === 'ticket_balance') donnees.pesee_operation_id = peseeOperationId;
+            await store.enqueue(context(action), donnees, ['avant_collecte', 'ticket_balance', 'apres_collecte'].includes(action) ? blob : undefined);
+        }
         const initial = await store.list();
-        check(initial.length === 7, 'mission, actions et photos en file');
+        check(initial.length === 9, 'mission, pesée, actions et photos en file');
         await store.enqueue(context(order[0]), payload(order[0]));
-        check((await store.list()).length === 7, 'doublon de contexte empêché');
+        check((await store.list()).length === 9, 'doublon de contexte empêché');
         check(!JSON.stringify(initial).includes('INTERDIT') && !JSON.stringify(await store.view()).includes('INTERDIT'), 'aucun token, secret ou agent_id dans queue et tournée');
         check((await store.view()).missions[0].statut === 'terminee', 'progression locale complète');
         store.close(); store = await O.open(names[0]);
@@ -47,7 +53,9 @@ document.getElementById('run').onclick = async () => {
         check(await (await store.list())[3].blob.text() === 'photo-fictive', 'Blob durable après réouverture');
         const sent = [];
         await store.sync({ post: async (url, body) => { sent.push({ url, body }); } }, () => true);
-        check(sent.length === 7 && sent[0].url.endsWith('/demarrer') && sent[1].url.endsWith('/arrivee') && sent[3].url.endsWith('/preuves') && sent[4].url.endsWith('/terminer'), 'ordre métier respecté');
+        check(sent.length === 9 && sent[0].url.endsWith('/demarrer') && sent[1].url.endsWith('/arrivee') && sent[3].url.endsWith('/preuves') && sent[4].url.endsWith('/pesees') && sent[5].url.endsWith('/preuves') && sent[6].url.endsWith('/terminer'), 'ordre métier respecté');
+        check(sent[4].body.balance_id === balance && sent[4].body.poids_brut === 12 && sent[4].body.tare === 0.2, 'payload de pesée conservé hors ligne');
+        check(sent[5].body instanceof FormData && sent[5].body.get('pesee_operation_id') === initial[4].operation_id, 'ticket_balance lié à la pesée par operation_id');
         check(sent[3].body instanceof FormData && await sent[3].body.get('fichier').text() === 'photo-fictive', 'FormData reconstruit avec photo');
         check((await store.list()).length === 0 && (await store.view()).missions[0].statut === 'terminee', 'acquittement atomique et progression durable');
         store.close();
@@ -247,7 +255,7 @@ document.getElementById('reload-test').onclick = async () => {
 })().catch(e => { document.getElementById('result').textContent = 'FAIL ' + e.message; });
 document.getElementById('cache-test').onclick = async () => {
     try {
-        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-4', { scope: '/agent-app/' });
+        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-6', { scope: '/agent-app/' });
         const worker = reg.installing || reg.waiting;
         if (worker && !['installed', 'activated'].includes(worker.state)) {
             await new Promise((resolve, reject) => {
@@ -258,7 +266,7 @@ document.getElementById('cache-test').onclick = async () => {
                 });
             });
         }
-        const cache = await caches.open('prorecup-terrain-shell-v1-4');
+        const cache = await caches.open('prorecup-terrain-shell-v1-6');
         const urls = (await cache.keys()).map(r => r.url);
         document.getElementById('result').textContent = urls.length === 10 && !urls.some(u => u.includes('/api/')) ? 'PASS 10 fichiers du shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.' : 'FAIL cache : ' + urls.join(', ');
     } catch (e) { document.getElementById('result').textContent = 'FAIL ' + e.message; }

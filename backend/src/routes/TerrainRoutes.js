@@ -16,6 +16,9 @@ import terrainIncidentController
 import terrainCollecteController
     from "../controllers/TerrainCollecteController.js";
 
+import terrainPeseeController
+    from "../controllers/TerrainPeseeController.js";
+
 import terrainMissionController
     from "../controllers/TerrainMissionController.js";
 
@@ -49,6 +52,14 @@ router.get(
 );
 
 
+router.get(
+    "/balances",
+    authMiddleware,
+    terrainContextMiddleware,
+    terrainPeseeController.listerBalances
+);
+
+
 router.post(
     "/missions/:id/demarrer",
     authMiddleware,
@@ -78,6 +89,14 @@ router.post(
     authMiddleware,
     terrainContextMiddleware,
     terrainCollecteController.terminer
+);
+
+
+router.post(
+    "/missions/:id/collectes/:collecteId/pesees",
+    authMiddleware,
+    terrainContextMiddleware,
+    terrainPeseeController.creer
 );
 
 

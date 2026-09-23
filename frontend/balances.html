@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balances | Pro Récup</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/balances.css">
+</head>
+<body>
+<div class="application">
+    <aside class="barre-laterale">
+        <div class="marque"><div class="logo">PR</div><div><strong>Pro Récup</strong><span>Gestion environnementale</span></div></div>
+        <nav class="navigation"><span class="chargement-navigation">Chargement du menu...</span></nav>
+        <div class="bas-barre-laterale">
+            <div class="utilisateur-lateral"><div id="initialeUtilisateur" class="avatar">U</div><div><strong id="nomUtilisateurLateral">Utilisateur</strong><span id="emailUtilisateurLateral">Chargement...</span></div></div>
+            <button type="button" id="boutonDeconnexion" class="bouton-deconnexion">Se déconnecter</button>
+        </div>
+    </aside>
+    <main class="contenu">
+        <header class="entete">
+            <div><p class="sur-titre">PESÉE & TRAÇABILITÉ</p><h1>Balances</h1><p class="sous-titre">Gérez les balances, leur calibrage et leur affectation.</p></div>
+            <button type="button" id="boutonNouvelleBalance" class="bouton-principal">Nouvelle balance</button>
+        </header>
+        <section class="panneau">
+            <div class="entete-panneau"><div><p class="sur-titre">PARC DE PESÉE</p><h2>Liste des balances</h2></div><button type="button" id="boutonActualiser" class="bouton-secondaire">Actualiser</button></div>
+            <div class="tableau-conteneur"><table><thead><tr><th>Numéro</th><th>Type</th><th>Capacité / précision</th><th>Calibrage</th><th>Affectation</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="corpsTableauBalances"></tbody></table></div>
+        </section>
+    </main>
+</div>
+<div id="fenetreBalance" class="modale cache" role="dialog" aria-modal="true" aria-labelledby="titreBalance">
+    <div class="contenu-modale">
+        <div class="entete-modale"><h2 id="titreBalance">Nouvelle balance</h2><button type="button" id="boutonFermerModale" aria-label="Fermer">×</button></div>
+        <form id="formulaireBalance">
+            <div class="grille-formulaire">
+                <label>Numéro interne<input id="numero_interne" name="numero_interne" maxlength="100" required></label>
+                <label>Type<select id="type" name="type"><option value="numerique">Numérique</option><option value="mecanique">Mécanique</option></select></label>
+                <label>Capacité maximale (kg)<input id="capacite_max_kg" name="capacite_max_kg" type="number" min="0.001" step="0.001" required></label>
+                <label>Précision (kg)<input id="precision_kg" name="precision_kg" type="number" min="0.001" step="0.001" required></label>
+                <label>Dernier calibrage<input id="date_calibrage" name="date_calibrage" type="date"></label>
+                <label>Prochain calibrage<input id="prochain_calibrage" name="prochain_calibrage" type="date"></label>
+                <label>Affectation<select id="type_affectation"><option value="">Non affectée</option><option value="tricycle">Tricycle</option><option value="site">Site</option></select></label>
+                <label>Équipement / site<select id="affectation_id" disabled><option value="">Choisir d'abord une affectation</option></select></label>
+            </div>
+            <p id="erreurFormulaire" class="erreur-formulaire cache"></p>
+            <div class="actions-modale"><button type="button" id="boutonAnnuler" class="bouton-secondaire">Annuler</button><button type="submit" id="boutonEnregistrer" class="bouton-principal">Enregistrer</button></div>
+        </form>
+    </div>
+</div>
+<script src="./js/config.js"></script><script src="./js/common.js"></script><script src="./js/sidebar.js"></script><script src="./js/balances.js"></script>
+</body>
+</html>

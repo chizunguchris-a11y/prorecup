@@ -255,6 +255,7 @@
                                 <th>Site</th>
                                 <th>Déchet</th>
                                 <th>Poids estimé</th>
+                                <th>Pesée & traçabilité</th>
                                 <th>Agent</th>
                                 <th>Statut</th>
                                 <th>Action</th>
@@ -267,7 +268,7 @@
                             <tr>
 
                                 <td
-                                    colspan="7"
+                                    colspan="8"
                                     class="etat-tableau"
                                 >
                                     Chargement des collectes...
@@ -435,6 +436,24 @@
 
         </section>
 
+    </div>
+
+    <div id="fenetrePeseeDepot" class="modale cache" aria-hidden="true">
+        <div class="fond-modale"></div>
+        <section class="contenu-modale">
+            <div class="entete-modale"><div><p class="sur-titre">CONTRÔLE AU DÉPÔT</p><h2>Enregistrer une pesée dépôt</h2></div><button type="button" id="boutonFermerPeseeDepot" class="bouton-fermer" aria-label="Fermer">×</button></div>
+            <form id="formulairePeseeDepot">
+                <div class="grille-formulaire">
+                    <div class="groupe-champ"><label for="balance_depot_id">Balance *</label><select id="balance_depot_id" required></select></div>
+                    <div class="groupe-champ"><label for="poids_brut_depot">Poids brut (kg) *</label><input id="poids_brut_depot" type="number" min="0" step="any" required></div>
+                    <div class="groupe-champ"><label for="tare_depot">Tare (kg) *</label><input id="tare_depot" type="number" min="0" step="any" value="0" required></div>
+                    <div class="groupe-champ"><label for="date_heure_depot">Date et heure *</label><input id="date_heure_depot" type="datetime-local" step="1" required></div>
+                </div>
+                <p>Une correction crée une nouvelle pesée : l'historique précédent reste visible.</p>
+                <div id="erreurPeseeDepot" class="message message-erreur cache"></div>
+                <div class="actions-formulaire"><button type="button" id="boutonAnnulerPeseeDepot" class="bouton-annuler">Annuler</button><button type="submit" id="boutonEnregistrerPeseeDepot" class="bouton-principal">Enregistrer la pesée</button></div>
+            </form>
+        </section>
     </div>
 
     <script src="./js/config.js"></script>

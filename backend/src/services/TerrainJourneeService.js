@@ -290,6 +290,14 @@ const construireCollecte =
                 collecte.preuves ||
                 [],
 
+            pesees:
+                (collecte.pesees || []).map(pesee => ({
+                    ...pesee,
+                    poids_brut: Number(pesee.poids_brut),
+                    tare: Number(pesee.tare),
+                    poids_net: Number(pesee.poids_net)
+                })),
+
             nombre_preuves:
                 (
                     collecte.preuves ||
@@ -589,6 +597,10 @@ class TerrainJourneeService {
                 0
             );
 
+        const balances = await terrainJourneeRepository.listerBalances(
+            agentTerrain.organisation_id
+        );
+
 
         return {
 
@@ -643,6 +655,12 @@ class TerrainJourneeService {
                     nombreTerminees
 
             },
+
+            balances: balances.map(balance => ({
+                ...balance,
+                capacite_max_kg: Number(balance.capacite_max_kg),
+                precision_kg: Number(balance.precision_kg)
+            })),
 
             missions
 

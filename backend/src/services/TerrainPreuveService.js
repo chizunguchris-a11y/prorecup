@@ -14,6 +14,9 @@ import terrainStorageService
 import ApiError
     from "../utils/ApiError.js";
 
+import peseeRepository
+    from "../repositories/PeseeRepository.js";
+
 
 const UUID_REGEX =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -222,6 +225,13 @@ class TerrainPreuveService {
                 .trim()
                 .toLowerCase();
 
+        if (donnees.pesee_operation_id) {
+            this.validerUuid(
+                donnees.pesee_operation_id,
+                "L'identifiant de la pesée"
+            );
+        }
+
 
         if (
             !TYPES_PREUVES.includes(
@@ -335,6 +345,25 @@ const extension =
 
         }
 
+        if (
+            typePreuve === "ticket_balance" &&
+            donnees.pesee_operation_id
+        ) {
+            const pesee = await peseeRepository.trouverParOperation(
+                donnees.pesee_operation_id,
+                agentTerrain.organisation_id
+            );
+            if (
+                !pesee ||
+                pesee.mission_id !== missionId ||
+                pesee.collecte_id !== collecteId ||
+                pesee.utilisateur_id !== agentTerrain.utilisateur_id ||
+                pesee.type !== "terrain"
+            ) {
+                throw new ApiError(409, "Le ticket ne correspond pas à cette pesée terrain.");
+            }
+        }
+
 
         /*
          * Permettre aussi la synchronisation tardive
@@ -444,6 +473,20 @@ const extension =
 
             }
 
+
+            if (
+                typePreuve === "ticket_balance" &&
+                donnees.pesee_operation_id
+            ) {
+                await peseeRepository.lierPreuveParOperation(
+                    donnees.pesee_operation_id,
+                    existante.id,
+                    agentTerrain.organisation_id,
+                    missionId,
+                    collecteId,
+                    agentTerrain.utilisateur_id
+                );
+            }
 
             return {
 
@@ -602,6 +645,20 @@ const extension =
 
                 if (existanteApres) {
 
+                    if (
+                        typePreuve === "ticket_balance" &&
+                        donnees.pesee_operation_id
+                    ) {
+                        await peseeRepository.lierPreuveParOperation(
+                            donnees.pesee_operation_id,
+                            existanteApres.id,
+                            agentTerrain.organisation_id,
+                            missionId,
+                            collecteId,
+                            agentTerrain.utilisateur_id
+                        );
+                    }
+
                     return {
 
                         deja_traitee:
@@ -614,11 +671,24 @@ const extension =
 
                 }
 
-
                 throw new Error(
                     "La preuve n'a pas pu être enregistrée."
                 );
 
+            }
+
+            if (
+                typePreuve === "ticket_balance" &&
+                donnees.pesee_operation_id
+            ) {
+                await peseeRepository.lierPreuveParOperation(
+                    donnees.pesee_operation_id,
+                    preuve.id,
+                    agentTerrain.organisation_id,
+                    missionId,
+                    collecteId,
+                    agentTerrain.utilisateur_id
+                );
             }
 
 

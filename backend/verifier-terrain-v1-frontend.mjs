@@ -273,7 +273,7 @@ await test('actualisation hors ligne : tournée locale sans appel réseau', asyn
     assert.equal(h.state.refreshCalls, 0);
     assert.match(h.messages.at(-1).message, /Tournée locale/);
 });
-await test('sept actions : contexte, champs autorisés et Blob séparé transmis à enqueue', async () => {
+await test('sept actions historiques : contexte, champs autorisés et Blob séparé transmis à enqueue', async () => {
     for (const action of ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte',
         'terminer_collecte', 'apres_collecte', 'terminer_mission']) {
         const h = harness(), m = mission(), e = step(action), f = form();
@@ -330,10 +330,10 @@ await test('CSS ajouté : absence des + parasites et propriétés valides', asyn
             assert.match(declaration.trim(), /^[a-z-]+:\s*[^;{}]+;$/);
     }
 });
-await test('récupération photo : message non sensible, sélection ciblée et cache v1-4', async () => {
+await test('récupération photo : message non sensible, sélection ciblée et cache v1-6', async () => {
     assert.match(html, /id="bouton-remplacer-preuve"/);
     assert.match(html, /Reprenez-la ou sélectionnez une nouvelle photo pour cette action uniquement/);
-    assert.match(html, /\.\/js\/offline\.js\?v=1-4/);
+    assert.match(html, /\.\/js\/offline\.js\?v=1-6/);
     assert.match(source, /last_error === 'BLOB_ILLISIBLE'/);
     assert.match(source, /replaceUnreadablePhoto/);
     assert.equal(source.includes('erreur.response?.data'), false);

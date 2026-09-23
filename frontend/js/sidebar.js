@@ -83,6 +83,19 @@
 
         {
             fichier:
+                "balances.html",
+
+            libelle:
+                "Balances",
+
+            roles: [
+                "admin",
+                "manager"
+            ]
+        },
+
+        {
+            fichier:
                 "lots.html",
 
             libelle:

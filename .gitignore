@@ -36,3 +36,4 @@ Desktop.ini
 dist/
 build/
 backend/terrain-e2e-resultat-*.json
+backend/terrain-manuel-runs/

@@ -72,14 +72,32 @@
     }
     async function open(name) {
         const r = indexedDB.open(name, 2);
-        r.onupgradeneeded = () => {
+        r.onupgradeneeded = event => {
             if (!r.result.objectStoreNames.contains('queue')) {
                 const q = r.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
                 q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
                 q.createIndex('operation', 'operation_id', { unique: true });
             }
             if (!r.result.objectStoreNames.contains('state')) r.result.createObjectStore('state');
-            if (!r.result.objectStoreNames.contains('queue_meta')) r.result.createObjectStore('queue_meta');
+            const meta = r.result.objectStoreNames.contains('queue_meta')
+                ? event.target.transaction.objectStore('queue_meta')
+                : r.result.createObjectStore('queue_meta');
+            // A v1 status described an interrupted execution, not a durable decision.
+            // Seed v2 metadata without ever rewriting the historical row or its Blob.
+            if (event.oldVersion === 1) {
+                const cursor = event.target.transaction.objectStore('queue').openCursor();
+                cursor.onsuccess = () => {
+                    if (!cursor.result) return;
+                    const row = cursor.result.value;
+                    meta.put({
+                        statut: row.statut === 'erreur' ? 'erreur' : 'en_attente',
+                        retry_count: Number.isSafeInteger(row.retry_count) && row.retry_count >= 0 ? row.retry_count : 0,
+                        last_error: ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'REFUS_DEFINITIF'].includes(row.last_error) ? row.last_error : null,
+                        next_attempt_at: Number.isFinite(row.next_attempt_at) && row.next_attempt_at > 0 ? row.next_attempt_at : 0
+                    }, row.id);
+                    cursor.result.continue();
+                };
+            }
         };
         const db = await request(r);
         db.onversionchange = () => db.close();
@@ -90,13 +108,33 @@
             catch (e) { try { tx.abort(); } catch {} await done.catch(() => {}); throw e; }
         };
         const metadata = row => ({ statut: row.statut, retry_count: row.retry_count, last_error: row.last_error, next_attempt_at: row.next_attempt_at });
+        const safeMetadata = (row, meta, interrupted = false) => {
+            const source = meta || row || {};
+            const rejected = source.statut === 'erreur';
+            return {
+                statut: rejected ? 'erreur' : interrupted || source.statut !== 'envoi' ? 'en_attente' : 'envoi',
+                retry_count: Number.isSafeInteger(source.retry_count) && source.retry_count >= 0 ? source.retry_count : 0,
+                last_error: ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'REFUS_DEFINITIF'].includes(source.last_error) ? source.last_error : null,
+                next_attempt_at: Number.isFinite(source.next_attempt_at) && source.next_attempt_at > 0 ? source.next_attempt_at : 0
+            };
+        };
+        // Also repairs databases that were already opened once by v2 before this fix.
+        // Opening a store means any persisted "envoi" belongs to a dead page execution.
+        const repairMetadata = () => transact(['queue', 'queue_meta'], 'readwrite', async tx => {
+            const q = tx.objectStore('queue'), metaStore = tx.objectStore('queue_meta');
+            const rows = await request(q.getAll());
+            let interrupted = false;
+            for (const row of rows) {
+                const current = await request(metaStore.get(row.id));
+                interrupted ||= row.statut === 'envoi' || current?.statut === 'envoi';
+                await request(metaStore.put(safeMetadata(row, current, true), row.id));
+            }
+            return interrupted;
+        });
+        let interruptedAtOpen = await repairMetadata();
         const mergedRows = async tx => {
             const rows = await request(tx.objectStore('queue').getAll());
-            return Promise.all(rows.map(async row => ({
-                statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0,
-                ...row,
-                ...((await request(tx.objectStore('queue_meta').get(row.id))) || {})
-            })));
+            return Promise.all(rows.map(async row => ({ ...row, ...safeMetadata(row, await request(tx.objectStore('queue_meta').get(row.id))) })));
         };
         const list = () => transact(['queue', 'queue_meta'], 'readonly', mergedRows);
         const view = () => transact(['queue', 'queue_meta', 'state'], 'readonly', async tx => {
@@ -165,7 +203,14 @@
                 }
                 return { stopped: null };
             };
-            running = (navigator.locks ? navigator.locks.request(name + ':sync', run) : run()).finally(() => { running = null; });
+            // Idempotent operation_id values make stealing a stale pre-reload lock safe.
+            const locked = navigator.locks
+                ? interruptedAtOpen
+                    ? navigator.locks.request(name + ':sync', { steal: true }, run)
+                    : navigator.locks.request(name + ':sync', run)
+                : run();
+            interruptedAtOpen = false;
+            running = locked.finally(() => { running = null; });
             return running;
         }
         // Explicit operator recovery only: the rejected action and its dependent successors.

@@ -54,12 +54,44 @@ document.getElementById('run').onclick = async () => {
         const legacy = await legacyPhoto();
         store = await O.open(legacy.name);
         const legacyRows = await store.list(); let legacySent = 0;
-        check(legacyRows.length === 1 && legacyRows[0].statut === 'envoi' && legacyRows[0].operation_id === legacy.operation_id, 'ligne photo version 1 relue après mise à niveau');
+        check(legacyRows.length === 1 && legacyRows[0].statut === 'en_attente' && legacyRows[0].operation_id === legacy.operation_id, 'migration version 1 : statut envoi interrompu réarmé sans toucher à la photo');
         await store.sync({ post: async (url, form) => {
             if (!url.endsWith('/preuves') || await form.get('fichier').text() !== 'photo-v1') throw new Error('Photo version 1 perdue');
             legacySent++;
         } }, () => true);
         check(legacySent === 1 && !(await store.list()).length, 'photo version 1 en statut envoi synchronisée puis acquittée');
+        store.close();
+        const legacyReload = await legacyPhoto();
+        store = await O.open(legacyReload.name);
+        const legacyReloadId = (await store.list())[0].id;
+        await new Promise((resolve, reject) => {
+            const opening = indexedDB.open(legacyReload.name);
+            opening.onsuccess = () => {
+                const db = opening.result, tx = db.transaction('queue_meta', 'readwrite');
+                tx.objectStore('queue_meta').put({ statut: 'envoi', retry_count: 'invalide', last_error: 'DETAIL_INTERDIT', next_attempt_at: NaN }, legacyReloadId);
+                tx.oncomplete = () => { db.close(); resolve(); };
+                tx.onabort = () => reject(tx.error); tx.onerror = () => {};
+            };
+            opening.onerror = () => reject(opening.error);
+        });
+        store.close();
+        store = await O.open(legacyReload.name);
+        const afterDoubleReload = await store.list();
+        const raw = await new Promise((resolve, reject) => {
+            const opening = indexedDB.open(legacyReload.name);
+            opening.onsuccess = () => {
+                const db = opening.result, tx = db.transaction(['queue', 'queue_meta']);
+                const q = tx.objectStore('queue').get(afterDoubleReload[0].id);
+                const m = tx.objectStore('queue_meta').get(afterDoubleReload[0].id);
+                tx.oncomplete = () => { db.close(); resolve({ row: q.result, meta: m.result }); };
+                tx.onabort = () => reject(tx.error); tx.onerror = () => {};
+            };
+            opening.onerror = () => reject(opening.error);
+        });
+        check(raw.row.statut === 'envoi' && raw.row.blob instanceof Blob && raw.meta.statut === 'en_attente' && raw.meta.retry_count === 0 && raw.meta.last_error === null && raw.meta.next_attempt_at === 0, 'double rechargement : Blob historique intact et queue_meta incohérent réparé');
+        let reloadedSent = 0;
+        await store.sync({ post: async () => reloadedSent++ }, () => true);
+        check(reloadedSent === 1 && !(await store.list()).length, 'double rechargement : reprise réelle de la photo historique');
         store.close();
         for (const error of [{ code: 'NETWORK_ERROR' }, { status: 500 }, { status: 408 }, { status: 425 }, { status: 429 }, { status: 400 }, { status: 401 }, { status: 403 }]) {
             store = await fresh(); await store.saveDay(day);
@@ -150,7 +182,7 @@ document.getElementById('reload-test').onclick = async () => {
 })().catch(e => { document.getElementById('result').textContent = 'FAIL ' + e.message; });
 document.getElementById('cache-test').onclick = async () => {
     try {
-        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-2', { scope: '/agent-app/' });
+        const reg = await navigator.serviceWorker.register('/agent-app/sw.js?v=1-3', { scope: '/agent-app/' });
         const worker = reg.installing || reg.waiting;
         if (worker && !['installed', 'activated'].includes(worker.state)) {
             await new Promise((resolve, reject) => {
@@ -161,7 +193,7 @@ document.getElementById('cache-test').onclick = async () => {
                 });
             });
         }
-        const cache = await caches.open('prorecup-terrain-shell-v1-2');
+        const cache = await caches.open('prorecup-terrain-shell-v1-3');
         const urls = (await cache.keys()).map(r => r.url);
         document.getElementById('result').textContent = urls.length === 10 && !urls.some(u => u.includes('/api/')) ? 'PASS 10 fichiers du shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.' : 'FAIL cache : ' + urls.join(', ');
     } catch (e) { document.getElementById('result').textContent = 'FAIL ' + e.message; }

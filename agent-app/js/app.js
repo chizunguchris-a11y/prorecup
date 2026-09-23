@@ -197,8 +197,12 @@
     const updateQueueUI = async () => {
         if (!terrainStore) return;
         const rows = await terrainStore.list();
+        const first = rows[0];
+        const firstType = first && ({ avant_collecte: 'photo avant collecte', apres_collecte: 'photo après collecte' }[first.type] || 'action ' + first.type.replaceAll('_', ' '));
+        const firstState = first && (first.statut === 'erreur' ? 'refusée' : first.statut === 'envoi' ? 'envoi en cours' :
+            first.last_error === 'RECONNEXION' ? 'reconnexion requise' : first.last_error === 'RESEAU_OU_SERVEUR' ? 'nouvel essai prévu' : 'prête');
         syncStatus.textContent = rows.length + ' action(s) en attente' +
-            (rows.some(r => r.statut === 'erreur') ? ' — refus à résoudre' : rows.some(r => r.statut === 'envoi') ? ' — envoi' : '');
+            (first ? ' — première : ' + firstType + ', ' + firstState : '');
         syncButton.hidden = !rows.length;
         syncButton.disabled = !rows.length || !navigator.onLine || !!synchronisation;
         rejectButton.hidden = !rows.some(r => r.statut === 'erreur');
@@ -1183,7 +1187,7 @@
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-2').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-3').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

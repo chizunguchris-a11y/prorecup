@@ -24,7 +24,7 @@ class PeseeRepository {
         }
         const resultat = await connexion.query(`
             SELECT m.id AS mission_id, m.agent_id, m.tricycle_id, m.statut AS mission_statut,
-                   c.id AS collecte_id, c.site_id,
+                   c.id AS collecte_id, c.site_id, c.client_id, c.type_dechet_id,
                    (
                        SELECT MIN(me.survenu_le)
                        FROM mission_evenements me

@@ -14,8 +14,18 @@ import authMiddleware
 
 import roleMiddleware
     from "../middlewares/roleMiddleware.js";
+import traceabiliteController
+    from "../controllers/TraceabiliteMatiereController.js";
 
 const router = express.Router();
+
+router.get("/unites", authMiddleware, traceabiliteController.lister);
+router.get("/tracabilite/:code", authMiddleware, traceabiliteController.historique);
+router.get("/etiquette/:code", authMiddleware, traceabiliteController.etiquette);
+router.post("/contenants", authMiddleware, roleMiddleware(["manager", "admin"]),
+    traceabiliteController.creerContenant);
+router.post("/regroupements", authMiddleware, roleMiddleware(["manager", "admin"]),
+    traceabiliteController.regrouper);
 
 /**
  * @swagger

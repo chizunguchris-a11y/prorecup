@@ -47,6 +47,5 @@ export const balanceCompatibleAvecUsage = (balance, contexte, type) => {
     if (type === "terrain")
         return !balance.site_id &&
             (!balance.tricycle_id || balance.tricycle_id === contexte.tricycle_id);
-    return !balance.tricycle_id &&
-        (!balance.site_id || balance.site_id === contexte.site_id);
+    return !balance.tricycle_id;
 };

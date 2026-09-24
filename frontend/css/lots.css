@@ -653,3 +653,15 @@ th {
     }
 
 }
+
+.panneau-unites { margin-top: 22px; }
+.actions-qr { display: flex; gap: 8px; flex-wrap: wrap; }
+.code-qr { font-family: Consolas, monospace; font-weight: 700; }
+.historique-qr { display: grid; gap: 12px; }
+.evenement-qr { padding: 13px; border: 1px solid var(--bordure); border-radius: 10px; background: #f8fafc; }
+
+@media print {
+    body * { visibility: hidden; }
+    .etiquette-impression, .etiquette-impression * { visibility: visible; }
+    .etiquette-impression { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; }
+}

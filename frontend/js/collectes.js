@@ -686,7 +686,10 @@ formulairePeseeDepot.addEventListener("submit", async evenement => {
                 operation_id: crypto.randomUUID(), mission_id: missionId,
                 balance_id: document.getElementById("balance_depot_id").value,
                 poids_brut: Number(document.getElementById("poids_brut_depot").value),
-                tare: Number(document.getElementById("tare_depot").value),
+                tare: document.getElementById("tare_depot").value.trim() === ""
+                    ? null : Number(document.getElementById("tare_depot").value),
+                codes_qr: [...new Set(document.getElementById("codes_qr_depot").value
+                    .split(/[\s,;]+/).map(code => code.trim().toUpperCase()).filter(Boolean))],
                 date_heure: new Date(document.getElementById("date_heure_depot").value).toISOString()
             })
         });
@@ -700,6 +703,29 @@ formulairePeseeDepot.addEventListener("submit", async evenement => {
 });
 document.getElementById("boutonFermerPeseeDepot").addEventListener("click", fermerPeseeDepot);
 document.getElementById("boutonAnnulerPeseeDepot").addEventListener("click", fermerPeseeDepot);
+document.getElementById("boutonScannerQrDepot").addEventListener("click", async () => {
+    const champ = document.getElementById("codes_qr_depot");
+    if (!("BarcodeDetector" in window)) {
+        ProRecup.afficherNotification("Scan QR indisponible ici : saisissez le code imprimé.", "erreur");
+        champ.focus(); return;
+    }
+    let flux;
+    const video = document.createElement("video");
+    video.playsInline = true; video.muted = true; video.style.width = "100%";
+    champ.parentElement.appendChild(video);
+    try {
+        flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+        video.srcObject = flux; await video.play();
+        const detecteur = new BarcodeDetector({ formats: ["qr_code"] });
+        for (let essai = 0; essai < 100 && video.isConnected; essai++) {
+            const codes = await detecteur.detect(video);
+            const valeur = codes[0]?.rawValue?.trim().toUpperCase();
+            if (valeur) { champ.value = [...new Set((champ.value + " " + valeur).trim().split(/\s+/))].join(" "); break; }
+            await new Promise(resolve => setTimeout(resolve, 120));
+        }
+    } catch { ProRecup.afficherNotification("Caméra indisponible : saisissez le code QR.", "erreur"); }
+    finally { flux?.getTracks().forEach(piste => piste.stop()); video.remove(); }
+});
 
 const ouvrirModale = async () => {
 

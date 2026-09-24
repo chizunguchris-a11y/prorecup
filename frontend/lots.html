@@ -122,6 +122,14 @@
                     Nouveau lot
                 </button>
 
+                <button type="button" id="boutonNouveauContenant" class="bouton-principal">
+                    Nouveau sac / bac QR
+                </button>
+
+                <button type="button" id="boutonRegrouperLot" class="bouton-principal">
+                    Regrouper au dépôt
+                </button>
+
             </header>
 
             <section class="resume-lots">
@@ -286,8 +294,46 @@
 
             </section>
 
+            <section class="panneau panneau-unites">
+                <div class="entete-panneau"><div><p class="sur-titre">QR & FILIATION</p><h2>Sacs, bacs et lots identifiés</h2></div></div>
+                <div class="tableau-conteneur"><table><thead><tr><th>Code QR</th><th>Type</th><th>Matière</th><th>Client / site</th><th>Tare</th><th>Poids courant</th><th>Statut</th><th>Actions</th></tr></thead>
+                    <tbody id="corpsTableauUnites"><tr><td colspan="8" class="etat-tableau">Chargement des QR…</td></tr></tbody></table></div>
+            </section>
+
         </main>
 
+    </div>
+
+    <div id="fenetreContenant" class="modale cache" aria-hidden="true">
+        <div class="fond-modale"></div><section class="contenu-modale">
+            <div class="entete-modale"><div><p class="sur-titre">NOUVEAU QR</p><h2>Créer un sac ou un bac</h2></div><button type="button" id="fermerContenant" class="bouton-fermer">×</button></div>
+            <form id="formulaireContenant"><div class="grille-formulaire">
+                <div class="groupe-champ"><label for="type_contenant">Type *</label><select id="type_contenant" required><option value="sac">Sac</option><option value="bac">Bac</option></select></div>
+                <div class="groupe-champ"><label for="tare_contenant">Tare enregistrée (kg)</label><input id="tare_contenant" type="number" min="0" step="any"></div>
+                <div class="groupe-champ champ-large"><label for="code_contenant">Code personnalisé (facultatif)</label><input id="code_contenant" type="text" placeholder="PR-C-…"><p class="aide-champ">À défaut, un code unique est généré.</p></div>
+            </div><div id="erreurContenant" class="message message-erreur cache"></div>
+            <div class="actions-formulaire"><button type="button" id="annulerContenant" class="bouton-annuler">Annuler</button><button type="submit" class="bouton-principal">Créer et imprimer</button></div></form>
+        </section>
+    </div>
+
+    <div id="fenetreTrace" class="modale cache" aria-hidden="true">
+        <div class="fond-modale"></div><section class="contenu-modale">
+            <div class="entete-modale"><div><p class="sur-titre">TRAÇABILITÉ</p><h2 id="titreTrace">Historique</h2></div><button type="button" id="fermerTrace" class="bouton-fermer">×</button></div>
+            <div id="contenuTrace"></div>
+        </section>
+    </div>
+
+    <div id="fenetreRegroupement" class="modale cache" aria-hidden="true">
+        <div class="fond-modale"></div><section class="contenu-modale">
+            <div class="entete-modale"><div><p class="sur-titre">LOT DÉPÔT</p><h2>Regrouper des contenants reçus</h2></div><button type="button" id="fermerRegroupement" class="bouton-fermer">×</button></div>
+            <form id="formulaireRegroupement"><div class="grille-formulaire">
+                <div class="groupe-champ champ-large"><label for="codes_regroupement">Codes QR des sacs/bacs *</label><input id="codes_regroupement" type="text" placeholder="PR-C-… PR-C-…" required></div>
+                <div class="groupe-champ"><label for="site_regroupement">Site dépôt *</label><select id="site_regroupement" required><option value="">Chargement…</option></select></div>
+                <div class="groupe-champ"><label for="code_lot_regroupement">Code lot (facultatif)</label><input id="code_lot_regroupement" type="text" placeholder="PR-L-…"></div>
+                <div class="groupe-champ"><label for="poids_lot_regroupement">Poids du lot (kg, si pesée groupée)</label><input id="poids_lot_regroupement" type="number" min="0.001" step="any"></div>
+            </div><div id="erreurRegroupement" class="message message-erreur cache"></div>
+            <div class="actions-formulaire"><button type="button" id="annulerRegroupement" class="bouton-annuler">Annuler</button><button type="submit" class="bouton-principal">Créer le lot</button></div></form>
+        </section>
     </div>
 
     <div

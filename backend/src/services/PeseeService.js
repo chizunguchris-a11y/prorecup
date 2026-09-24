@@ -2,6 +2,7 @@ import pool from "../config/db.js";
 import peseeRepository from "../repositories/PeseeRepository.js";
 import ApiError from "../utils/ApiError.js";
 import { balanceCompatibleAvecUsage, calculerPoidsNet, doitSuperseder, normaliserInstantIso, respectePrecision } from "./PeseeRules.js";
+import traceabiliteRepository from "../repositories/TraceabiliteMatiereRepository.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -50,15 +51,23 @@ class PeseeService {
         const connexion = await pool.connect();
         try {
             await connexion.query("BEGIN");
+            const codesQr = Array.isArray(donnees.codes_qr)
+                ? [...new Set(donnees.codes_qr.map(code => String(code).trim().toUpperCase()).filter(Boolean))].sort()
+                : [];
+            if (codesQr.some(code => !/^PR-[CL]-[A-Z0-9-]{6,60}$/.test(code)))
+                throw new ApiError(400, "Un code QR est invalide.");
             const existante = await peseeRepository.trouverParOperation(
                 donnees.operation_id, identite.organisation_id, connexion);
             if (existante) {
+                const tareDemandee = donnees.tare === undefined || donnees.tare === null || donnees.tare === ""
+                    ? Number(existante.tare) : Number(donnees.tare);
                 if (existante.mission_id !== missionId || existante.collecte_id !== collecteId ||
                     existante.utilisateur_id !== identite.utilisateur_id || existante.type !== type ||
                     existante.balance_id !== donnees.balance_id ||
                     Number(existante.poids_brut) !== Number(donnees.poids_brut) ||
-                    Number(existante.tare) !== Number(donnees.tare) ||
-                    new Date(existante.date_heure).getTime() !== new Date(donnees.date_heure).getTime())
+                    Number(existante.tare) !== tareDemandee ||
+                    new Date(existante.date_heure).getTime() !== new Date(donnees.date_heure).getTime() ||
+                    JSON.stringify(await traceabiliteRepository.listerCodesPesee(existante.id, connexion)) !== JSON.stringify(codesQr))
                     throw new ApiError(409, "Cet identifiant d'opération a déjà été utilisé.");
                 await connexion.query("COMMIT");
                 return { deja_traitee: true, pesee: existante };
@@ -75,7 +84,23 @@ class PeseeService {
                 throw new ApiError(409, type === "terrain"
                     ? "Cette balance n'est pas disponible pour la pesée terrain."
                     : "Cette balance n'est pas disponible pour la pesée dépôt.");
-            const valeurs = this.normaliser(donnees, balance, type);
+            const sitePesee = type === "depot" ? (balance.site_id || contexte.site_id) : contexte.site_id;
+            const unites = await traceabiliteRepository.trouverUnitesParCodes(
+                identite.organisation_id, codesQr, connexion, true);
+            if (unites.length !== codesQr.length) throw new ApiError(404, "Un contenant ou lot QR est introuvable.");
+            const statutsInterdits = type === "terrain" ? ["recu_depot", "dans_lot", "vide", "retire", "vendu", "transforme"] : ["vide", "retire", "vendu", "transforme"];
+            if (unites.some(unite => statutsInterdits.includes(unite.statut)))
+                throw new ApiError(409, "Un contenant ou lot n'est pas disponible pour cette pesée.");
+            if (unites.some(unite => unite.type_dechet_id && unite.type_dechet_id !== contexte.type_dechet_id))
+                throw new ApiError(409, "La matière du QR ne correspond pas à la collecte.");
+            if (type === "terrain" && unites.some(unite =>
+                (unite.site_courant_id && unite.site_courant_id !== contexte.site_id) ||
+                (unite.client_courant_id && unite.client_courant_id !== contexte.client_id)))
+                throw new ApiError(409, "Le QR n'est pas affecté à ce client ou à ce site.");
+            const donneesPesee = { ...donnees };
+            if (codesQr.length && (donneesPesee.tare === undefined || donneesPesee.tare === null || donneesPesee.tare === ""))
+                donneesPesee.tare = unites.reduce((somme, unite) => somme + Number(unite.tare_kg || 0), 0);
+            const valeurs = this.normaliser(donneesPesee, balance, type);
             if (type === "terrain") {
                 if (!contexte.collecte_demarree_le)
                     throw new ApiError(409, "La collecte doit être démarrée avant la pesée.");
@@ -98,11 +123,17 @@ class PeseeService {
             if (!pesee) pesee = await peseeRepository.trouverParOperation(
                 donnees.operation_id, identite.organisation_id, connexion);
             if (!pesee) throw new ApiError(409, "Cet identifiant d'opération est déjà utilisé.");
+            if (unites.length) await traceabiliteRepository.lierPesee(pesee.id, unites, {
+                organisation_id: identite.organisation_id, utilisateur_id: identite.utilisateur_id,
+                operation_id: donnees.operation_id, collecte_id: collecteId, mission_id: missionId,
+                site_id: sitePesee, client_id: contexte.client_id, type_dechet_id: contexte.type_dechet_id,
+                survenu_le: valeurs.dateHeure, poids_net: valeurs.poidsNet, nombre_unites: unites.length, type
+            }, connexion);
             if (type === "terrain" && devientCourante) await peseeRepository.mettreAJourPoidsCompatible(
                 collecteId, valeurs.poidsNet, identite.utilisateur_id, valeurs.dateHeure, connexion);
             await connexion.query("COMMIT");
             return { deja_traitee: false, est_courante: devientCourante,
-                pesee: { ...pesee, poids_net: valeurs.poidsNet },
+                pesee: { ...pesee, poids_net: valeurs.poidsNet, codes_qr: codesQr },
                 avertissement_calibrage: balance.prochain_calibrage &&
                     new Date(balance.prochain_calibrage) < new Date() ? "calibrage_expire" : null };
         } catch (erreur) {

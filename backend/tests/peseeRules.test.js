@@ -54,6 +54,6 @@ describe("Règles de pesée V1", function () {
         assert.equal(balanceCompatibleAvecUsage(partagee, contexte, "terrain"), true);
         assert.equal(balanceCompatibleAvecUsage(partagee, contexte, "depot"), true);
         assert.equal(balanceCompatibleAvecUsage({ ...terrain, tricycle_id: "tri-2" }, contexte, "terrain"), false);
-        assert.equal(balanceCompatibleAvecUsage({ ...depot, site_id: "site-2" }, contexte, "depot"), false);
+        assert.equal(balanceCompatibleAvecUsage({ ...depot, site_id: "site-2" }, contexte, "depot"), true);
     });
 });

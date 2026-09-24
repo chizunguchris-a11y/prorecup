@@ -15,7 +15,10 @@ const lotController = {
             ...req.body,
 
             organisation_id:
-                req.utilisateur.organisationId
+                req.utilisateur.organisationId,
+
+            utilisateur_id:
+                req.utilisateur.id
         };
 
         const resultat =

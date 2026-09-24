@@ -364,7 +364,12 @@
         const balance = (journeeCourante?.balances || []).find(item => item.id === donnees.balance_id);
         if (!balance) throw new Error("Choisissez une balance disponible.");
         const brut = Number(donnees.poids_brut);
-        const tare = Number(donnees.tare);
+        const codes = [...new Set(String(donnees.codes_qr || "").split(/[\s,;]+/)
+            .map(code => code.trim().toUpperCase()).filter(Boolean))];
+        const unites = codes.map(code => (journeeCourante?.unites_qr || []).find(unite => unite.code_qr === code));
+        if (unites.some(unite => !unite)) throw new Error("Un QR est inconnu de la tournée. Synchronisez ou vérifiez le code.");
+        const tareEnregistree = unites.reduce((somme, unite) => somme + Number(unite?.tare_kg || 0), 0);
+        const tare = String(donnees.tare ?? "").trim() === "" ? tareEnregistree : Number(donnees.tare);
         if (![brut, tare].every(Number.isFinite) || brut < 0 || tare < 0 || tare > brut)
             throw new Error("Le poids brut et la tare sont invalides.");
         if (brut > Number(balance.capacite_max_kg))
@@ -373,7 +378,8 @@
         const aligne = valeur => Math.abs(valeur / precision - Math.round(valeur / precision)) < 1e-7;
         if (!aligne(brut) || !aligne(tare))
             throw new Error(`Respectez la précision de ${precision} kg de la balance.`);
-        return { balance_id: balance.id, poids_brut: brut, tare, poids_net: Math.round((brut - tare) * 1000) / 1000 };
+        return { balance_id: balance.id, poids_brut: brut, tare, codes_qr: codes,
+            poids_net: Math.round((brut - tare) * 1000) / 1000 };
     };
 
     // Une liste fermée de champs est appliquée aussi aux données restaurées.
@@ -1084,6 +1090,43 @@
         });
     };
 
+    const preparerScannerQr = formulaire => {
+        const bouton = formulaire.querySelector("[data-scanner-qr]");
+        const champ = formulaire.elements.codes_qr;
+        if (!bouton || !champ) return;
+        bouton.addEventListener("click", async () => {
+            if (!("BarcodeDetector" in window)) {
+                afficherMessage(messageApplication, "Le scan QR n’est pas disponible sur ce navigateur. Saisissez le code imprimé.", "erreur");
+                champ.focus();
+                return;
+            }
+            let flux;
+            const video = document.createElement("video");
+            video.playsInline = true; video.muted = true; video.className = "apercu-camera";
+            formulaire.insertBefore(video, bouton.nextSibling);
+            try {
+                flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+                video.srcObject = flux; await video.play();
+                const detecteur = new BarcodeDetector({ formats: ["qr_code"] });
+                for (let essai = 0; essai < 100 && video.isConnected; essai++) {
+                    const codes = await detecteur.detect(video);
+                    const valeur = codes[0]?.rawValue?.trim().toUpperCase();
+                    if (valeur) { champ.value = valeur; champ.dispatchEvent(new Event("change")); break; }
+                    await new Promise(resolve => setTimeout(resolve, 120));
+                }
+            } catch (erreur) {
+                afficherMessage(messageApplication, erreur.name === "NotAllowedError"
+                    ? "Caméra refusée. Saisissez le code QR." : "Scan impossible. Saisissez le code QR.", "erreur");
+            } finally { flux?.getTracks().forEach(piste => piste.stop()); video.remove(); }
+        });
+        champ.addEventListener("change", () => {
+            const codes = String(champ.value || "").split(/[\s,;]+/).map(code => code.trim().toUpperCase()).filter(Boolean);
+            const unites = codes.map(code => (journeeCourante?.unites_qr || []).find(unite => unite.code_qr === code));
+            if (unites.length && unites.every(Boolean)) formulaire.elements.tare.value = unites
+                .reduce((somme, unite) => somme + Number(unite.tare_kg || 0), 0);
+        });
+    };
+
     const ouvrirSaisie = (carte, action, mission, etape) => {
         fermerSaisie(carte.querySelector(".saisie-terrain"));
         const formulaire = document.createElement("form");
@@ -1109,7 +1152,9 @@
                 ...balances.map(balance => `<option value="${nettoyer(balance.id)}">${nettoyer(balance.numero_interne)} — max ${Number(balance.capacite_max_kg)} kg, précision ${Number(balance.precision_kg)} kg</option>`),
                 '</select></label>',
                 '<label>Poids affiché / brut (kg)<input name="poids_brut" type="number" min="0" step="any" inputmode="decimal" required></label>',
-                '<label>Tare — contenant vide (kg)<input name="tare" type="number" min="0" step="any" inputmode="decimal" value="0" required></label>',
+                '<label>Code QR du sac, bac ou lot<input name="codes_qr" type="text" autocomplete="off" placeholder="PR-C-…"></label>',
+                '<button class="bouton-secondaire" type="button" data-scanner-qr>Scanner le QR</button>',
+                '<label>Tare — contenant vide (kg)<input name="tare" type="number" min="0" step="any" inputmode="decimal" placeholder="Calculée depuis le QR"></label>',
                 '<p>Le poids net sera calculé automatiquement : poids affiché − tare.</p>',
                 '<label>Ticket de balance (optionnel, recommandé)<input name="ticket_balance" type="file" accept="image/jpeg,image/png,image/webp"></label>'
             ].join("");
@@ -1129,6 +1174,7 @@
         carte.append(formulaire);
         formulaire.querySelector("[data-annuler]").addEventListener("click", () => fermerSaisie(formulaire));
         if (estPhoto(action)) preparerPhoto(formulaire);
+        if (action === "enregistrer_pesee") preparerScannerQr(formulaire);
         return formulaire;
     };
 
@@ -1311,7 +1357,7 @@
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-7').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-8').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

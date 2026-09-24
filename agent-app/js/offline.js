@@ -35,7 +35,9 @@
             if (!UUID.test(p.balance_id || '') || !Number.isFinite(p.poids_brut) ||
                 !Number.isFinite(p.tare) || p.poids_brut < 0 || p.tare < 0 || p.tare > p.poids_brut)
                 throw new Error('Pesée invalide.');
-            Object.assign(out, { balance_id: p.balance_id, poids_brut: p.poids_brut, tare: p.tare });
+            const codes = Array.isArray(p.codes_qr) ? [...new Set(p.codes_qr.map(code => String(code).trim().toUpperCase()).filter(Boolean))] : [];
+            if (codes.some(code => !/^PR-[CL]-[A-Z0-9-]{6,60}$/.test(code))) throw new Error('Code QR invalide.');
+            Object.assign(out, { balance_id: p.balance_id, poids_brut: p.poids_brut, tare: p.tare, codes_qr: codes });
         }
         return out;
     }
@@ -61,6 +63,11 @@
             id: b.id, numero_interne: String(b.numero_interne || ''),
             capacite_max_kg: Number(b.capacite_max_kg), precision_kg: Number(b.precision_kg),
             tricycle_id: b.tricycle_id || null, site_id: b.site_id || null
+        })), unites_qr: (day?.unites_qr || []).map(u => ({
+            code_qr: String(u.code_qr || ''), type: String(u.type || ''),
+            tare_kg: u.tare_kg === null ? null : Number(u.tare_kg), statut: String(u.statut || ''),
+            site_courant_id: u.site_courant_id || null, client_courant_id: u.client_courant_id || null,
+            type_dechet_id: u.type_dechet_id || null
         })), missions: (day?.missions || []).map(m => ({
             id: m.id, statut: m.statut,
             tricycle: { id: m.tricycle?.id || null, numero: String(m.tricycle?.numero || '') },
@@ -90,7 +97,8 @@
                     c.pesees.filter(p => p.type === 'terrain').forEach(p => { p.est_courante = false; });
                     c.pesees.push({ operation_id: r.operation_id, type: 'terrain', poids_brut: r.payload.poids_brut,
                         tare: r.payload.tare, poids_net: r.payload.poids_brut - r.payload.tare,
-                        balance_id: r.payload.balance_id, date_heure: r.payload.survenu_le, est_courante: true });
+                        balance_id: r.payload.balance_id, codes_qr: r.payload.codes_qr || [],
+                        date_heure: r.payload.survenu_le, est_courante: true });
                 }
             }
         }

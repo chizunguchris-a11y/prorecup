@@ -841,4 +841,110 @@ document.addEventListener(
     }
 );
 
-chargerLots();
+const fenetreContenant = document.getElementById("fenetreContenant");
+const fenetreTrace = document.getElementById("fenetreTrace");
+const fenetreRegroupement = document.getElementById("fenetreRegroupement");
+const corpsTableauUnites = document.getElementById("corpsTableauUnites");
+let unitesQr = [];
+const echapper = valeur => String(valeur ?? "").replace(/[&<>"']/g, caractere => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+})[caractere]);
+
+const fermerFenetre = fenetre => { fenetre.classList.add("cache"); fenetre.setAttribute("aria-hidden", "true"); };
+const ouvrirFenetre = fenetre => { fenetre.classList.remove("cache"); fenetre.setAttribute("aria-hidden", "false"); };
+
+const imprimerQr = async code => {
+    const impression = window.open("", "_blank", "width=520,height=650");
+    if (!impression) throw new Error("Autorisez la fenêtre d’impression.");
+    try {
+        const resultat = await ProRecup.requete(`/api/lots/etiquette/${encodeURIComponent(code)}`);
+        impression.document.write(`<title>${code}</title><main class="etiquette-impression" style="font-family:Arial;text-align:center;padding:30px"><h1>Pro Récup</h1>${resultat.data.svg}<h2>${code}</h2><p>${resultat.data.nature}</p></main>`);
+        impression.document.close(); impression.focus(); impression.print();
+    } catch (erreur) { impression.close(); throw erreur; }
+};
+
+const afficherUnites = () => {
+    corpsTableauUnites.innerHTML = "";
+    if (!unitesQr.length) { corpsTableauUnites.innerHTML = '<tr><td colspan="8" class="etat-tableau">Aucun QR créé.</td></tr>'; return; }
+    for (const unite of unitesQr) {
+        const ligne = document.createElement("tr");
+        for (const valeur of [unite.code_qr, unite.type, unite.matiere || "—",
+            [unite.client_nom, unite.site_nom].filter(Boolean).join(" / ") || "—",
+            unite.tare_kg === null ? "—" : `${ProRecup.formaterNombre(unite.tare_kg)} kg`,
+            unite.poids_courant === null ? "—" : `${ProRecup.formaterNombre(unite.poids_courant)} kg`, unite.statut]) {
+            const cellule = creerCellule(valeur); if (valeur === unite.code_qr) cellule.classList.add("code-qr"); ligne.appendChild(cellule);
+        }
+        const actions = document.createElement("td"); actions.className = "actions-qr";
+        actions.innerHTML = `<button type="button" class="bouton-secondaire" data-imprimer="${unite.code_qr}">Imprimer</button><button type="button" class="bouton-secondaire" data-trace="${unite.code_qr}">Historique</button>`;
+        ligne.appendChild(actions); corpsTableauUnites.appendChild(ligne);
+    }
+};
+
+const chargerUnites = async () => {
+    const resultat = await ProRecup.requete("/api/lots/unites");
+    unitesQr = Array.isArray(resultat.data) ? resultat.data : []; afficherUnites();
+};
+
+document.getElementById("boutonNouveauContenant").addEventListener("click", () => ouvrirFenetre(fenetreContenant));
+document.getElementById("fermerContenant").addEventListener("click", () => fermerFenetre(fenetreContenant));
+document.getElementById("annulerContenant").addEventListener("click", () => fermerFenetre(fenetreContenant));
+document.getElementById("fermerTrace").addEventListener("click", () => fermerFenetre(fenetreTrace));
+document.getElementById("fermerRegroupement").addEventListener("click", () => fermerFenetre(fenetreRegroupement));
+document.getElementById("annulerRegroupement").addEventListener("click", () => fermerFenetre(fenetreRegroupement));
+document.getElementById("boutonRegrouperLot").addEventListener("click", async () => {
+    try {
+        const resultat = await ProRecup.requete("/api/sites");
+        const sites = Array.isArray(resultat.data) ? resultat.data : [];
+        document.getElementById("site_regroupement").innerHTML = '<option value="">Sélectionnez le dépôt</option>' +
+            sites.map(site => `<option value="${echapper(site.id)}">${echapper(site.nom)}</option>`).join("");
+        ouvrirFenetre(fenetreRegroupement);
+    } catch (erreur) { ProRecup.afficherNotification(erreur.message, "erreur"); }
+});
+
+document.getElementById("formulaireContenant").addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+    const tareTexte = document.getElementById("tare_contenant").value.trim();
+    try {
+        const resultat = await ProRecup.requete("/api/lots/contenants", { method: "POST", body: JSON.stringify({
+            type_contenant: document.getElementById("type_contenant").value,
+            tare_kg: tareTexte === "" ? null : Number(tareTexte), code_qr: document.getElementById("code_contenant").value.trim() || undefined
+        }) });
+        fermerFenetre(fenetreContenant); evenement.target.reset(); await chargerUnites(); await imprimerQr(resultat.data.code_qr);
+    } catch (erreur) { const zone = document.getElementById("erreurContenant"); zone.textContent = erreur.message; zone.classList.remove("cache"); }
+});
+
+document.getElementById("formulaireRegroupement").addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+    const codes = [...new Set(document.getElementById("codes_regroupement").value
+        .split(/[\s,;]+/).map(code => code.trim().toUpperCase()).filter(Boolean))];
+    try {
+        const resultat = await ProRecup.requete("/api/lots/regroupements", { method: "POST", body: JSON.stringify({
+            operation_id: crypto.randomUUID(), codes_qr: codes,
+            site_id: document.getElementById("site_regroupement").value,
+            code_qr: document.getElementById("code_lot_regroupement").value.trim() || undefined,
+            poids_reel: document.getElementById("poids_lot_regroupement").value.trim() || undefined,
+            survenu_le: new Date().toISOString()
+        }) });
+        fermerFenetre(fenetreRegroupement); evenement.target.reset();
+        await Promise.all([chargerLots(), chargerUnites()]); await imprimerQr(resultat.data.code_qr);
+    } catch (erreur) { const zone = document.getElementById("erreurRegroupement"); zone.textContent = erreur.message; zone.classList.remove("cache"); }
+});
+
+corpsTableauUnites.addEventListener("click", async evenement => {
+    const imprimer = evenement.target.closest("[data-imprimer]");
+    const trace = evenement.target.closest("[data-trace]");
+    try {
+        if (imprimer) await imprimerQr(imprimer.dataset.imprimer);
+        if (trace) {
+            const resultat = await ProRecup.requete(`/api/lots/tracabilite/${encodeURIComponent(trace.dataset.trace)}`);
+            document.getElementById("titreTrace").textContent = resultat.data.unite.code_qr;
+            const filiation = (resultat.data.filiation || []).length ? `<h3>Contenants d’origine</h3><ul>${resultat.data.filiation.map(item =>
+                `<li><span class="code-qr">${echapper(item.code_qr)}</span> — ${echapper([item.client_nom, item.site_nom, item.matiere].filter(Boolean).join(" — "))}</li>`).join("")}</ul>` : "";
+            document.getElementById("contenuTrace").innerHTML = filiation + '<h3>Événements</h3><div class="historique-qr">' + resultat.data.historique.map(item =>
+                `<article class="evenement-qr"><strong>${echapper(item.type_evenement || "Création")}</strong><p>${echapper(item.survenu_le ? new Date(item.survenu_le).toLocaleString("fr-FR") : "")}</p><p>${echapper([item.client_nom, item.site_nom].filter(Boolean).join(" — "))}</p><p>${item.poids_net === null ? "" : `Poids net : ${echapper(item.poids_net)} kg`}</p></article>`).join("") + '</div>';
+            ouvrirFenetre(fenetreTrace);
+        }
+    } catch (erreur) { ProRecup.afficherNotification(erreur.message, "erreur"); }
+});
+
+Promise.all([chargerLots(), chargerUnites()]).catch(erreur => ProRecup.afficherNotification(erreur.message, "erreur"));

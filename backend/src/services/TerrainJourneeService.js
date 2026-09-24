@@ -3,6 +3,8 @@
 
 import ApiError
     from "../utils/ApiError.js";
+import traceabiliteRepository
+    from "../repositories/TraceabiliteMatiereRepository.js";
 
 
 const TIMEZONE =
@@ -600,6 +602,9 @@ class TerrainJourneeService {
         const balances = await terrainJourneeRepository.listerBalances(
             agentTerrain.organisation_id
         );
+        const unitesQr = await traceabiliteRepository.listerPourTerrain(
+            agentTerrain.organisation_id
+        );
 
 
         return {
@@ -660,6 +665,11 @@ class TerrainJourneeService {
                 ...balance,
                 capacite_max_kg: Number(balance.capacite_max_kg),
                 precision_kg: Number(balance.precision_kg)
+            })),
+
+            unites_qr: unitesQr.map(unite => ({
+                ...unite,
+                tare_kg: unite.tare_kg === null ? null : Number(unite.tare_kg)
             })),
 
             missions

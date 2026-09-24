@@ -446,7 +446,8 @@
                 <div class="grille-formulaire">
                     <div class="groupe-champ"><label for="balance_depot_id">Balance *</label><select id="balance_depot_id" required></select></div>
                     <div class="groupe-champ"><label for="poids_brut_depot">Poids brut (kg) *</label><input id="poids_brut_depot" type="number" min="0" step="any" required></div>
-                    <div class="groupe-champ"><label for="tare_depot">Tare (kg) *</label><input id="tare_depot" type="number" min="0" step="any" value="0" required></div>
+                    <div class="groupe-champ champ-large"><label for="codes_qr_depot">QR reçus (séparés par un espace)</label><input id="codes_qr_depot" type="text" autocomplete="off" placeholder="PR-C-…"><button type="button" id="boutonScannerQrDepot" class="bouton-secondaire">Scanner un QR</button></div>
+                    <div class="groupe-champ"><label for="tare_depot">Tare (kg)</label><input id="tare_depot" type="number" min="0" step="any" placeholder="Calculée depuis les QR"></div>
                     <div class="groupe-champ"><label for="date_heure_depot">Date et heure *</label><input id="date_heure_depot" type="datetime-local" step="1" required></div>
                 </div>
                 <p>Une correction crée une nouvelle pesée : l'historique précédent reste visible.</p>

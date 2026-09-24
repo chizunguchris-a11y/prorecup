@@ -11,6 +11,8 @@ import stockService
 
 import ApiError
     from "../utils/ApiError.js";
+import { randomUUID } from "node:crypto";
+import traceabiliteRepository from "../repositories/TraceabiliteMatiereRepository.js";
 
 class LotService {
 
@@ -115,6 +117,9 @@ class LotService {
                         collecte_id:
                             lot.collecte_id,
 
+                        organisation_id:
+                            lot.organisation_id,
+
                         type_dechet_id:
                             lot.type_dechet_id,
 
@@ -124,10 +129,32 @@ class LotService {
                             ),
 
                         statut_lot:
-    			"en_stock"
+			"en_stock",
+
+                        code_qr:
+                            "PR-L-" + randomUUID().replaceAll("-", "").toUpperCase(),
+
+                        site_courant_id:
+                            collecte.site_id,
+
+                        client_courant_id:
+                            collecte.client_id
                     },
                     client
                 );
+
+            await traceabiliteRepository.creerEvenement({
+                organisation_id: lot.organisation_id,
+                lot_id: nouveauLot.id,
+                type_evenement: "creation",
+                operation_id: randomUUID(),
+                collecte_id: collecte.id,
+                site_id: collecte.site_id,
+                client_id: collecte.client_id,
+                utilisateur_id: lot.utilisateur_id,
+                survenu_le: nouveauLot.cree_le || new Date().toISOString(),
+                details: { code_qr: nouveauLot.code_qr }
+            }, client);
 
             const stock =
                 await stockService

@@ -1111,7 +1111,20 @@
                 for (let essai = 0; essai < 100 && video.isConnected; essai++) {
                     const codes = await detecteur.detect(video);
                     const valeur = codes[0]?.rawValue?.trim().toUpperCase();
-                    if (valeur) { champ.value = valeur; champ.dispatchEvent(new Event("change")); break; }
+                    if (valeur) {
+    const existants = String(champ.value || "")
+        .split(/[\s,;]+/)
+        .map(code => code.trim().toUpperCase())
+        .filter(Boolean);
+
+    if (!existants.includes(valeur)) {
+        existants.push(valeur);
+    }
+
+    champ.value = existants.join(" ");
+    champ.dispatchEvent(new Event("change"));
+    break;
+}
                     await new Promise(resolve => setTimeout(resolve, 120));
                 }
             } catch (erreur) {

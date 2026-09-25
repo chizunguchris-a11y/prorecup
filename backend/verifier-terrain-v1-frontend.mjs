@@ -330,7 +330,7 @@ await test('CSS ajouté : absence des + parasites et propriétés valides', asyn
             assert.match(declaration.trim(), /^[a-z-]+:\s*[^;{}]+;$/);
     }
 });
-await test('récupération photo : message non sensible, sélection ciblée et cache v1-8', async () => {
+await test('récupération photo : message non sensible, sélection ciblée et cache v1-9', async () => {
     assert.match(html, /id="bouton-remplacer-preuve"/);
     assert.match(html, /Reprenez-la ou sélectionnez une nouvelle photo pour cette action uniquement/);
     assert.match(html, /\.\/js\/offline\.js\?v=1-8/);

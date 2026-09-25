@@ -22,7 +22,7 @@ const roleController = {
 
             return ApiResponse.created(
                 res,
-                "Rôle créé avec succès.",
+                "RÃ´le crÃ©Ã© avec succÃ¨s.",
                 role
             );
 
@@ -40,7 +40,7 @@ const roleController = {
 
             return ApiResponse.success(
                 res,
-                "Rôles récupérés avec succès.",
+                "RÃ´les rÃ©cupÃ©rÃ©s avec succÃ¨s.",
                 roles
             );
 

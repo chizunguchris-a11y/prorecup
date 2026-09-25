@@ -138,7 +138,7 @@ const organisationService = {
 
             throw new ApiError(
                 409,
-                "Cette adresse e-mail est déjà utilisée par une autre organisation."
+                "Cette adresse e-mail est dÃ©jÃ  utilisÃ©e par une autre organisation."
             );
 
         }

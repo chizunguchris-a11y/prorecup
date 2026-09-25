@@ -230,6 +230,13 @@ const mettreAJourCompteurs = () => {
             0
         );
 
+    const ventesSansImpact =
+        ventesConfirmees.filter(
+            (vente) =>
+                vente.co2e_estime_kg === null ||
+                vente.co2e_estime_kg === undefined
+        ).length;
+
     chiffreAffaires.textContent =
         formaterMontant(
             totalMontant
@@ -243,7 +250,12 @@ const mettreAJourCompteurs = () => {
     impactCarbone.textContent =
         `${ProRecup.formaterNombre(
             totalCarbone
-        )} kg CO₂e`;
+        )} kg CO₂e` +
+        (
+            ventesSansImpact > 0
+                ? ` — ${ventesSansImpact} vente(s) non calculée(s)`
+                : ""
+        );
 
 };
 
@@ -879,22 +891,37 @@ formulaireVente.addEventListener(
 
         try {
 
-            await ProRecup.requete(
-                "/api/ventes",
-                {
-                    method: "POST",
+            const resultat =
+                await ProRecup.requete(
+                    "/api/ventes",
+                    {
+                        method: "POST",
 
-                    body: JSON.stringify(
-                        donneesVente
-                    )
-                }
-            );
+                        body: JSON.stringify(
+                            donneesVente
+                        )
+                    }
+                );
+
+            const facteurCarboneAbsent =
+                Array.isArray(
+                    resultat.data?.avertissements
+                ) &&
+                resultat.data.avertissements.some(
+                    (avertissement) =>
+                        avertissement.code ===
+                        "CARBON_FACTOR_NOT_FOUND"
+                );
 
             fermerModale();
 
             ProRecup.afficherNotification(
-                "Vente enregistrée, stock diminué et impact carbone calculé.",
-                "succes"
+                facteurCarboneAbsent
+                    ? "Vente enregistrée et stock diminué. Impact carbone non calculé : aucun facteur carbone applicable."
+                    : "Vente enregistrée, stock diminué et impact carbone calculé.",
+                facteurCarboneAbsent
+                    ? "avertissement"
+                    : "succes"
             );
 
             await chargerVentes();

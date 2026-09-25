@@ -62,7 +62,7 @@ const enregistrerAuditSilencieusement =
         } catch (erreur) {
 
             console.error(
-                "Audit non enregistré :",
+                "Audit non enregistrÃ© :",
                 erreur.message
             );
 
@@ -119,7 +119,7 @@ const authController = {
                 return res.status(400).json({
                     success: false,
                     error:
-                        "Le mot de passe doit contenir au moins 8 caractères."
+                        "Le mot de passe doit contenir au moins 8 caractÃ¨res."
                 });
 
             }
@@ -135,7 +135,7 @@ const authController = {
                 return res.status(409).json({
                     success: false,
                     error:
-                        "Cet email est déjà utilisé."
+                        "Cet email est dÃ©jÃ  utilisÃ©."
                 });
 
             }
@@ -158,7 +158,7 @@ const authController = {
             return res.status(201).json({
                 success: true,
                 message:
-                    "Utilisateur inscrit avec succès.",
+                    "Utilisateur inscrit avec succÃ¨s.",
                 data:
                     utilisateur
             });
@@ -173,7 +173,7 @@ const authController = {
             return res.status(500).json({
                 success: false,
                 error:
-                    "Impossible de créer l'utilisateur."
+                    "Impossible de crÃ©er l'utilisateur."
             });
 
         }
@@ -233,7 +233,7 @@ const authController = {
                 return res.status(403).json({
                     success: false,
                     error:
-                        "Votre compte est désactivé. Contactez un administrateur."
+                        "Votre compte est dÃ©sactivÃ©. Contactez un administrateur."
                 });
 
             }
@@ -259,7 +259,7 @@ const authController = {
                 return res.status(403).json({
                     success: false,
                     error:
-                        "Aucun rôle n'est attribué à cet utilisateur."
+                        "Aucun rÃ´le n'est attribuÃ© Ã  cet utilisateur."
                 });
 
             }
@@ -302,8 +302,8 @@ const authController = {
                 );
 
             /*
-             * Mise à jour non bloquante :
-             * la connexion réussit même si cette opération échoue.
+             * Mise Ã  jour non bloquante :
+             * la connexion rÃ©ussit mÃªme si cette opÃ©ration Ã©choue.
              */
             if (
                 typeof utilisateurRepository
@@ -319,7 +319,7 @@ const authController = {
                         (erreur) => {
 
                             console.error(
-                                "Dernier accès non enregistré :",
+                                "Dernier accÃ¨s non enregistrÃ© :",
                                 erreur.message
                             );
 
@@ -331,7 +331,7 @@ const authController = {
             return res.status(200).json({
                 success: true,
                 message:
-                    "Connexion réussie !",
+                    "Connexion rÃ©ussie !",
 
                 token,
 
@@ -408,7 +408,7 @@ const authController = {
             return res.status(401).json({
                 success: false,
                 error:
-                    "Utilisateur non authentifié."
+                    "Utilisateur non authentifiÃ©."
             });
 
         }
@@ -416,7 +416,7 @@ const authController = {
         return res.status(200).json({
             success: true,
             message:
-                "Profil récupéré avec succès.",
+                "Profil rÃ©cupÃ©rÃ© avec succÃ¨s.",
             data: {
                 id:
                     utilisateur.id,
@@ -530,7 +530,7 @@ const authController = {
                 return res.status(409).json({
                     success: false,
                     error:
-                        "Cette adresse e-mail est déjà utilisée."
+                        "Cette adresse e-mail est dÃ©jÃ  utilisÃ©e."
                 });
 
             }
@@ -597,7 +597,7 @@ const authController = {
             return res.status(200).json({
                 success: true,
                 message:
-                    "Profil modifié avec succès.",
+                    "Profil modifiÃ© avec succÃ¨s.",
                 data:
                     profilComplet
             });
@@ -675,7 +675,7 @@ const authController = {
                 return res.status(400).json({
                     success: false,
                     error:
-                        "Le nouveau mot de passe doit contenir au moins 8 caractères."
+                        "Le nouveau mot de passe doit contenir au moins 8 caractÃ¨res."
                 });
 
             }
@@ -701,7 +701,7 @@ const authController = {
                 return res.status(400).json({
                     success: false,
                     error:
-                        "Le nouveau mot de passe doit être différent de l'ancien."
+                        "Le nouveau mot de passe doit Ãªtre diffÃ©rent de l'ancien."
                 });
 
             }
@@ -787,7 +787,7 @@ const authController = {
             return res.status(200).json({
                 success: true,
                 message:
-                    "Mot de passe modifié avec succès."
+                    "Mot de passe modifiÃ© avec succÃ¨s."
             });
 
         } catch (erreur) {

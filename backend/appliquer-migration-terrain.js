@@ -76,7 +76,7 @@ const sql =
 
 
         console.log(
-            "Connexion réussie."
+            "Connexion rÃ©ussie."
         );
 
         console.log("");

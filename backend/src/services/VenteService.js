@@ -154,6 +154,19 @@ class VenteService {
                         client
                     );
 
+            const avertissements =
+                impactCarbone
+                    ? []
+                    : [
+                        {
+                            code:
+                                "CARBON_FACTOR_NOT_FOUND",
+
+                            message:
+                                "Impact carbone non calculé : aucun facteur carbone applicable."
+                        }
+                    ];
+
             await client.query("COMMIT");
 
             return {
@@ -166,7 +179,9 @@ class VenteService {
                 mouvement,
 
                 impact_carbone:
-                    impactCarbone
+                    impactCarbone,
+
+                avertissements
             };
 
         } catch (erreur) {

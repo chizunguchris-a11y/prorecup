@@ -9,7 +9,7 @@ const siteValidator = [
         .bail()
         .isLength({ min: 2, max: 150 })
         .withMessage(
-            "Le nom du site doit contenir entre 2 et 150 caractères."
+            "Le nom du site doit contenir entre 2 et 150 caractÃ¨res."
         ),
 
     body("adresse")
@@ -17,7 +17,7 @@ const siteValidator = [
         .trim()
         .isLength({ max: 255 })
         .withMessage(
-            "L'adresse du site ne doit pas dépasser 255 caractères."
+            "L'adresse du site ne doit pas dÃ©passer 255 caractÃ¨res."
         ),
 
     body("zone_geographique")
@@ -25,7 +25,7 @@ const siteValidator = [
         .trim()
         .isLength({ max: 150 })
         .withMessage(
-            "La zone géographique ne doit pas dépasser 150 caractères."
+            "La zone gÃ©ographique ne doit pas dÃ©passer 150 caractÃ¨res."
         ),
 
     body("responsable_nom")
@@ -33,7 +33,7 @@ const siteValidator = [
         .trim()
         .isLength({ min: 2, max: 150 })
         .withMessage(
-            "Le nom du responsable doit contenir entre 2 et 150 caractères."
+            "Le nom du responsable doit contenir entre 2 et 150 caractÃ¨res."
         )
 
 ];

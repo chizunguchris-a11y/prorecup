@@ -155,7 +155,7 @@ const executer = async () => {
         if (!ligne) {
 
             throw new Error(
-                "Aucun arrÍt restant."
+                "Aucun arr√™t restant."
             );
 
         }
@@ -201,8 +201,8 @@ const executer = async () => {
 
 
         /*
-         * VÈrifie d'abord si l'arrivÈe
-         * existe dÈj‡.
+         * V√©rifie d'abord si l'arriv√©e
+         * existe d√©j√†.
          */
         const arriveeExistante =
             await pool.query(
@@ -263,7 +263,7 @@ const executer = async () => {
                             10,
 
                         observations:
-                            "Test arrivÈe arrÍt suivant.",
+                            "Test arriv√©e arr√™t suivant.",
 
                         mode:
                             "online"
@@ -272,7 +272,7 @@ const executer = async () => {
 
 
             console.log(
-                "ArrivÈe :",
+                "Arriv√©e :",
                 arrivee.statut
             );
 
@@ -290,20 +290,20 @@ const executer = async () => {
             }
 
             console.log(
-                "[OK] ArrivÈe enregistrÈe"
+                "[OK] Arriv√©e enregistr√©e"
             );
 
         } else {
 
             console.log(
-                "[OK] ArrivÈe dÈj‡ prÈsente"
+                "[OK] Arriv√©e d√©j√† pr√©sente"
             );
 
         }
 
 
         /*
-         * VÈrifie le dÈmarrage.
+         * V√©rifie le d√©marrage.
          */
         const debutExistant =
             await pool.query(
@@ -343,7 +343,7 @@ const executer = async () => {
                                 .toISOString(),
 
                         observations:
-                            "Test dÈmarrage arrÍt suivant.",
+                            "Test d√©marrage arr√™t suivant.",
 
                         mode:
                             "online"
@@ -352,7 +352,7 @@ const executer = async () => {
 
 
             console.log(
-                "DÈmarrage :",
+                "D√©marrage :",
                 demarrage.statut
             );
 
@@ -370,13 +370,13 @@ const executer = async () => {
             }
 
             console.log(
-                "[OK] Collecte dÈmarrÈe"
+                "[OK] Collecte d√©marr√©e"
             );
 
         } else {
 
             console.log(
-                "[OK] Collecte dÈj‡ dÈmarrÈe"
+                "[OK] Collecte d√©j√† d√©marr√©e"
             );
 
         }

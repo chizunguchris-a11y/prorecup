@@ -25,7 +25,7 @@ class ImpactCarboneService {
         if (!typeDechetId) {
             throw new ApiError(
                 400,
-                "Le type de déchet est obligatoire."
+                "Le type de dÃ©chet est obligatoire."
             );
         }
 
@@ -35,7 +35,7 @@ class ImpactCarboneService {
         ) {
             throw new ApiError(
                 400,
-                "La quantité vendue doit être supérieure à zéro."
+                "La quantitÃ© vendue doit Ãªtre supÃ©rieure Ã  zÃ©ro."
             );
         }
 
@@ -49,7 +49,7 @@ class ImpactCarboneService {
         if (impactExistant) {
             throw new ApiError(
                 409,
-                "Un impact carbone existe déjà pour cette vente."
+                "Un impact carbone existe dÃ©jÃ  pour cette vente."
             );
         }
 
@@ -66,10 +66,7 @@ class ImpactCarboneService {
                 );
 
         if (!facteur) {
-            throw new ApiError(
-                404,
-                "Aucun facteur carbone applicable n'a été trouvé."
-            );
+            return null;
         }
 
         const quantiteKg =

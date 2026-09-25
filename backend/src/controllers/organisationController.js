@@ -56,7 +56,7 @@ const organisationController = {
 
             return ApiResponse.created(
                 res,
-                "Organisation créée avec succès.",
+                "Organisation crÃ©Ã©e avec succÃ¨s.",
                 organisation
             );
 
@@ -75,7 +75,7 @@ const organisationController = {
 
             return ApiResponse.success(
                 res,
-                "Organisations récupérées avec succès.",
+                "Organisations rÃ©cupÃ©rÃ©es avec succÃ¨s.",
                 organisations
             );
 
@@ -99,7 +99,7 @@ const organisationController = {
 
                 return ApiResponse.success(
                     res,
-                    "Organisation récupérée avec succès.",
+                    "Organisation rÃ©cupÃ©rÃ©e avec succÃ¨s.",
                     organisation
                 );
 
@@ -171,7 +171,7 @@ const organisationController = {
 
                 return ApiResponse.success(
                     res,
-                    "Organisation modifiée avec succès.",
+                    "Organisation modifiÃ©e avec succÃ¨s.",
                     resultat.nouvelEtat
                 );
 

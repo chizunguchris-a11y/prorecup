@@ -16,13 +16,13 @@ class MouvementStockService {
 
         if (!lotId) {
             throw new Error(
-                "Le lot est obligatoire pour une entrée en stock."
+                "Le lot est obligatoire pour une entrÃ©e en stock."
             );
         }
 
         if (!quantite || Number(quantite) <= 0) {
             throw new Error(
-                "La quantité du mouvement doit être supérieure à zéro."
+                "La quantitÃ© du mouvement doit Ãªtre supÃ©rieure Ã  zÃ©ro."
             );
         }
 
@@ -57,7 +57,7 @@ class MouvementStockService {
 
         if (!quantite || Number(quantite) <= 0) {
             throw new Error(
-                "La quantité du mouvement doit être supérieure à zéro."
+                "La quantitÃ© du mouvement doit Ãªtre supÃ©rieure Ã  zÃ©ro."
             );
         }
 

@@ -91,7 +91,7 @@ const authMiddleware = (
             return res.status(403).json({
                 success: false,
                 error:
-                    "Rôle absent du token."
+                    "RÃ´le absent du token."
             });
 
         }
@@ -140,7 +140,7 @@ const authMiddleware = (
             return res.status(401).json({
                 success: false,
                 error:
-                    "Votre session a expiré."
+                    "Votre session a expirÃ©."
             });
 
         }

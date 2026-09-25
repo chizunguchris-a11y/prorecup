@@ -57,7 +57,7 @@ const utilisateurController = {
 
             return ApiResponse.success(
                 res,
-                "Utilisateurs récupérés avec succès.",
+                "Utilisateurs rÃ©cupÃ©rÃ©s avec succÃ¨s.",
                 utilisateurs
             );
 
@@ -124,7 +124,7 @@ const utilisateurController = {
 
             return ApiResponse.created(
                 res,
-                "Utilisateur créé avec succès.",
+                "Utilisateur crÃ©Ã© avec succÃ¨s.",
                 utilisateur
             );
 
@@ -194,7 +194,7 @@ const utilisateurController = {
 
             return ApiResponse.success(
                 res,
-                "Utilisateur modifié avec succès.",
+                "Utilisateur modifiÃ© avec succÃ¨s.",
                 resultat.nouvelEtat
             );
 
@@ -268,8 +268,8 @@ const utilisateurController = {
             return ApiResponse.success(
                 res,
                 resultat.nouvelEtat.actif
-                    ? "Utilisateur activé avec succès."
-                    : "Utilisateur désactivé avec succès.",
+                    ? "Utilisateur activÃ© avec succÃ¨s."
+                    : "Utilisateur dÃ©sactivÃ© avec succÃ¨s.",
                 resultat.nouvelEtat
             );
 

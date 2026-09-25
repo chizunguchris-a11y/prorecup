@@ -36,7 +36,7 @@ const roleMiddleware = (
                     success: false,
 
                     error:
-                        "Utilisateur non authentifié."
+                        "Utilisateur non authentifiÃ©."
 
                 });
 
@@ -49,8 +49,8 @@ const roleMiddleware = (
                 );
 
             /*
-             * Compatibilité avec les anciens tokens
-             * qui ne contiennent pas encore le rôle.
+             * CompatibilitÃ© avec les anciens tokens
+             * qui ne contiennent pas encore le rÃ´le.
              */
             if (!roleUtilisateur) {
 
@@ -97,7 +97,7 @@ const roleMiddleware = (
                         success: false,
 
                         error:
-                            "Aucun rôle attribué."
+                            "Aucun rÃ´le attribuÃ©."
 
                     });
 
@@ -123,7 +123,7 @@ const roleMiddleware = (
                     success: false,
 
                     error:
-                        "Accès refusé."
+                        "AccÃ¨s refusÃ©."
 
                 });
 
@@ -140,7 +140,7 @@ const roleMiddleware = (
         } catch (erreur) {
 
             console.error(
-                "Erreur de vérification du rôle :",
+                "Erreur de vÃ©rification du rÃ´le :",
                 erreur
             );
 
@@ -149,7 +149,7 @@ const roleMiddleware = (
                 success: false,
 
                 error:
-                    "Impossible de vérifier les autorisations de l'utilisateur."
+                    "Impossible de vÃ©rifier les autorisations de l'utilisateur."
 
             });
 

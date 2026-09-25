@@ -113,7 +113,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 400,
-                "Le mot de passe doit contenir au moins 8 caractËres."
+                "Le mot de passe doit contenir au moins 8 caract√®res."
             );
 
         }
@@ -128,7 +128,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 400,
-                "Le rÙle de l'utilisateur est obligatoire."
+                "Le r√¥le de l'utilisateur est obligatoire."
             );
 
         }
@@ -143,8 +143,8 @@ class UtilisateurService {
     ) {
 
         /*
-         * MÈthode conservÈe pour compatibilitÈ
-         * avec l'ancien contrÙleur d'inscription.
+         * M√©thode conserv√©e pour compatibilit√©
+         * avec l'ancien contr√¥leur d'inscription.
          */
 
         this.validerNom(
@@ -179,7 +179,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 409,
-                "Cette adresse e-mail est dÈj‡ utilisÈe."
+                "Cette adresse e-mail est d√©j√† utilis√©e."
             );
 
         }
@@ -257,7 +257,7 @@ class UtilisateurService {
 
         /*
          * L'e-mail reste unique dans l'ensemble
-         * de Pro RÈcup, pas uniquement dans
+         * de Pro R√©cup, pas uniquement dans
          * l'organisation.
          */
         const utilisateurExistant =
@@ -270,7 +270,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 409,
-                "Cette adresse e-mail est dÈj‡ utilisÈe."
+                "Cette adresse e-mail est d√©j√† utilis√©e."
             );
 
         }
@@ -408,7 +408,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 409,
-                "Cette adresse e-mail est dÈj‡ utilisÈe."
+                "Cette adresse e-mail est d√©j√† utilis√©e."
             );
 
         }
@@ -501,7 +501,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 400,
-                "Le statut actif doit Ítre un boolÈen."
+                "Le statut actif doit √™tre un bool√©en."
             );
 
         }
@@ -523,8 +523,8 @@ class UtilisateurService {
         }
 
         /*
-         * Un administrateur connectÈ ne doit pas
-         * pouvoir dÈsactiver son propre compte.
+         * Un administrateur connect√© ne doit pas
+         * pouvoir d√©sactiver son propre compte.
          */
         if (
             utilisateurConnecteId &&
@@ -535,7 +535,7 @@ class UtilisateurService {
 
             throw new ApiError(
                 409,
-                "Vous ne pouvez pas dÈsactiver votre propre compte."
+                "Vous ne pouvez pas d√©sactiver votre propre compte."
             );
 
         }

@@ -155,7 +155,7 @@ const executer =
 
             /*
              * Chercher une mission en cours dont
-             * toutes les collectes sont terminées.
+             * toutes les collectes sont terminÃ©es.
              */
             const resultat =
                 await pool.query(`
@@ -229,7 +229,7 @@ const executer =
             if (!ligne) {
 
                 throw new Error(
-                    "Aucune mission en cours prête à être terminée."
+                    "Aucune mission en cours prÃªte Ã  Ãªtre terminÃ©e."
                 );
 
             }
@@ -295,7 +295,7 @@ const executer =
                         .toISOString(),
 
                 observations:
-                    "Test fin complète de tournée Terrain.",
+                    "Test fin complÃ¨te de tournÃ©e Terrain.",
 
                 mode:
                     "online"
@@ -332,7 +332,7 @@ const executer =
 
 
             ok(
-                "Mission terminée",
+                "Mission terminÃ©e",
                 premier.statut === 200 &&
                 premier.corps?.data
                     ?.deja_traitee === false
@@ -368,7 +368,7 @@ const executer =
 
 
             /*
-             * Vérifier l'état réel final.
+             * VÃ©rifier l'Ã©tat rÃ©el final.
              */
             const verification =
                 await pool.query(
@@ -430,7 +430,7 @@ const executer =
 
 
             ok(
-                "Heure retour réelle enregistrée",
+                "Heure retour rÃ©elle enregistrÃ©e",
                 Boolean(
                     final
                         .heure_retour_reelle
@@ -439,7 +439,7 @@ const executer =
 
 
             ok(
-                "Agent à nouveau disponible",
+                "Agent Ã  nouveau disponible",
                 final.agent_disponible ===
                     true
             );
@@ -453,7 +453,7 @@ const executer =
 
 
             ok(
-                "Tricycle correctement libéré",
+                "Tricycle correctement libÃ©rÃ©",
                 final.tricycle_statut ===
                     statutTricycleAttendu
             );
@@ -499,20 +499,20 @@ const executer =
 
 
             ok(
-                "Un seul événement final",
+                "Un seul Ã©vÃ©nement final",
                 evt.nombre === 1
             );
 
 
             ok(
-                "Evénement mission_terminee",
+                "EvÃ©nement mission_terminee",
                 evt.type_evenement ===
                     "mission_terminee"
             );
 
 
             ok(
-                "Fin attribuée au vrai agent",
+                "Fin attribuÃ©e au vrai agent",
                 evt.cree_par ===
                     String(
                         ligne.utilisateur_id

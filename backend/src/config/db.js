@@ -71,6 +71,11 @@ async function testerConnexion() {
 
 }
 
-testerConnexion();
+if (
+    process.env.SKIP_DATABASE_STARTUP_CHECK !==
+    "1"
+) {
+    testerConnexion();
+}
 
 export default pool;

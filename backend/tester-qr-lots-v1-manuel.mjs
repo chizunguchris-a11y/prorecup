@@ -18,6 +18,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { randomBytes, randomUUID } from "node:crypto";
 import { createInterface } from "node:readline/promises";
+import { cleanupQrLotsFixtures } from "./lib/qrLotsCleanup.mjs";
 
 const ORGANISATION_ID = "04fbfede-8cf8-47fc-a9b2-599b766229e2";
 const SITE_ID = "781d4e3f-903d-4779-9137-304202e99767";
@@ -46,7 +47,6 @@ dotenv.config({
 const BUSINESS_TIMEZONE =
     process.env.APP_TIMEZONE || "Africa/Kinshasa";
 
-const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const request = require("supertest");
@@ -62,21 +62,15 @@ assert.ok(
     "JWT_SECRET absente de backend/.env."
 );
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    },
-    max: 2
-});
+process.env.SKIP_DATABASE_STARTUP_CHECK = "1";
 
-const app = (
-    await import(
-        pathToFileURL(
-            path.join(backend, "src", "app.js")
-        )
-    )
-).default;
+const [
+    { default: pool },
+    { default: app }
+] = await Promise.all([
+    import(pathToFileURL(path.join(backend, "src", "config", "db.js"))),
+    import(pathToFileURL(path.join(backend, "src", "app.js")))
+]);
 
 const label = runId =>
     "qrlots-v1-" + runId;
@@ -370,7 +364,7 @@ async function prepare() {
         "!mM2";
 
     const manifest = {
-        version: 2,
+        version: 3,
 
         runId,
 
@@ -404,6 +398,13 @@ async function prepare() {
 
         lotId:
             null,
+
+        created: {
+            containers: [],
+            lot: null,
+            stock: null,
+            mouvementStock: null
+        },
 
         createdAt:
             iso(),
@@ -901,6 +902,13 @@ async function prepare() {
             response.body.data.code_qr,
             body.code_qr
         );
+
+        manifest.created.containers.push({
+            id: response.body.data.id,
+            code: response.body.data.code_qr
+        });
+
+        save(manifest);
     }
 
     return {
@@ -1197,9 +1205,42 @@ async function smokeRun(
     manifest.lotId =
         lot.body.data.id;
 
+    manifest.created.lot = {
+        id: lot.body.data.id,
+        code: lot.body.data.code_qr,
+        operationId: operationLot
+    };
+
     save(
         manifest
     );
+
+    const stockCreated = await pool.query(
+        `
+        SELECT
+            ms.id AS mouvement_id,
+            ms.stock_id
+        FROM mouvements_stock ms
+        WHERE ms.lot_id=$1
+        `,
+        [manifest.lotId]
+    );
+
+    assert.equal(
+        stockCreated.rows.length,
+        1,
+        "Mouvement de stock du lot introuvable ou ambigu."
+    );
+
+    manifest.created.stock = {
+        id: stockCreated.rows[0].stock_id
+    };
+
+    manifest.created.mouvementStock = {
+        id: stockCreated.rows[0].mouvement_id
+    };
+
+    save(manifest);
 
     const replay =
         await api(
@@ -1447,516 +1488,121 @@ async function smokeRun(
     };
 }
 
-async function cleanup(
-    manifest
-) {
-    assert.equal(
-        manifest.label,
-        label(
-            manifest.runId
-        ),
-        "Manifeste non propriétaire."
-    );
-
-    const {
-        ids
-    } =
-        manifest;
-
-    const c =
-        await pool.connect();
-
-    let affected =
-        0;
-
-    try {
-        await c.query(
-            "BEGIN"
-        );
-
-        const q =
-            async (
-                sql,
-                values
-            ) => {
-                const r =
-                    await c.query(
-                        sql,
-                        values
-                    );
-
-                affected +=
-                    r.rowCount;
-            };
-
-        await q(
-            `
-            DELETE FROM
-                tracabilite_matiere_evenements
-            WHERE organisation_id=$1
-              AND
-              (
-                    collecte_id=$2
-
-                 OR contenant_id
-                    IN
-                    (
-                        SELECT id
-                        FROM contenants
-                        WHERE code_qr=
-                            ANY($3::text[])
-                    )
-
-                 OR lot_id=$4
-              )
-            `,
-            [
-                ORGANISATION_ID,
-
-                ids.collecte,
-
-                [
-                    manifest.codeSac,
-                    manifest.codeBac
-                ],
-
-                manifest.lotId
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM pesees_unites
-            WHERE pesee_id IN
-            (
-                SELECT id
-                FROM pesees
-                WHERE collecte_id=$1
-            )
-            `,
-            [
-                ids.collecte
-            ]
-        );
-
-        if (
-            manifest.lotId
-        ) {
-            await q(
-                `
-                DELETE FROM
-                    mouvements_stock
-                WHERE lot_id=$1
-                `,
-                [
-                    manifest.lotId
-                ]
-            );
-        }
-
-        if (
-            manifest.stockBefore
-        ) {
-            await q(
-                `
-                UPDATE stocks
-                SET
-                    quantite=$1,
-                    date_mise_a_jour=
-                        $2::timestamptz
-                WHERE id=$3
-                `,
-                [
-                    manifest.stockBefore
-                        .quantite,
-
-                    manifest.stockBefore
-                        .date_mise_a_jour,
-
-                    manifest.stockBefore
-                        .id
-                ]
-            );
-        } else {
-            await q(
-                `
-                DELETE FROM stocks
-                WHERE organisation_id=$1
-                  AND type_dechet_id=$2
-                `,
-                [
-                    ORGANISATION_ID,
-
-                    manifest.type.id
-                ]
-            );
-        }
-
-        if (
-            manifest.lotId
-        ) {
-            await q(
-                `
-                DELETE FROM lots
-                WHERE id=$1
-                  AND organisation_id=$2
-                `,
-                [
-                    manifest.lotId,
-
-                    ORGANISATION_ID
-                ]
-            );
-        }
-
-        await q(
-            `
-            DELETE FROM contenants
-            WHERE organisation_id=$1
-              AND code_qr=
-                    ANY($2::text[])
-            `,
-            [
-                ORGANISATION_ID,
-
-                [
-                    manifest.codeSac,
-                    manifest.codeBac
-                ]
-            ]
-        );
-
-        await q(
-            `
-            UPDATE pesees
-            SET
-                remplace_pesee_id=NULL,
-                preuve_id=NULL
-            WHERE collecte_id=$1
-            `,
-            [
-                ids.collecte
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM pesees
-            WHERE collecte_id=$1
-            `,
-            [
-                ids.collecte
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM preuves_collecte
-            WHERE mission_id=$1
-               OR collecte_id=$2
-            `,
-            [
-                ids.mission,
-
-                ids.collecte
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM mission_evenements
-            WHERE mission_id=$1
-            `,
-            [
-                ids.mission
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM missions_collectes
-            WHERE mission_id=$1
-            `,
-            [
-                ids.mission
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM missions
-            WHERE id=$1
-              AND observations=$2
-            `,
-            [
-                ids.mission,
-
-                manifest.label
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM collectes
-            WHERE id=$1
-            `,
-            [
-                ids.collecte
-            ]
-        );
-
-        /*
-         * Compatibilité anciens manifests :
-         * les anciens runs n'ont pas
-         * ids.balanceTerrain ni
-         * ids.tricycle.
-         */
-        if (
-            ids.balanceTerrain
-        ) {
-            await q(
-                `
-                DELETE FROM balances
-                WHERE id=$1
-                  AND organisation_id=$2
-                `,
-                [
-                    ids.balanceTerrain,
-
-                    ORGANISATION_ID
-                ]
-            );
-        }
-
-        if (
-            ids.tricycle
-        ) {
-            await q(
-                `
-                DELETE FROM tricycles
-                WHERE id=$1
-                  AND organisation_id=$2
-                  AND observations=$3
-                `,
-                [
-                    ids.tricycle,
-
-                    ORGANISATION_ID,
-
-                    manifest.label
-                ]
-            );
-        }
-
-        await q(
-            `
-            DELETE FROM agents
-            WHERE id=$1
-              AND utilisateur_id=$2
-            `,
-            [
-                ids.agent,
-
-                ids.agentUser
-            ]
-        );
-
-        await q(
-            `
-            DELETE FROM utilisateurs
-            WHERE id=
-                ANY($1::uuid[])
-              AND organisation_id=$2
-            `,
-            [
-                [
-                    ids.agentUser,
-                    ids.managerUser
-                ],
-
-                ORGANISATION_ID
-            ]
-        );
-
-        await c.query(
-            "COMMIT"
-        );
-    } catch (
-        error
+async function recordManualLot(manifest) {
+    if (
+        Number(manifest.version) < 3 ||
+        manifest.created?.lot
     ) {
-        await c.query(
-            "ROLLBACK"
-        );
-
-        throw error;
-    } finally {
-        c.release();
+        return;
     }
 
-    const left =
-        await pool.query(
-            `
+    const result = await pool.query(
+        `
+        SELECT
+            l.id,
+            l.code_qr,
+            l.operation_id,
+            l.type_dechet_id,
+            e.creation_user_id,
+            e.creation_count,
+            ms.id AS mouvement_id,
+            ms.stock_id
+        FROM lots l
+        LEFT JOIN LATERAL
+        (
             SELECT
-
-            (
-                SELECT count(*)::int
-                FROM utilisateurs
-                WHERE id=
-                    ANY($1::uuid[])
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM missions
-                WHERE id=$2
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM collectes
-                WHERE id=$3
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM contenants
-                WHERE code_qr=
-                    ANY($4::text[])
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM lots
-                WHERE id=$5
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM pesees
-                WHERE collecte_id=$3
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM preuves_collecte
-                WHERE mission_id=$2
-                   OR collecte_id=$3
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM mission_evenements
-                WHERE mission_id=$2
-
-            )
-
-            +
-
-            (
-                SELECT count(*)::int
-                FROM missions_collectes
-                WHERE mission_id=$2
-
-            )
-
-            AS n
-            `,
-            [
-                [
-                    ids.agentUser,
-                    ids.managerUser
-                ],
-
-                ids.mission,
-
-                ids.collecte,
-
-                [
-                    manifest.codeSac,
-                    manifest.codeBac
-                ],
-
-                manifest.lotId
-            ]
-        );
-
-    assert.equal(
-        left.rows[0].n,
-        0,
-        "Fixtures QR/Lots restantes."
+                min(utilisateur_id::text)::uuid
+                    AS creation_user_id,
+                count(*)::int
+                    AS creation_count
+            FROM tracabilite_matiere_evenements
+            WHERE lot_id=l.id
+              AND type_evenement='creation'
+        ) e ON TRUE
+        LEFT JOIN mouvements_stock ms
+          ON ms.lot_id=l.id
+        WHERE l.organisation_id=$1
+          AND l.code_qr=$2
+        `,
+        [
+            ORGANISATION_ID,
+            manifest.codeLot
+        ]
     );
 
-    if (
-        ids.balanceTerrain
-    ) {
-        const balanceLeft =
-            await pool.query(
-                `
-                SELECT
-                    count(*)::int
-                    AS n
-                FROM balances
-                WHERE id=$1
-                `,
-                [
-                    ids.balanceTerrain
-                ]
-            );
-
-        assert.equal(
-            balanceLeft.rows[0].n,
-            0,
-            "Balance Terrain temporaire restante."
-        );
+    if (!result.rows.length) {
+        return;
     }
 
-    if (
-        ids.tricycle
-    ) {
-        const tricycleLeft =
-            await pool.query(
-                `
-                SELECT
-                    count(*)::int
-                    AS n
-                FROM tricycles
-                WHERE id=$1
-                `,
-                [
-                    ids.tricycle
-                ]
-            );
+    assert.equal(
+        result.rows.length,
+        1,
+        "Lot manuel ou mouvement de stock ambigu."
+    );
 
-        assert.equal(
-            tricycleLeft.rows[0].n,
-            0,
-            "Tricycle temporaire restant."
-        );
-    }
+    const row = result.rows[0];
 
-    return affected;
+    assert.equal(
+        row.creation_user_id,
+        manifest.ids.managerUser,
+        "Le lot manuel n'appartient pas au manager du run."
+    );
+
+    assert.equal(
+        Number(row.creation_count),
+        1,
+        "Preuve de création du lot manuel ambiguë."
+    );
+
+    assert.equal(
+        row.type_dechet_id,
+        manifest.type.id,
+        "Matière du lot manuel différente du manifeste."
+    );
+
+    assert.match(
+        String(row.operation_id || ""),
+        /^[0-9a-f-]{36}$/i,
+        "Opération du lot manuel absente."
+    );
+
+    assert.match(
+        String(row.mouvement_id || ""),
+        /^[0-9a-f-]{36}$/i,
+        "Mouvement du lot manuel absent."
+    );
+
+    assert.match(
+        String(row.stock_id || ""),
+        /^[0-9a-f-]{36}$/i,
+        "Stock du lot manuel absent."
+    );
+
+    manifest.lotId = row.id;
+    manifest.created.lot = {
+        id: row.id,
+        code: row.code_qr,
+        operationId: row.operation_id
+    };
+    manifest.created.stock = {
+        id: row.stock_id
+    };
+    manifest.created.mouvementStock = {
+        id: row.mouvement_id
+    };
+
+    save(manifest);
 }
+
+const cleanup = async manifest => {
+    await recordManualLot(manifest);
+
+    return cleanupQrLotsFixtures(
+        pool,
+        manifest,
+        ORGANISATION_ID
+    );
+};
 
 let manifest;
 

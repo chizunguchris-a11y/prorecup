@@ -19,6 +19,7 @@ import { pathToFileURL } from "node:url";
 import { randomBytes, randomUUID } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import { cleanupQrLotsFixtures } from "./lib/qrLotsCleanup.mjs";
+import { beginTransactionWithRetry } from "./lib/qrLotsTransaction.mjs";
 
 const ORGANISATION_ID = "04fbfede-8cf8-47fc-a9b2-599b766229e2";
 const SITE_ID = "781d4e3f-903d-4779-9137-304202e99767";
@@ -259,21 +260,58 @@ async function prepare() {
             12
         );
 
-    const roles = (
-        await pool.query(
-            `
-            SELECT
-                id,
-                lower(trim(nom)) AS nom
-            FROM roles
-            WHERE lower(trim(nom))
-                IN (
-                    'agent_valorisation_carbone',
-                    'manager'
-                )
-            `
+    const agentPassword =
+        randomBytes(18)
+            .toString("base64url") +
+        "!aA1";
+
+    const managerPassword =
+        randomBytes(18)
+            .toString("base64url") +
+        "!mM2";
+
+    const [
+        agentHash,
+        managerHash
+    ] = await Promise.all([
+        bcrypt.hash(
+            agentPassword,
+            12
+        ),
+        bcrypt.hash(
+            managerPassword,
+            12
         )
-    ).rows;
+    ]);
+
+    const c = await beginTransactionWithRetry(
+        pool,
+        {
+            onRetry: ({ attempt, attempts, delayMs, stage }) => {
+                console.warn(
+                    `Connexion Supabase transitoire (${stage}, tentative ${attempt}/${attempts}); ` +
+                    `nouvel essai dans ${delayMs} ms.`
+                );
+            }
+        }
+    );
+
+    try {
+        const roles = (
+            await c.query(
+                `
+                SELECT
+                    id,
+                    lower(trim(nom)) AS nom
+                FROM roles
+                WHERE lower(trim(nom))
+                    IN (
+                        'agent_valorisation_carbone',
+                        'manager'
+                    )
+                `
+            )
+        ).rows;
 
     const agentRole =
         roles.find(
@@ -296,7 +334,7 @@ async function prepare() {
     );
 
     const client = (
-        await pool.query(
+        await c.query(
             `
             SELECT
                 id,
@@ -315,7 +353,7 @@ async function prepare() {
     ).rows[0];
 
     const type = (
-        await pool.query(
+        await c.query(
             `
             SELECT
                 id,
@@ -336,7 +374,7 @@ async function prepare() {
     );
 
     const stock = (
-        await pool.query(
+        await c.query(
             `
             SELECT
                 id,
@@ -352,16 +390,6 @@ async function prepare() {
             ]
         )
     ).rows[0] || null;
-
-    const agentPassword =
-        randomBytes(18)
-            .toString("base64url") +
-        "!aA1";
-
-    const managerPassword =
-        randomBytes(18)
-            .toString("base64url") +
-        "!mM2";
 
     const manifest = {
         version: 3,
@@ -421,30 +449,6 @@ async function prepare() {
     save(
         manifest
     );
-
-    const [
-        agentHash,
-        managerHash
-    ] =
-        await Promise.all([
-            bcrypt.hash(
-                agentPassword,
-                12
-            ),
-
-            bcrypt.hash(
-                managerPassword,
-                12
-            )
-        ]);
-
-    const c =
-        await pool.connect();
-
-    try {
-        await c.query(
-            "BEGIN"
-        );
 
         await c.query(
             `

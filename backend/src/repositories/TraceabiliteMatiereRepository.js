@@ -33,8 +33,8 @@ class TraceabiliteMatiereRepository {
 
     async regrouperLot(donnees, contenants, connexion = pool) {
         const lot = (await connexion.query(`INSERT INTO lots
-          (organisation_id,collecte_id,type_dechet_id,poids_reel,statut_lot,code_qr,tare_kg,site_courant_id,client_courant_id,operation_id)
-          VALUES ($1,NULL,$2,$3,'en_stock',$4,$5,$6,NULL,$7) RETURNING *`,
+          (organisation_id,collecte_id,type_dechet_id,poids_reel,quantite_restante_kg,statut_lot,code_qr,tare_kg,site_courant_id,client_courant_id,operation_id)
+          VALUES ($1,NULL,$2,$3,$3,'en_stock',$4,$5,$6,NULL,$7) RETURNING *`,
         [donnees.organisation_id, donnees.type_dechet_id, donnees.poids_reel,
             donnees.code_qr, donnees.tare_kg, donnees.site_id, donnees.operation_id])).rows[0];
         for (const contenant of contenants) {
@@ -65,13 +65,14 @@ class TraceabiliteMatiereRepository {
     async listerUnites(organisationId, connexion = pool) {
         const resultat = await connexion.query(`SELECT 'contenant' AS nature,c.id,c.code_qr,c.type_contenant AS type,
             c.tare_kg,c.statut,c.poids_courant_kg AS poids_courant,c.collecte_origine_id,c.site_courant_id,
-            c.client_courant_id,c.type_dechet_id,td.nom AS matiere,s.nom AS site_nom,cl.nom AS client_nom,c.cree_le,c.modifie_le
+            c.client_courant_id,c.type_dechet_id,td.nom AS matiere,s.nom AS site_nom,cl.nom AS client_nom,c.cree_le,c.modifie_le,
+            NULL::numeric AS quantite_restante_kg
           FROM contenants c LEFT JOIN types_dechets td ON td.id=c.type_dechet_id
           LEFT JOIN sites_de_collecte s ON s.id=c.site_courant_id LEFT JOIN clients cl ON cl.id=c.client_courant_id
           WHERE c.organisation_id=$1
           UNION ALL
           SELECT 'lot',l.id,l.code_qr,'lot',l.tare_kg,l.statut_lot,l.poids_reel,l.collecte_id,l.site_courant_id,
-            l.client_courant_id,l.type_dechet_id,td.nom,s.nom,cl.nom,l.cree_le,l.modifie_le
+            l.client_courant_id,l.type_dechet_id,td.nom,s.nom,cl.nom,l.cree_le,l.modifie_le,l.quantite_restante_kg
           FROM lots l LEFT JOIN types_dechets td ON td.id=l.type_dechet_id
           LEFT JOIN sites_de_collecte s ON s.id=l.site_courant_id LEFT JOIN clients cl ON cl.id=l.client_courant_id
           WHERE l.organisation_id=$1 ORDER BY cree_le DESC`, [organisationId]);
@@ -134,9 +135,14 @@ class TraceabiliteMatiereRepository {
 
     async historique(organisationId, code, connexion = pool) {
         const resultat = await connexion.query(`WITH unite AS (
-            SELECT 'contenant' AS nature,id,code_qr FROM contenants WHERE organisation_id=$1 AND code_qr=$2
-            UNION ALL SELECT 'lot',id,code_qr FROM lots WHERE organisation_id=$1 AND code_qr=$2)
-          SELECT u.nature,u.id,u.code_qr,e.type_evenement,e.survenu_le,e.collecte_id,e.mission_id,e.pesee_id,e.details,
+            SELECT 'contenant' AS nature,id,code_qr,NULL::numeric AS poids_initial,
+              poids_courant_kg AS quantite_restante_kg
+            FROM contenants WHERE organisation_id=$1 AND code_qr=$2
+            UNION ALL
+            SELECT 'lot',id,code_qr,poids_reel,quantite_restante_kg
+            FROM lots WHERE organisation_id=$1 AND code_qr=$2)
+          SELECT u.nature,u.id,u.code_qr,u.poids_initial,u.quantite_restante_kg,
+            e.type_evenement,e.survenu_le,e.collecte_id,e.mission_id,e.pesee_id,e.details,
             s.nom AS site_nom,cl.nom AS client_nom,p.poids_brut,p.tare,p.poids_net,p.type AS type_pesee
           FROM unite u LEFT JOIN tracabilite_matiere_evenements e
             ON (u.nature='contenant' AND e.contenant_id=u.id) OR (u.nature='lot' AND e.lot_id=u.id)

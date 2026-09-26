@@ -18,9 +18,10 @@ class VenteRepository {
                 acheteur_nom,
                 reference_vente,
                 statut,
-                cree_par
+                cree_par,
+                provenance_lots_statut
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
             RETURNING *;
         `;
 
@@ -33,7 +34,8 @@ class VenteRepository {
             vente.acheteur_nom,
             vente.reference_vente || null,
             vente.statut || "confirmee",
-            vente.cree_par || null
+            vente.cree_par || null,
+            vente.provenance_lots_statut || "non_determinee"
         ];
 
         const resultat =
@@ -44,6 +46,22 @@ class VenteRepository {
 
         return resultat.rows[0];
 
+    }
+
+    async marquerProvenanceComplete(
+        venteId,
+        organisationId,
+        client = pool
+    ) {
+        const resultat = await client.query(`
+            UPDATE ventes
+            SET provenance_lots_statut = 'complete'
+            WHERE id = $1
+              AND organisation_id = $2
+            RETURNING *;
+        `, [venteId, organisationId]);
+
+        return resultat.rows[0] || null;
     }
 
     async trouverParId(
@@ -85,6 +103,7 @@ class VenteRepository {
                 v.statut,
                 v.cree_par,
                 v.date_vente,
+                v.provenance_lots_statut,
 
                 td.nom AS type_dechet,
 
@@ -92,7 +111,9 @@ class VenteRepository {
 
                 u.nom AS cree_par_nom,
 
-                ic.co2e_estime_kg
+                ic.co2e_estime_kg,
+
+                COALESCE(provenance.allocations, '[]'::json) AS allocations_lots
 
             FROM ventes v
 
@@ -107,6 +128,20 @@ class VenteRepository {
 
             LEFT JOIN impacts_carbone ic
                 ON ic.vente_id = v.id
+
+            LEFT JOIN LATERAL (
+                SELECT json_agg(json_build_object(
+                    'lot_id', vl.lot_id,
+                    'code_qr', l.code_qr,
+                    'quantite_kg', vl.quantite_kg
+                ) ORDER BY vl.cree_le, vl.id) AS allocations
+                FROM vente_lots vl
+                JOIN lots l
+                  ON l.id = vl.lot_id
+                 AND l.organisation_id = vl.organisation_id
+                WHERE vl.vente_id = v.id
+                  AND vl.organisation_id = v.organisation_id
+            ) provenance ON TRUE
 
             WHERE v.organisation_id = $1
 

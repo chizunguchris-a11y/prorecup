@@ -29,9 +29,9 @@ const lotValidator = [
 
     body("statut_lot")
         .optional({ nullable: true, checkFalsy: true })
-        .isIn(["en_stock", "vendu", "transforme"])
+        .isIn(["en_stock", "partiellement_vendu", "vendu", "transforme"])
         .withMessage(
-            "Le statut du lot doit être en_stock, vendu ou transforme."
+            "Le statut du lot doit être en_stock, partiellement_vendu, vendu ou transforme."
         )
 
 ];

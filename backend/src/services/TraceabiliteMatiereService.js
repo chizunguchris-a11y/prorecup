@@ -4,6 +4,7 @@ import pool from "../config/db.js";
 import repository from "../repositories/TraceabiliteMatiereRepository.js";
 import ApiError from "../utils/ApiError.js";
 import stockService from "./StockService.js";
+import venteLotRepository from "../repositories/VenteLotRepository.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const QR = /^PR-[CL]-[A-Z0-9-]{6,60}$/;
@@ -60,10 +61,18 @@ class TraceabiliteMatiereService {
         if (!QR.test(valeur)) throw new ApiError(400, "Le code QR est invalide.");
         const lignes = await repository.historique(organisationId, valeur);
         if (!lignes.length) throw new ApiError(404, "Ce contenant ou lot est introuvable.");
-        const unite = { nature: lignes[0].nature, id: lignes[0].id, code_qr: lignes[0].code_qr };
+        const unite = {
+            nature: lignes[0].nature,
+            id: lignes[0].id,
+            code_qr: lignes[0].code_qr,
+            poids_initial: lignes[0].poids_initial,
+            quantite_restante_kg: lignes[0].quantite_restante_kg
+        };
         const filiation = unite.nature === "lot"
             ? await repository.listerContenantsLot(organisationId, unite.id) : [];
-        return { unite, filiation, historique: lignes };
+        const ventes = unite.nature === "lot"
+            ? await venteLotRepository.listerParLot(unite.id, organisationId) : [];
+        return { unite, filiation, ventes, historique: lignes };
     }
 
     async etiquette(organisationId, code) {
@@ -113,7 +122,16 @@ class TraceabiliteMatiereService {
                 poids_reel: poidsReel,
                 tare_kg: contenants.reduce((somme, item) => somme + Number(item.tare_kg || 0), 0),
                 code_qr: this.normaliserCode(donnees.code_qr, "lot") }, contenants, connexion);
-            await stockService.ajouterAuStock(organisationId, matieres[0], poidsReel, lot.id, connexion);
+            const stock = await stockService.ajouterAuStock(
+                organisationId,
+                matieres[0],
+                poidsReel,
+                lot.id,
+                connexion
+            );
+            if (stock.tracabilite_lots_active !== true) {
+                lot.quantite_restante_kg = null;
+            }
             await connexion.query("COMMIT");
             return lot;
         } catch (erreur) {

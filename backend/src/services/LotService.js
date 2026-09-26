@@ -168,6 +168,10 @@ class LotService {
                         client
                     );
 
+            if (stock.tracabilite_lots_active !== true) {
+                nouveauLot.quantite_restante_kg = null;
+            }
+
             await client.query("COMMIT");
 
             return {

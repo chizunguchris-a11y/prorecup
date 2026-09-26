@@ -26,6 +26,22 @@ class StockRepository {
         return resultat.rows[0];
     }
 
+    async trouverParTypeDechetPourMiseAJour(
+        organisationId,
+        typeDechetId,
+        client = pool
+    ) {
+        const resultat = await client.query(`
+            SELECT *
+            FROM stocks
+            WHERE organisation_id = $1
+              AND type_dechet_id = $2
+            FOR UPDATE;
+        `, [organisationId, typeDechetId]);
+
+        return resultat.rows[0] || null;
+    }
+
     async trouverParIdPourMiseAJour(
         stockId,
         organisationId,
@@ -55,6 +71,7 @@ class StockRepository {
         organisationId,
         typeDechetId,
         quantite,
+        tracabiliteLotsActive = false,
         client = pool
     ) {
 
@@ -63,9 +80,11 @@ class StockRepository {
             (
                 organisation_id,
                 type_dechet_id,
-                quantite
+                quantite,
+                tracabilite_lots_active
             )
-            VALUES ($1, $2, $3)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (organisation_id, type_dechet_id) DO NOTHING
             RETURNING *;
         `;
 
@@ -74,7 +93,8 @@ class StockRepository {
             [
                 organisationId,
                 typeDechetId,
-                quantite
+                quantite,
+                tracabiliteLotsActive
             ]
         );
 
@@ -120,7 +140,8 @@ class StockRepository {
                 td.nom AS type_dechet,
                 s.quantite,
                 s.unite,
-                s.date_mise_a_jour
+                s.date_mise_a_jour,
+                s.tracabilite_lots_active
             FROM stocks s
             JOIN types_dechets td
                 ON td.id = s.type_dechet_id

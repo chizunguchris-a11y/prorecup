@@ -33,6 +33,18 @@ class MouvementStockRepository {
         return resultat.rows[0];
     }
 
+    async existeEntreePourLot(lotId, client = pool) {
+        const resultat = await client.query(`
+            SELECT 1
+            FROM mouvements_stock
+            WHERE lot_id = $1
+              AND type_mouvement = 'ENTREE'
+            LIMIT 1;
+        `, [lotId]);
+
+        return resultat.rowCount > 0;
+    }
+
     async listerParStock(stockId) {
 
         const requete = `

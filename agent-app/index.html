@@ -187,6 +187,8 @@
 
 
         <main class="contenu">
+        <section id="vue-accueil" class="vue-interne">
+
 
             <!-- CONNEXION RÉSEAU -->
 
@@ -290,7 +292,45 @@
                 class="liste-missions"
             ></section>
 
-        </main>
+        </section>
+
+        <section id="vue-tournee" class="vue-interne masque">
+
+            <div class="bloc-entete">
+                <div>
+                    <p class="sur-titre">AUJOURD'HUI</p>
+                    <h2>Ma tournée détaillée</h2>
+                </div>
+            </div>
+
+            <div id="contenu-tournee"></div>
+
+        </section>
+                <section id="vue-incident" class="vue-interne masque">
+
+            <div class="bloc-entete">
+                <div>
+                    <p class="sur-titre">TERRAIN</p>
+                    <h2>Signaler un incident</h2>
+                </div>
+            </div>
+
+            <div id="contenu-incident"></div>
+
+        </section>
+        <section id="vue-profil" class="vue-interne masque">
+
+            <div class="bloc-entete">
+                <div>
+                    <p class="sur-titre">AGENT</p>
+                    <h2>Mon profil</h2>
+                </div>
+            </div>
+
+            <div id="contenu-profil"></div>
+
+        </section>
+</main>
 
 
         <aside class="synchronisation" aria-live="polite">
@@ -311,6 +351,7 @@
         <nav class="navigation-bas">
 
             <button
+            id="nav-accueil"
                 class="navigation-item actif"
                 type="button"
             >
@@ -325,9 +366,9 @@
 
 
             <button
+            id="nav-tournee"
                 class="navigation-item"
                 type="button"
-                disabled
             >
                 <span class="navigation-icone">
                     ◎
@@ -340,9 +381,9 @@
 
 
             <button
+            id="nav-incident"
                 class="navigation-item"
                 type="button"
-                disabled
             >
                 <span class="navigation-icone">
                     !
@@ -355,9 +396,9 @@
 
 
             <button
+            id="nav-profil"
                 class="navigation-item"
                 type="button"
-                disabled
             >
                 <span class="navigation-icone">
                     ○
@@ -377,7 +418,7 @@
     <script src="./js/api.js?v=1-6"></script>
     <script src="./js/auth.js?v=1-6"></script>
     <script src="./js/offline.js?v=1-8"></script>
-    <script src="./js/app.js?v=1-8"></script>
+    <script src="./js/app.js?v=1-9"></script>
 
 </body>
 </html>

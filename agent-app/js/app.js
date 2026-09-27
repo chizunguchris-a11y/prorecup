@@ -1341,7 +1341,44 @@
     };
 
 
-    const demarrer =
+    const vuesInternes = {
+    accueil: document.getElementById("vue-accueil"),
+    tournee: document.getElementById("vue-tournee"),
+    incident: document.getElementById("vue-incident"),
+    profil: document.getElementById("vue-profil")
+};
+
+const boutonsNavigation = {
+    accueil: document.getElementById("nav-accueil"),
+    tournee: document.getElementById("nav-tournee"),
+    incident: document.getElementById("nav-incident"),
+    profil: document.getElementById("nav-profil")
+};
+
+const afficherVueInterne = nom => {
+    const vue = vuesInternes[nom];
+    if (!vue) return;
+
+    Object.values(vuesInternes).forEach(element => {
+        if (element) element.classList.add("masque");
+    });
+
+    vue.classList.remove("masque");
+
+    Object.entries(boutonsNavigation).forEach(([cle, bouton]) => {
+        if (bouton) bouton.classList.toggle("actif", cle === nom);
+    });
+};
+
+Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
+    if (!bouton) return;
+
+    bouton.addEventListener("click", () => {
+        afficherVueInterne(nom);
+    });
+});
+
+const demarrer =
         async function () {
 
             mettreAJourReseau();
@@ -1370,7 +1407,7 @@
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-8').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-9').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

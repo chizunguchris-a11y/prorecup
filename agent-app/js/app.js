@@ -1341,7 +1341,98 @@
     };
 
 
-    const vuesInternes = {
+    const afficherTourneeDetaillee = () => {
+    const conteneur = document.getElementById("contenu-tournee");
+    if (!conteneur) return;
+
+    const missions = journeeCourante?.missions || [];
+
+    if (!missions.length) {
+        conteneur.innerHTML = `
+            <div class="vide">
+                <strong>Aucune tournée aujourd'hui</strong>
+                <p>Aucune mission ne vous est actuellement affectée.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const libellesEtat = {
+        a_faire: "À faire",
+        sur_site: "Sur le site",
+        en_collecte: "Collecte en cours",
+        terminee: "Terminée"
+    };
+
+    conteneur.innerHTML = missions.map(mission => {
+        const progression = mission.progression || {};
+        const collectes = [...(mission.collectes || [])].sort(
+            (a, b) => Number(a.ordre_collecte || 0) - Number(b.ordre_collecte || 0)
+        );
+
+        const listeCollectes = collectes.length
+            ? collectes.map(collecte => {
+                const client = collecte.client?.nom || "Client non renseigné";
+                const matiere = collecte.type_dechet?.nom || "Matière non renseignée";
+                const site = collecte.site?.nom || "Site non renseigné";
+                const adresse = collecte.site?.adresse || "";
+                const poidsEstime = collecte.poids?.estime_kg;
+                const poidsReel = collecte.poids?.reel_kg;
+                const etat = libellesEtat[collecte.etat] || collecte.etat || "À faire";
+
+                return `
+                    <div class="prochaine-etape">
+                        <strong>Arrêt ${Number(collecte.ordre_collecte || 0)}</strong>
+                        <span>${nettoyer(client)}</span>
+                        <span>${nettoyer(site)}</span>
+                        ${adresse ? `<span>${nettoyer(adresse)}</span>` : ""}
+                        <span>Matière : ${nettoyer(matiere)}</span>
+                        <span>Poids estimé : ${poidsEstime ?? "—"} kg</span>
+                        ${poidsReel !== null && poidsReel !== undefined
+                            ? `<span>Poids réel : ${Number(poidsReel)} kg</span>`
+                            : ""}
+                        <span>État : ${nettoyer(etat)}</span>
+                    </div>
+                `;
+            }).join("")
+            : `<div class="vide"><p>Aucune collecte associée à cette mission.</p></div>`;
+
+        return `
+            <article class="mission-carte">
+                <div class="mission-corps">
+                    <div class="mission-haut">
+                        <div>
+                            <span class="badge badge-${nettoyer(mission.statut)}">
+                                ${nettoyer(mission.statut)}
+                            </span>
+                            <h3>Mission du jour</h3>
+                        </div>
+                        <strong>${Number(progression.pourcentage || 0)} %</strong>
+                    </div>
+
+                    <div class="mission-info">
+                        Tricycle : <strong>${nettoyer(mission.tricycle?.numero || "Non renseigné")}</strong>
+                        <br>
+                        Plaque : ${nettoyer(mission.tricycle?.plaque || "Non renseignée")}
+                        <br>
+                        Collectes : ${Number(progression.terminees || 0)} / ${Number(progression.nombre_collectes || collectes.length)}
+                    </div>
+
+                    <div class="progression">
+                        <div
+                            class="progression-barre"
+                            style="width:${Math.min(100, Math.max(0, Number(progression.pourcentage || 0)))}%"
+                        ></div>
+                    </div>
+
+                    ${listeCollectes}
+                </div>
+            </article>
+        `;
+    }).join("");
+};
+
+const vuesInternes = {
     accueil: document.getElementById("vue-accueil"),
     tournee: document.getElementById("vue-tournee"),
     incident: document.getElementById("vue-incident"),
@@ -1365,6 +1456,10 @@ const afficherVueInterne = nom => {
 
     vue.classList.remove("masque");
 
+    if (nom === "tournee") {
+        afficherTourneeDetaillee();
+    }
+
     Object.entries(boutonsNavigation).forEach(([cle, bouton]) => {
         if (bouton) bouton.classList.toggle("actif", cle === nom);
     });
@@ -1378,7 +1473,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
     });
 });
 
-const demarrer =
+    const demarrer =
         async function () {
 
             mettreAJourReseau();

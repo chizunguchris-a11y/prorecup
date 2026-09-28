@@ -1274,3 +1274,151 @@ input:focus {
         width: 100%;
     }
 }
+/* === UX MOBILE FINAL === */
+
+#ecran-application {
+    overflow-x: hidden;
+}
+
+.contenu {
+    padding-bottom: calc(170px + env(safe-area-inset-bottom));
+}
+
+.vue-interne {
+    min-width: 0;
+}
+
+.navigation-bas {
+    min-height: 68px;
+}
+
+.navigation-item {
+    min-width: 0;
+    min-height: 52px;
+    padding: 6px 4px;
+}
+
+.synchronisation {
+    width: 100%;
+    box-sizing: border-box;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+.profil-actions .bouton {
+    margin-top: 0;
+}
+
+@media (width >= 700px) {
+
+    .synchronisation {
+        max-width: 760px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (width <= 700px) {
+
+    .barre-haute {
+        gap: 12px;
+        padding: max(12px, env(safe-area-inset-top)) 14px 12px;
+    }
+
+    .barre-haute .sur-titre {
+        margin-bottom: 4px;
+        font-size: 11px;
+        letter-spacing: 1.8px;
+    }
+
+    .titre-agent {
+        font-size: 22px;
+        line-height: 1.15;
+    }
+
+    #bouton-deconnexion {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        padding: 0;
+    }
+
+    .contenu {
+        padding: 14px 12px calc(180px + env(safe-area-inset-bottom));
+    }
+
+    .bloc-entete {
+        margin-bottom: 12px;
+    }
+
+    .bloc-entete h2 {
+        font-size: 20px;
+    }
+
+    .navigation-bas {
+        min-height: 64px;
+        padding: 6px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+    }
+
+    .navigation-item {
+        min-height: 50px;
+        padding: 6px 3px;
+        font-size: 12px;
+    }
+
+    .navigation-icone {
+        margin-bottom: 2px;
+        font-size: 20px;
+    }
+
+    .synchronisation {
+        bottom: calc(68px + env(safe-area-inset-bottom));
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .profil-carte {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .profil-entete {
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .profil-actions {
+        gap: 10px;
+    }
+
+    .incident-formulaire {
+        padding: 16px;
+        border-radius: 14px;
+    }
+}
+
+@media (width <= 420px) {
+
+    .titre-agent {
+        font-size: 20px;
+    }
+
+    .barre-haute .sur-titre {
+        letter-spacing: 1.4px;
+    }
+
+    .navigation-item {
+        font-size: 11px;
+    }
+
+    .navigation-icone {
+        font-size: 18px;
+    }
+
+    .profil-entete {
+        gap: 10px;
+    }
+
+    .profil-identite strong {
+        font-size: 18px;
+    }
+}

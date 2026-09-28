@@ -3039,21 +3039,6 @@
                                 </strong>
                             </div>
 
-                            <div class="profil-ligne">
-                                <span class="profil-etiquette">
-                                    Organisation
-                                </span>
-
-                                <strong class="profil-valeur profil-valeur-technique">
-                                    ${nettoyer(
-                                        valeurProfil(
-                                            organisation
-                                                ?.id
-                                        )
-                                    )}
-                                </strong>
-                            </div>
-
                         </div>
 
                     </div>
@@ -3284,6 +3269,8 @@ const afficherVueInterne = nom => {
 
     vue.classList.remove("masque");
 
+    window.scrollTo(0, 0);
+
     if (nom === "tournee") {
         afficherTourneeDetaillee();
     }
@@ -3338,7 +3325,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-12').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-13').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

@@ -1829,22 +1829,34 @@
                                         .poids
                                         ?.reel_kg;
 
+                                const progressionCollecte =
+                                    collecte.progression ||
+                                    {};
+
+                                const etatCode =
+                                    progressionCollecte
+                                        .collecte_terminee
+                                        ? "terminee"
+                                        : progressionCollecte
+                                            .collecte_demarree
+                                            ? "en_collecte"
+                                            : progressionCollecte
+                                                .arrivee
+                                                ? "sur_site"
+                                                : collecte.etat ||
+                                                    "a_faire";
+
                                 const etat =
                                     libellesEtat[
-                                        collecte.etat
+                                        etatCode
                                     ] ||
-                                    collecte.etat ||
-                                    "À faire";
+                                    etatCode;
 
                                 const estActuelle =
                                     collecteActiveId ===
                                     collecte.id &&
                                     etape.action !==
                                     "aucune";
-
-                                const progressionCollecte =
-                                    collecte.progression ||
-                                    {};
 
                                 let suivi =
                                     "À rejoindre";
@@ -3560,7 +3572,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-16').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-17').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

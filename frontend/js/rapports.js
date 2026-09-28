@@ -202,6 +202,10 @@
                 cle: "montant_total"
             },
             {
+                titre: "Devise",
+                cle: "devise"
+            },
+            {
                 titre: "Statut",
                 cle: "statut"
             }
@@ -478,10 +482,32 @@
         cle === "prix_unitaire" ||
         cle === "montant_total"
     ) {
-        return formaterNombre(
-            valeur,
-            2
-        );
+
+        var montant =
+            formaterNombre(
+                valeur,
+                2
+            );
+
+        var devise =
+            String(
+                ligne.devise || ""
+            )
+                .trim()
+                .toUpperCase();
+
+        if (devise === "CDF") {
+            return montant + " FC";
+        }
+
+        if (devise === "USD") {
+            return montant + " $";
+        }
+
+        return devise
+            ? montant + " " + devise
+            : montant;
+
     }
 
     return String(
@@ -614,6 +640,69 @@
 
     }
 
+    function formaterTotauxParDevise(
+        totaux
+    ) {
+
+        var devises =
+            Object.keys(
+                totaux || {}
+            ).sort();
+
+        if (!devises.length) {
+            return "0";
+        }
+
+        return devises
+            .map(
+                function (devise) {
+
+                    var montant =
+                        formaterNombre(
+                            totaux[devise],
+                            2
+                        );
+
+                    if (devise === "CDF") {
+                        return (
+                            "CDF : " +
+                            montant +
+                            " FC"
+                        );
+                    }
+
+                    if (devise === "USD") {
+                        return (
+                            "USD : " +
+                            montant +
+                            " $"
+                        );
+                    }
+
+                    if (
+                        devise ===
+                        "NON_RENSEIGNEE"
+                    ) {
+                        return (
+                            "Devise non renseign\u00e9e : " +
+                            montant
+                        );
+                    }
+
+                    return (
+                        devise +
+                        " : " +
+                        montant +
+                        " " +
+                        devise
+                    );
+
+                }
+            )
+            .join(" ? ");
+
+    }
+
     function obtenirValeurLigne(
         ligne
     ) {
@@ -658,6 +747,7 @@
 
         var quantiteTotale = 0;
         var valeurTotale = 0;
+        var totauxParDevise = {};
 
         lignes.forEach(
             function (ligne) {
@@ -667,10 +757,47 @@
                         ligne
                     );
 
-                valeurTotale +=
-                    obtenirValeurLigne(
-                        ligne
-                    );
+                if (
+                    typeRapport.value ===
+                    "ventes"
+                ) {
+
+                    var devise =
+                        String(
+                            ligne.devise || ""
+                        )
+                            .trim()
+                            .toUpperCase() ||
+                        "NON_RENSEIGNEE";
+
+                    var montant =
+                        Number(
+                            ligne.montant_total
+                        );
+
+                    if (!isNaN(montant)) {
+
+                        totauxParDevise[
+                            devise
+                        ] =
+                            (
+                                totauxParDevise[
+                                    devise
+                                ] ||
+                                0
+                            ) +
+                            montant;
+
+                    }
+
+                } else {
+
+                    valeurTotale +=
+                        obtenirValeurLigne(
+                            ligne
+                        );
+
+                }
 
             }
         );
@@ -724,6 +851,20 @@
         );
 
 }
+        if (
+            typeRapport.value ===
+            "ventes"
+        ) {
+
+            element(
+                "valeurTotaleRapport"
+            ).textContent =
+                formaterTotauxParDevise(
+                    totauxParDevise
+                );
+
+        }
+
         element(
             "periodeRapport"
         ).textContent =

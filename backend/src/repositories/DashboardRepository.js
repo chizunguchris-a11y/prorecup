@@ -71,13 +71,31 @@ class DashboardRepository {
 
                 (
                     SELECT COALESCE(
-                        SUM(montant_total),
-                        0
+                        jsonb_object_agg(
+                            ca.devise,
+                            ca.montant_total
+                        ),
+                        '{}'::jsonb
                     )
-                    FROM ventes
-                    WHERE organisation_id = $1
-                      AND statut = 'confirmee'
-                ) AS chiffre_affaires_total,
+                    FROM (
+                        SELECT
+                            COALESCE(
+                                devise,
+                                'NON_RENSEIGNEE'
+                            ) AS devise,
+                            SUM(
+                                montant_total
+                            ) AS montant_total
+                        FROM ventes
+                        WHERE organisation_id = $1
+                          AND statut = 'confirmee'
+                        GROUP BY
+                            COALESCE(
+                                devise,
+                                'NON_RENSEIGNEE'
+                            )
+                    ) ca
+                ) AS chiffre_affaires_par_devise,
 
                 (
                     SELECT COALESCE(

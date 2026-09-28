@@ -67,6 +67,107 @@
 
     }
 
+    function normaliserDevise(
+        valeur
+    ) {
+
+        return String(
+            valeur || ""
+        )
+            .trim()
+            .toUpperCase();
+
+    }
+
+    function formaterMontantDevise(
+        valeur,
+        devise
+    ) {
+
+        var montant =
+            formaterNombre(
+                valeur,
+                2
+            );
+
+        var code =
+            normaliserDevise(
+                devise
+            );
+
+        if (code === "CDF") {
+            return montant + " FC";
+        }
+
+        if (code === "USD") {
+            return montant + " $";
+        }
+
+        if (
+            code ===
+            "NON_RENSEIGNEE"
+        ) {
+            return montant;
+        }
+
+        return code
+            ? montant + " " + code
+            : montant;
+
+    }
+
+    function formaterChiffreAffairesParDevise(
+        valeurs
+    ) {
+
+        if (
+            !valeurs ||
+            typeof valeurs !== "object"
+        ) {
+            return "0 de chiffre d?affaires";
+        }
+
+        var devises =
+            Object.keys(
+                valeurs
+            ).sort();
+
+        if (!devises.length) {
+            return "0 de chiffre d?affaires";
+        }
+
+        return devises
+            .map(
+                function (devise) {
+
+                    if (
+                        devise ===
+                        "NON_RENSEIGNEE"
+                    ) {
+                        return (
+                            "Devise non renseign\u00e9e : " +
+                            formaterMontantDevise(
+                                valeurs[devise],
+                                devise
+                            )
+                        );
+                    }
+
+                    return (
+                        devise +
+                        " : " +
+                        formaterMontantDevise(
+                            valeurs[devise],
+                            devise
+                        )
+                    );
+
+                }
+            )
+            .join(" ? ");
+
+    }
+
     function formaterDate(valeur) {
 
         if (!valeur) {
@@ -1506,13 +1607,9 @@
 
             definirTexte(
                 "detailVentes",
-                formaterNombre(
-                    ventes.chiffre_affaires_total ||
-                    ventes.chiffre_affaires ||
-                    0,
-                    2
-                ) +
-                " de chiffre d’affaires"
+                formaterChiffreAffairesParDevise(
+                    ventes.chiffre_affaires_par_devise
+                )
             );
 
             definirTexte(

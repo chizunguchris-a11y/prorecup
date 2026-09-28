@@ -23,6 +23,19 @@ class DashboardService {
                     organisationId
                 );
 
+        const chiffreAffairesParDevise =
+            Object.fromEntries(
+                Object.entries(
+                    resume.chiffre_affaires_par_devise ||
+                    {}
+                ).map(
+                    ([devise, montant]) => [
+                        devise,
+                        Number(montant)
+                    ]
+                )
+            );
+
         return {
 
             activite: {
@@ -70,10 +83,8 @@ class DashboardService {
                         resume.nombre_ventes
                     ),
 
-                chiffre_affaires_total:
-                    Number(
-                        resume.chiffre_affaires_total
-                    )
+                chiffre_affaires_par_devise:
+                    chiffreAffairesParDevise
 
             },
 

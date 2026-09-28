@@ -1986,6 +1986,746 @@
             .join("");
     };
 
+    const afficherIncident = (
+        missionSelectionneeId = null
+    ) => {
+        const conteneur =
+            document.getElementById(
+                "contenu-incident"
+            );
+
+        if (!conteneur) return;
+
+        const missions =
+            (
+                journeeCourante
+                    ?.missions ||
+                []
+            ).filter(
+                mission =>
+                    mission.statut ===
+                    "en_cours"
+            );
+
+        if (!missions.length) {
+            conteneur.innerHTML = `
+                <div class="vide">
+                    <strong>
+                        Aucune mission en cours
+                    </strong>
+
+                    <p>
+                        Pour signaler un incident,
+                        démarrez d'abord votre mission
+                        depuis l'onglet Tournée.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+        const mission =
+            missions.find(
+                item =>
+                    item.id ===
+                    missionSelectionneeId
+            ) ||
+            missions[0];
+
+        const collectes =
+            [
+                ...(
+                    mission.collectes ||
+                    []
+                )
+            ].sort(
+                (a, b) =>
+                    Number(
+                        a.ordre_collecte ||
+                        0
+                    ) -
+                    Number(
+                        b.ordre_collecte ||
+                        0
+                    )
+            );
+
+        const optionsMissions =
+            missions
+                .map(
+                    (item, index) => {
+                        const tricycle =
+                            item.tricycle
+                                ?.numero ||
+                            "sans tricycle";
+
+                        return `
+                            <option
+                                value="${nettoyer(
+                                    item.id
+                                )}"
+                                ${
+                                    item.id ===
+                                    mission.id
+                                        ? "selected"
+                                        : ""
+                                }
+                            >
+                                Mission ${index + 1}
+                                · ${nettoyer(
+                                    tricycle
+                                )}
+                            </option>
+                        `;
+                    }
+                )
+                .join("");
+
+        const optionsCollectes =
+            collectes
+                .map(
+                    collecte => {
+                        const client =
+                            collecte
+                                .client
+                                ?.nom ||
+                            "Client";
+
+                        const site =
+                            collecte
+                                .site
+                                ?.nom ||
+                            "Site";
+
+                        return `
+                            <option
+                                value="${nettoyer(
+                                    collecte.id
+                                )}"
+                            >
+                                Arrêt ${Number(
+                                    collecte
+                                        .ordre_collecte ||
+                                    0
+                                )}
+                                · ${nettoyer(client)}
+                                · ${nettoyer(site)}
+                            </option>
+                        `;
+                    }
+                )
+                .join("");
+
+        conteneur.innerHTML = `
+            <form
+                id="form-incident"
+                class="incident-formulaire"
+                novalidate
+            >
+
+                <div class="incident-resume">
+                    <strong>
+                        Incident pendant la mission
+                    </strong>
+
+                    <span>
+                        Tricycle :
+                        ${nettoyer(
+                            mission.tricycle
+                                ?.numero ||
+                            "Non renseigné"
+                        )}
+                    </span>
+
+                    <span>
+                        ${
+                            collectes.length
+                        }
+                        collecte(s) dans cette mission
+                    </span>
+                </div>
+
+                <div class="incident-grille">
+
+                    <label class="incident-champ">
+                        <span>
+                            Mission concernée
+                        </span>
+
+                        <select
+                            id="incident-mission"
+                            name="mission_id"
+                            required
+                        >
+                            ${optionsMissions}
+                        </select>
+                    </label>
+
+                    <label class="incident-champ">
+                        <span>
+                            Collecte concernée
+                        </span>
+
+                        <select
+                            name="collecte_id"
+                        >
+                            <option value="">
+                                Incident général sur la mission
+                            </option>
+
+                            ${optionsCollectes}
+                        </select>
+                    </label>
+
+                    <label class="incident-champ">
+                        <span>
+                            Type d'incident
+                        </span>
+
+                        <select
+                            name="categorie"
+                            required
+                        >
+                            <option value="">
+                                Sélectionner
+                            </option>
+
+                            <option value="panne_tricycle">
+                                Panne du tricycle
+                            </option>
+
+                            <option value="accident">
+                                Accident
+                            </option>
+
+                            <option value="client_absent">
+                                Client absent
+                            </option>
+
+                            <option value="acces_refuse">
+                                Accès refusé
+                            </option>
+
+                            <option value="dechets_non_conformes">
+                                Déchets non conformes
+                            </option>
+
+                            <option value="securite">
+                                Problème de sécurité
+                            </option>
+
+                            <option value="autre">
+                                Autre
+                            </option>
+                        </select>
+                    </label>
+
+                    <label class="incident-champ">
+                        <span>
+                            Gravité
+                        </span>
+
+                        <select
+                            name="gravite"
+                            required
+                        >
+                            <option value="">
+                                Sélectionner
+                            </option>
+
+                            <option value="faible">
+                                Faible
+                            </option>
+
+                            <option value="moyenne">
+                                Moyenne
+                            </option>
+
+                            <option value="elevee">
+                                Élevée
+                            </option>
+
+                            <option value="critique">
+                                Critique
+                            </option>
+                        </select>
+                    </label>
+
+                    <label class="incident-checkbox">
+
+                        <input
+                            type="checkbox"
+                            name="bloquant"
+                        >
+
+                        <span>
+                            <strong>
+                                Incident bloquant
+                            </strong>
+
+                            <small>
+                                Cochez si cet incident
+                                empêche la poursuite normale
+                                de la mission.
+                            </small>
+                        </span>
+
+                    </label>
+
+                    <label
+                        class="
+                            incident-champ
+                            incident-champ-large
+                        "
+                    >
+                        <span>
+                            Description de l'incident
+                        </span>
+
+                        <textarea
+                            name="description"
+                            rows="5"
+                            minlength="5"
+                            required
+                            placeholder="Décrivez clairement ce qui s'est passé..."
+                        ></textarea>
+                    </label>
+
+                    <div class="incident-gps">
+                        <strong>
+                            Position GPS
+                        </strong>
+
+                        <span>
+                            Votre position sera enregistrée
+                            automatiquement au moment
+                            du signalement.
+                        </span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="bouton bouton-principal incident-envoyer"
+                    >
+                        Signaler l'incident
+                    </button>
+
+                </div>
+
+            </form>
+        `;
+    };
+
+
+    const gererSoumissionIncident =
+        async evenement => {
+
+            const formulaire =
+                evenement.target.closest(
+                    "#form-incident"
+                );
+
+            if (!formulaire) return;
+
+            evenement.preventDefault();
+
+            if (
+                actionEnCours ||
+                chargementJournee
+            ) {
+                return;
+            }
+
+            if (!terrainStore) {
+                afficherMessage(
+                    messageApplication,
+                    "Le stockage Terrain n'est pas disponible.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            const donneesFormulaire =
+                new FormData(formulaire);
+
+            const missionId =
+                String(
+                    donneesFormulaire.get(
+                        "mission_id"
+                    ) || ""
+                );
+
+            const collecteId =
+                String(
+                    donneesFormulaire.get(
+                        "collecte_id"
+                    ) || ""
+                ) || null;
+
+            const categorie =
+                String(
+                    donneesFormulaire.get(
+                        "categorie"
+                    ) || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            const gravite =
+                String(
+                    donneesFormulaire.get(
+                        "gravite"
+                    ) || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            const description =
+                String(
+                    donneesFormulaire.get(
+                        "description"
+                    ) || ""
+                )
+                    .trim();
+
+            const bloquant =
+                donneesFormulaire.has(
+                    "bloquant"
+                );
+
+            const missions =
+                journeeCourante
+                    ?.missions ||
+                [];
+
+            const mission =
+                missions.find(
+                    item =>
+                        item.id ===
+                        missionId
+                );
+
+            if (
+                !mission ||
+                !UUID.test(
+                    mission.id ||
+                    ""
+                )
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "La mission sélectionnée est invalide.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            if (
+                mission.statut !==
+                "en_cours"
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "Un incident ne peut être signalé que pendant une mission en cours.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            if (
+                collecteId &&
+                !(
+                    mission.collectes ||
+                    []
+                ).some(
+                    collecte =>
+                        collecte.id ===
+                        collecteId &&
+                        UUID.test(
+                            collecte.id ||
+                            ""
+                        )
+                )
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "La collecte sélectionnée n'appartient pas à cette mission.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            const categories =
+                [
+                    "panne_tricycle",
+                    "accident",
+                    "client_absent",
+                    "acces_refuse",
+                    "dechets_non_conformes",
+                    "securite",
+                    "autre"
+                ];
+
+            const gravites =
+                [
+                    "faible",
+                    "moyenne",
+                    "elevee",
+                    "critique"
+                ];
+
+            if (
+                !categories.includes(
+                    categorie
+                )
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "Choisissez un type d'incident.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            if (
+                !gravites.includes(
+                    gravite
+                )
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "Choisissez la gravité de l'incident.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            if (
+                description.length < 5
+            ) {
+                afficherMessage(
+                    messageApplication,
+                    "Décrivez l'incident en au moins 5 caractères.",
+                    "erreur"
+                );
+
+                return;
+            }
+
+            const bouton =
+                formulaire.querySelector(
+                    'button[type="submit"]'
+                );
+
+            const controles =
+                [
+                    ...formulaire
+                        .querySelectorAll(
+                            "button, input, select, textarea"
+                        )
+                ];
+
+            const etats =
+                controles.map(
+                    element => [
+                        element,
+                        element.disabled
+                    ]
+                );
+
+            /*
+             * Instant réel du signalement :
+             * capturé AVANT l'attente GPS.
+             */
+            const survenuLe =
+                new Date()
+                    .toISOString();
+
+            /*
+             * UUID créé une seule fois
+             * pour cet incident.
+             */
+            const operationId =
+                crypto.randomUUID();
+
+            actionEnCours = true;
+
+            controles.forEach(
+                element => {
+                    element.disabled = true;
+                }
+            );
+
+            if (bouton) {
+                bouton.textContent =
+                    "Localisation GPS…";
+            }
+
+            afficherMessage(
+                messageApplication,
+                "Localisation GPS de l'incident en cours…",
+                "succes"
+            );
+
+            try {
+                const gps =
+                    await obtenirGps();
+
+                const utilisateur =
+                    auth
+                        .obtenirUtilisateur()
+                        ?.id ||
+                    null;
+
+                const contexte = {
+                    utilisateur,
+                    mission:
+                        mission.id,
+                    collecte:
+                        collecteId,
+                    action:
+                        "signaler_incident"
+                };
+
+                const payload = {
+                    operation_id:
+                        operationId,
+
+                    survenu_le:
+                        survenuLe,
+
+                    collecte_id:
+                        collecteId,
+
+                    categorie,
+
+                    gravite,
+
+                    bloquant,
+
+                    description,
+
+                    mode:
+                        navigator.onLine
+                            ? "online"
+                            : "offline",
+
+                    latitude:
+                        gps.latitude,
+
+                    longitude:
+                        gps.longitude,
+
+                    precision_gps:
+                        gps.precision_gps
+                };
+
+                /*
+                 * Aucun POST direct ici.
+                 * L'incident est enregistré
+                 * localement d'abord.
+                 */
+                await terrainStore.enqueue(
+                    contexte,
+                    payload
+                );
+
+                await updateQueueUI();
+
+                afficherMessage(
+                    messageApplication,
+                    navigator.onLine
+                        ? "Incident enregistré sur cet appareil. Synchronisation demandée."
+                        : "Incident enregistré hors connexion. Il sera synchronisé automatiquement dès que possible.",
+                    "succes"
+                );
+
+                formulaire.reset();
+
+                afficherIncident(
+                    mission.id
+                );
+
+                /*
+                 * La file offline reste
+                 * la source de vérité.
+                 */
+                synchroniser();
+
+            } catch (erreur) {
+
+                afficherMessage(
+                    messageApplication,
+                    erreur.message ||
+                    "Impossible d'enregistrer l'incident.",
+                    "erreur"
+                );
+
+            } finally {
+
+                etats.forEach(
+                    (
+                        [
+                            element,
+                            disabled
+                        ]
+                    ) => {
+                        element.disabled =
+                            disabled;
+                    }
+                );
+
+                if (
+                    bouton &&
+                    document.body
+                        .contains(bouton)
+                ) {
+                    bouton.textContent =
+                        "Signaler l'incident";
+                }
+
+                actionEnCours = false;
+            }
+        };
+
+
+    const conteneurIncident =
+        document.getElementById(
+            "contenu-incident"
+        );
+
+    conteneurIncident
+        ?.addEventListener(
+            "submit",
+            gererSoumissionIncident
+        );
+
+    conteneurIncident
+        ?.addEventListener(
+            "change",
+            evenement => {
+
+                if (
+                    evenement.target
+                        ?.id !==
+                    "incident-mission"
+                ) {
+                    return;
+                }
+
+                afficherIncident(
+                    evenement.target.value
+                );
+            }
+        );
+
 const vuesInternes = {
     accueil: document.getElementById("vue-accueil"),
     tournee: document.getElementById("vue-tournee"),
@@ -2012,6 +2752,10 @@ const afficherVueInterne = nom => {
 
     if (nom === "tournee") {
         afficherTourneeDetaillee();
+    }
+
+    if (nom === "incident") {
+        afficherIncident();
     }
 
     Object.entries(boutonsNavigation).forEach(([cle, bouton]) => {
@@ -2056,7 +2800,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-10').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-11').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

@@ -983,3 +983,130 @@ input:focus {
     padding: 8px;
     font: inherit;
 }
+
+/* === INCIDENT TERRAIN === */
+
+.incident-formulaire {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px;
+    background: white;
+    border: 1px solid var(--bordure);
+    border-radius: 20px;
+}
+
+.incident-resume {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(0, 120, 73, 0.06);
+}
+
+.incident-resume strong {
+    width: 100%;
+    color: var(--vert-fonce);
+}
+
+.incident-resume span {
+    color: #56635d;
+}
+
+.incident-grille {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.incident-champ {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.incident-champ select, .incident-champ textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    border: 1px solid var(--bordure);
+    border-radius: 12px;
+    background: white;
+    font: inherit;
+    font-weight: 400;
+    color: inherit;
+}
+
+.incident-champ textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+.incident-champ-large {
+    grid-column: 1 / -1;
+}
+
+.incident-checkbox {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid var(--bordure);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.incident-checkbox input {
+    margin-top: 4px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--vert);
+}
+
+.incident-checkbox span {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.incident-checkbox small {
+    font-weight: 400;
+    color: #66736d;
+}
+
+.incident-gps {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(0, 120, 73, 0.06);
+}
+
+.incident-gps span {
+    color: #66736d;
+}
+
+.incident-envoyer {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+@media (width <= 700px) {
+
+    .incident-formulaire {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .incident-grille {
+        grid-template-columns: 1fr;
+    }
+
+    .incident-champ-large, .incident-checkbox, .incident-gps, .incident-envoyer {
+        grid-column: 1;
+    }
+}

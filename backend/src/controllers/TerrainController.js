@@ -1,5 +1,6 @@
-﻿import terrainService
+import terrainService
     from "../services/TerrainService.js";
+import terrainJourneeService from "../services/TerrainJourneeService.js";
 
 import asyncHandler
     from "../middlewares/asyncHandler.js";
@@ -45,8 +46,7 @@ const terrainController = {
 
 
             const journee =
-                await terrainService
-                    .obtenirJournee(
+                await terrainJourneeService.obtenir(
                         req.agentTerrain,
                         dateDemandee
                     );

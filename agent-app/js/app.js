@@ -492,6 +492,22 @@
     const preuvePresente = (collecte, type) =>
         (collecte?.preuves || []).some(preuve => preuve.type_preuve === type);
 
+    const libelleStatutMission = statut => {
+        const libelles = {
+            planifiee: "Planifiée",
+            en_cours: "En cours",
+            terminee: "Terminée",
+            annulee: "Annulée"
+        };
+
+        if (!statut) return "—";
+
+        return libelles[statut] ||
+            String(statut)
+                .replaceAll("_", " ")
+                .replace(/^./, lettre => lettre.toUpperCase());
+    };
+
     const etapeMission = mission => {
         const collecte = (mission.collectes || []).find(item =>
             !item.progression?.collecte_terminee ||
@@ -783,12 +799,37 @@
 
 
                             const etape = etapeMission(mission);
-                            const prochaine = etape.collecte ? { site_nom: etape.collecte.site?.nom } : mission.prochaine_collecte;
 
+                            const missionTerminee =
+                                mission.statut === "terminee";
+
+                            const prochaine =
+                                !missionTerminee &&
+                                etape.action !== "terminer_mission"
+                                    ? (
+                                        etape.collecte
+                                            ? {
+                                                site_nom:
+                                                    etape.collecte.site?.nom
+                                            }
+                                            : mission.prochaine_collecte
+                                    )
+                                    : null;
+
+                            const titreProchaineEtape =
+                                missionTerminee
+                                    ? "Tournée terminée"
+                                    : etape.action === "terminer_mission"
+                                        ? "Dernière étape"
+                                        : "Prochaine étape";
 
                             const site =
-                                prochaine?.site_nom ||
-                                "Aucun prochain arrêt";
+                                missionTerminee
+                                    ? "Toutes les collectes sont terminées"
+                                    : etape.action === "terminer_mission"
+                                        ? "Finaliser la tournée"
+                                        : prochaine?.site_nom ||
+                                            "Aucun prochain arrêt";
 
 
                             return `
@@ -810,9 +851,7 @@
                                                         mission.statut
                                                     )}"
                                                 >
-                                                    ${nettoyer(
-                                                        mission.statut
-                                                    )}
+                                                    ${nettoyer(libelleStatutMission(mission.statut))}
                                                 </span>
 
                                                 <h3>
@@ -896,7 +935,7 @@
                                         <div class="prochaine-etape">
 
                                             <strong>
-                                                Prochaine étape
+                                                ${nettoyer(titreProchaineEtape)}
                                             </strong>
 
                                             <span>
@@ -3521,7 +3560,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-15').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-16').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

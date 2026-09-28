@@ -516,6 +516,8 @@
 
             journeeCourante = journee;
 
+            afficherTourneeDetaillee();
+
             const resume =
                 journee?.resume || {};
 
@@ -1271,39 +1273,139 @@
 
     };
 
-    listeMissions.addEventListener("click", async evenement => {
+    const gererClicMission = async evenement => {
         const bouton = evenement.target.closest(".bouton-mission");
-        if (!bouton || bouton.disabled || actionEnCours || chargementJournee) return;
-        const mission = journeeCourante?.missions?.find(item => item.id === bouton.dataset.missionId);
+
+        if (
+            !bouton ||
+            bouton.disabled ||
+            actionEnCours ||
+            chargementJournee
+        ) return;
+
+        const mission =
+            journeeCourante?.missions?.find(
+                item =>
+                    item.id ===
+                    bouton.dataset.missionId
+            );
+
         if (!mission) return;
-        let etape = etapeMission(mission);
-        if (bouton.dataset.action === "corriger_pesee") {
-            const collecte = (mission.collectes || []).find(
-                item => item.id === bouton.dataset.collecteId);
-            if (!collecte || collecte.progression?.collecte_terminee) return;
-            etape = { action: "enregistrer_pesee", collecte };
+
+        let etape =
+            etapeMission(mission);
+
+        if (
+            bouton.dataset.action ===
+            "corriger_pesee"
+        ) {
+            const collecte =
+                (mission.collectes || [])
+                    .find(
+                        item =>
+                            item.id ===
+                            bouton.dataset.collecteId
+                    );
+
+            if (
+                !collecte ||
+                collecte.progression
+                    ?.collecte_terminee
+            ) return;
+
+            etape = {
+                action:
+                    "enregistrer_pesee",
+                collecte
+            };
         }
-        if (etape.action === "aucune") return;
+
+        if (
+            etape.action ===
+            "aucune"
+        ) return;
+
         try {
-            const cle = cleOperation(contexteOperation(mission, etape));
-            if (actionsAcquittees.has(cle)) {
+            const cle =
+                cleOperation(
+                    contexteOperation(
+                        mission,
+                        etape
+                    )
+                );
+
+            if (
+                actionsAcquittees.has(cle)
+            ) {
                 await chargerJournee();
+                afficherTourneeDetaillee();
                 return;
             }
-            const carte = bouton.closest(".mission-carte");
-            if (["terminer_collecte", "enregistrer_pesee", ...typesPhoto].includes(etape.action)) {
-                const formulaire = ouvrirSaisie(carte, etape.action, mission, etape);
-                formulaire.addEventListener("submit", async event => {
-                    event.preventDefault();
-                    await lancer(mission, etape, formulaire);
-                });
+
+            const carte =
+                bouton.closest(
+                    ".mission-carte"
+                );
+
+            if (
+                [
+                    "terminer_collecte",
+                    "enregistrer_pesee",
+                    ...typesPhoto
+                ].includes(etape.action)
+            ) {
+                const formulaire =
+                    ouvrirSaisie(
+                        carte,
+                        etape.action,
+                        mission,
+                        etape
+                    );
+
+                formulaire.addEventListener(
+                    "submit",
+                    async event => {
+                        event.preventDefault();
+
+                        await lancer(
+                            mission,
+                            etape,
+                            formulaire
+                        );
+
+                        afficherTourneeDetaillee();
+                    }
+                );
+
             } else {
-                await lancer(mission, etape);
+                await lancer(
+                    mission,
+                    etape
+                );
+
+                afficherTourneeDetaillee();
             }
+
         } catch (erreur) {
-            afficherMessage(messageApplication, erreur.message, "erreur");
+            afficherMessage(
+                messageApplication,
+                erreur.message,
+                "erreur"
+            );
         }
-    });
+    };
+
+    listeMissions.addEventListener(
+        "click",
+        gererClicMission
+    );
+
+    document
+        .getElementById("contenu-tournee")
+        ?.addEventListener(
+            "click",
+            gererClicMission
+        );
 
     const lancer = async (mission, etape, formulaire) => {
         if (actionEnCours || chargementJournee || synchronisation) return;
@@ -1314,6 +1416,8 @@
         actionEnCours = true;
         const controles = [
             ...listeMissions.querySelectorAll("button, input, select"),
+            ...(document.getElementById("contenu-tournee")
+                ?.querySelectorAll("button, input, select") || []),
             document.getElementById("bouton-actualiser"),
             document.getElementById("bouton-deconnexion")
         ].filter(Boolean);
@@ -1342,95 +1446,545 @@
 
 
     const afficherTourneeDetaillee = () => {
-    const conteneur = document.getElementById("contenu-tournee");
-    if (!conteneur) return;
+        const conteneur =
+            document.getElementById(
+                "contenu-tournee"
+            );
 
-    const missions = journeeCourante?.missions || [];
+        if (!conteneur) return;
 
-    if (!missions.length) {
-        conteneur.innerHTML = `
-            <div class="vide">
-                <strong>Aucune tournée aujourd'hui</strong>
-                <p>Aucune mission ne vous est actuellement affectée.</p>
-            </div>
-        `;
-        return;
-    }
+        const missions =
+            journeeCourante?.missions ||
+            [];
 
-    const libellesEtat = {
-        a_faire: "À faire",
-        sur_site: "Sur le site",
-        en_collecte: "Collecte en cours",
-        terminee: "Terminée"
-    };
+        if (!missions.length) {
+            conteneur.innerHTML = `
+                <div class="vide">
+                    <strong>
+                        Aucune tournée aujourd'hui
+                    </strong>
 
-    conteneur.innerHTML = missions.map(mission => {
-        const progression = mission.progression || {};
-        const collectes = [...(mission.collectes || [])].sort(
-            (a, b) => Number(a.ordre_collecte || 0) - Number(b.ordre_collecte || 0)
-        );
+                    <p>
+                        Aucune mission ne vous est
+                        actuellement affectée.
+                    </p>
+                </div>
+            `;
 
-        const listeCollectes = collectes.length
-            ? collectes.map(collecte => {
-                const client = collecte.client?.nom || "Client non renseigné";
-                const matiere = collecte.type_dechet?.nom || "Matière non renseignée";
-                const site = collecte.site?.nom || "Site non renseigné";
-                const adresse = collecte.site?.adresse || "";
-                const poidsEstime = collecte.poids?.estime_kg;
-                const poidsReel = collecte.poids?.reel_kg;
-                const etat = libellesEtat[collecte.etat] || collecte.etat || "À faire";
+            return;
+        }
+
+        const libellesEtat = {
+            a_faire:
+                "À faire",
+
+            sur_site:
+                "Sur le site",
+
+            en_collecte:
+                "Collecte en cours",
+
+            terminee:
+                "Terminée"
+        };
+
+        const libellesMission = {
+            planifiee:
+                "Planifiée",
+
+            en_cours:
+                "En cours",
+
+            terminee:
+                "Terminée",
+
+            annulee:
+                "Annulée"
+        };
+
+        const heureCourte = valeur => {
+            if (!valeur) return "—";
+
+            return String(valeur)
+                .slice(0, 5);
+        };
+
+        conteneur.innerHTML =
+            missions.map(mission => {
+
+                const progression =
+                    mission.progression ||
+                    {};
+
+                const etape =
+                    etapeMission(mission);
+
+                const collecteActiveId =
+                    etape.collecte?.id ||
+                    null;
+
+                const collectes =
+                    [
+                        ...(
+                            mission.collectes ||
+                            []
+                        )
+                    ].sort(
+                        (a, b) =>
+                            Number(
+                                a.ordre_collecte ||
+                                0
+                            ) -
+                            Number(
+                                b.ordre_collecte ||
+                                0
+                            )
+                    );
+
+                const listeCollectes =
+                    collectes.length
+                        ? collectes
+                            .map(collecte => {
+
+                                const client =
+                                    collecte
+                                        .client
+                                        ?.nom ||
+                                    "Client non renseigné";
+
+                                const matiere =
+                                    collecte
+                                        .type_dechet
+                                        ?.nom ||
+                                    "Matière non renseignée";
+
+                                const site =
+                                    collecte
+                                        .site
+                                        ?.nom ||
+                                    "Site non renseigné";
+
+                                const adresse =
+                                    collecte
+                                        .site
+                                        ?.adresse ||
+                                    "";
+
+                                const zone =
+                                    collecte
+                                        .site
+                                        ?.zone_geographique ||
+                                    "";
+
+                                const responsable =
+                                    collecte
+                                        .site
+                                        ?.responsable_nom ||
+                                    "";
+
+                                const poidsEstime =
+                                    collecte
+                                        .poids
+                                        ?.estime_kg;
+
+                                const poidsReel =
+                                    collecte
+                                        .poids
+                                        ?.reel_kg;
+
+                                const etat =
+                                    libellesEtat[
+                                        collecte.etat
+                                    ] ||
+                                    collecte.etat ||
+                                    "À faire";
+
+                                const estActuelle =
+                                    collecteActiveId ===
+                                    collecte.id &&
+                                    etape.action !==
+                                    "aucune";
+
+                                const progressionCollecte =
+                                    collecte.progression ||
+                                    {};
+
+                                let suivi =
+                                    "À rejoindre";
+
+                                if (
+                                    progressionCollecte
+                                        .arrivee
+                                ) {
+                                    suivi =
+                                        "Arrivé sur le site";
+                                }
+
+                                if (
+                                    progressionCollecte
+                                        .collecte_demarree
+                                ) {
+                                    suivi =
+                                        "Collecte démarrée";
+                                }
+
+                                if (
+                                    progressionCollecte
+                                        .collecte_terminee
+                                ) {
+                                    suivi =
+                                        "Collecte terminée";
+                                }
+
+                                const nombrePreuves =
+                                    Number(
+                                        collecte
+                                            .nombre_preuves ??
+                                        (
+                                            collecte
+                                                .preuves ||
+                                            []
+                                        ).length
+                                    );
+
+                                return `
+                                    <div class="prochaine-etape">
+
+                                        <strong>
+                                            Arrêt ${Number(
+                                                collecte
+                                                    .ordre_collecte ||
+                                                0
+                                            )}
+                                            ${
+                                                estActuelle
+                                                    ? " · Étape actuelle"
+                                                    : ""
+                                            }
+                                        </strong>
+
+                                        <span>
+                                            <strong>
+                                                ${nettoyer(client)}
+                                            </strong>
+                                        </span>
+
+                                        <span>
+                                            ${nettoyer(site)}
+                                        </span>
+
+                                        ${
+                                            adresse
+                                                ? `
+                                                <span>
+                                                    ${nettoyer(adresse)}
+                                                </span>
+                                                `
+                                                : ""
+                                        }
+
+                                        ${
+                                            zone
+                                                ? `
+                                                <span>
+                                                    Zone :
+                                                    ${nettoyer(zone)}
+                                                </span>
+                                                `
+                                                : ""
+                                        }
+
+                                        ${
+                                            responsable
+                                                ? `
+                                                <span>
+                                                    Responsable :
+                                                    ${nettoyer(responsable)}
+                                                </span>
+                                                `
+                                                : ""
+                                        }
+
+                                        <span>
+                                            Matière :
+                                            ${nettoyer(matiere)}
+                                        </span>
+
+                                        <span>
+                                            Poids estimé :
+                                            ${
+                                                poidsEstime ??
+                                                "—"
+                                            }
+                                            kg
+                                        </span>
+
+                                        ${
+                                            poidsReel !==
+                                                null &&
+                                            poidsReel !==
+                                                undefined
+                                                ? `
+                                                <span>
+                                                    Poids réel :
+                                                    ${Number(
+                                                        poidsReel
+                                                    )}
+                                                    kg
+                                                </span>
+                                                `
+                                                : ""
+                                        }
+
+                                        <span>
+                                            État :
+                                            ${nettoyer(etat)}
+                                        </span>
+
+                                        <span>
+                                            Suivi :
+                                            ${nettoyer(suivi)}
+                                        </span>
+
+                                        <span>
+                                            Preuves :
+                                            ${nombrePreuves}
+                                        </span>
+
+                                        ${
+                                            estActuelle
+                                                ? `
+                                                <span>
+                                                    Prochaine action :
+                                                    <strong>
+                                                        ${nettoyer(
+                                                            libelleEtape(
+                                                                etape.action
+                                                            )
+                                                        )}
+                                                    </strong>
+                                                </span>
+                                                `
+                                                : ""
+                                        }
+
+                                    </div>
+                                `;
+                            })
+                            .join("")
+                        : `
+                            <div class="vide">
+                                <p>
+                                    Aucune collecte associée
+                                    à cette mission.
+                                </p>
+                            </div>
+                        `;
+
+                const correctionPesee =
+                    etape.action ===
+                        "terminer_collecte" &&
+                    (
+                        etape.collecte
+                            ?.pesees ||
+                        []
+                    ).some(
+                        pesee =>
+                            pesee.type ===
+                            "terrain"
+                    )
+                        ? `
+                            <button
+                                type="button"
+                                class="bouton bouton-secondaire bouton-mission"
+                                data-mission-id="${nettoyer(
+                                    mission.id
+                                )}"
+                                data-collecte-id="${nettoyer(
+                                    etape.collecte.id
+                                )}"
+                                data-action="corriger_pesee"
+                            >
+                                Corriger la pesée
+                            </button>
+                        `
+                        : "";
 
                 return `
-                    <div class="prochaine-etape">
-                        <strong>Arrêt ${Number(collecte.ordre_collecte || 0)}</strong>
-                        <span>${nettoyer(client)}</span>
-                        <span>${nettoyer(site)}</span>
-                        ${adresse ? `<span>${nettoyer(adresse)}</span>` : ""}
-                        <span>Matière : ${nettoyer(matiere)}</span>
-                        <span>Poids estimé : ${poidsEstime ?? "—"} kg</span>
-                        ${poidsReel !== null && poidsReel !== undefined
-                            ? `<span>Poids réel : ${Number(poidsReel)} kg</span>`
-                            : ""}
-                        <span>État : ${nettoyer(etat)}</span>
-                    </div>
-                `;
-            }).join("")
-            : `<div class="vide"><p>Aucune collecte associée à cette mission.</p></div>`;
+                    <article
+                        class="mission-carte"
+                        data-mission-id="${nettoyer(
+                            mission.id
+                        )}"
+                    >
 
-        return `
-            <article class="mission-carte">
-                <div class="mission-corps">
-                    <div class="mission-haut">
-                        <div>
-                            <span class="badge badge-${nettoyer(mission.statut)}">
-                                ${nettoyer(mission.statut)}
-                            </span>
-                            <h3>Mission du jour</h3>
+                        <div class="mission-corps">
+
+                            <div class="mission-haut">
+
+                                <div>
+                                    <span
+                                        class="badge badge-${nettoyer(
+                                            mission.statut
+                                        )}"
+                                    >
+                                        ${nettoyer(
+                                            libellesMission[
+                                                mission.statut
+                                            ] ||
+                                            mission.statut
+                                        )}
+                                    </span>
+
+                                    <h3>
+                                        Mission du jour
+                                    </h3>
+                                </div>
+
+                                <strong>
+                                    ${Number(
+                                        progression
+                                            .pourcentage ||
+                                        0
+                                    )} %
+                                </strong>
+
+                            </div>
+
+                            <div class="mission-info">
+
+                                Tricycle :
+                                <strong>
+                                    ${nettoyer(
+                                        mission
+                                            .tricycle
+                                            ?.numero ||
+                                        "Non renseigné"
+                                    )}
+                                </strong>
+
+                                <br>
+
+                                Plaque :
+                                ${nettoyer(
+                                    mission
+                                        .tricycle
+                                        ?.plaque ||
+                                    "Non renseignée"
+                                )}
+
+                                ${
+                                    mission
+                                        .tricycle
+                                        ?.capacite_kg !==
+                                        null &&
+                                    mission
+                                        .tricycle
+                                        ?.capacite_kg !==
+                                        undefined
+                                        ? `
+                                        <br>
+                                        Capacité :
+                                        ${Number(
+                                            mission
+                                                .tricycle
+                                                .capacite_kg
+                                        )}
+                                        kg
+                                        `
+                                        : ""
+                                }
+
+                                <br>
+
+                                Départ prévu :
+                                ${nettoyer(
+                                    heureCourte(
+                                        mission
+                                            .heure_depart_prevue
+                                    )
+                                )}
+
+                                · Retour prévu :
+                                ${nettoyer(
+                                    heureCourte(
+                                        mission
+                                            .heure_retour_prevue
+                                    )
+                                )}
+
+                                <br>
+
+                                Collectes :
+                                ${Number(
+                                    progression
+                                        .terminees ||
+                                    0
+                                )}
+                                /
+                                ${Number(
+                                    progression
+                                        .nombre_collectes ||
+                                    collectes.length
+                                )}
+
+                            </div>
+
+                            <div class="progression">
+                                <div
+                                    class="progression-barre"
+                                    style="width:${Math.min(
+                                        100,
+                                        Math.max(
+                                            0,
+                                            Number(
+                                                progression
+                                                    .pourcentage ||
+                                                0
+                                            )
+                                        )
+                                    )}%"
+                                ></div>
+                            </div>
+
+                            ${listeCollectes}
+
                         </div>
-                        <strong>${Number(progression.pourcentage || 0)} %</strong>
-                    </div>
 
-                    <div class="mission-info">
-                        Tricycle : <strong>${nettoyer(mission.tricycle?.numero || "Non renseigné")}</strong>
-                        <br>
-                        Plaque : ${nettoyer(mission.tricycle?.plaque || "Non renseignée")}
-                        <br>
-                        Collectes : ${Number(progression.terminees || 0)} / ${Number(progression.nombre_collectes || collectes.length)}
-                    </div>
+                        <div class="mission-action">
 
-                    <div class="progression">
-                        <div
-                            class="progression-barre"
-                            style="width:${Math.min(100, Math.max(0, Number(progression.pourcentage || 0)))}%"
-                        ></div>
-                    </div>
+                            ${correctionPesee}
 
-                    ${listeCollectes}
-                </div>
-            </article>
-        `;
-    }).join("");
-};
+                            <button
+                                type="button"
+                                class="bouton bouton-principal bouton-mission"
+                                data-mission-id="${nettoyer(
+                                    mission.id
+                                )}"
+                                data-action="${nettoyer(
+                                    etape.action
+                                )}"
+                                ${
+                                    etape.action ===
+                                    "aucune"
+                                        ? "disabled"
+                                        : ""
+                                }
+                            >
+                                ${nettoyer(
+                                    libelleEtape(
+                                        etape.action
+                                    )
+                                )}
+                            </button>
+
+                        </div>
+
+                    </article>
+                `;
+            })
+            .join("");
+    };
 
 const vuesInternes = {
     accueil: document.getElementById("vue-accueil"),
@@ -1502,7 +2056,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-9').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-10').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

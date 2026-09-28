@@ -28,10 +28,12 @@ const venteValidator = [
         ),
 
     body("devise")
-        .optional({
-            nullable: true,
-            checkFalsy: true
-        })
+        .trim()
+        .notEmpty()
+        .withMessage(
+            "La devise de la vente est obligatoire."
+        )
+        .bail()
         .customSanitizer(
             valeur =>
                 String(valeur)

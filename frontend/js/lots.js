@@ -850,6 +850,23 @@ const echapper = valeur => String(valeur ?? "").replace(/[&<>"']/g, caractere =>
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 })[caractere]);
 
+const formaterStatutUnite = statut => {
+    const libelles = {
+        disponible: "Disponible",
+        en_collecte: "En collecte",
+        recu_depot: "Reçu au dépôt",
+        dans_lot: "Intégré dans un lot",
+        en_stock: "En stock"
+    };
+
+    if (!statut) return "—";
+
+    return libelles[statut] ||
+        String(statut)
+            .replaceAll("_", " ")
+            .replace(/^./, lettre => lettre.toUpperCase());
+};
+
 const fermerFenetre = fenetre => { fenetre.classList.add("cache"); fenetre.setAttribute("aria-hidden", "true"); };
 const ouvrirFenetre = fenetre => { fenetre.classList.remove("cache"); fenetre.setAttribute("aria-hidden", "false"); };
 
@@ -907,7 +924,7 @@ const afficherUnites = () => {
         for (const valeur of [unite.code_qr, unite.type, unite.matiere || "—",
             [unite.client_nom, unite.site_nom].filter(Boolean).join(" / ") || "—",
             unite.tare_kg === null ? "—" : `${ProRecup.formaterNombre(unite.tare_kg)} kg`,
-            unite.poids_courant === null ? "—" : `${ProRecup.formaterNombre(unite.poids_courant)} kg`, unite.statut]) {
+            unite.poids_courant === null ? "—" : `${ProRecup.formaterNombre(unite.poids_courant)} kg`, formaterStatutUnite(unite.statut)]) {
             const cellule = creerCellule(valeur); if (valeur === unite.code_qr) cellule.classList.add("code-qr"); ligne.appendChild(cellule);
         }
         const actions = document.createElement("td"); actions.className = "actions-qr";

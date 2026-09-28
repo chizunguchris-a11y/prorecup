@@ -1110,3 +1110,167 @@ input:focus {
         grid-column: 1;
     }
 }
+/* === PROFIL TERRAIN === */
+
+.profil-carte {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px;
+    background: white;
+    border: 1px solid var(--bordure);
+    border-radius: 20px;
+}
+
+.profil-entete {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--bordure);
+}
+
+.profil-avatar {
+    width: 72px;
+    height: 72px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 72px;
+    border-radius: 50%;
+    background: #007849;
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.profil-identite {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+}
+
+.profil-identite strong {
+    font-size: 24px;
+}
+
+.profil-identite span {
+    color: #5f6b66;
+}
+
+.profil-badge {
+    display: inline-flex;
+    margin-top: 4px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(0, 120, 73, 0.08);
+    color: #00683f !important;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.profil-section {
+    padding-top: 24px;
+}
+
+.profil-section h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+}
+
+.profil-grille {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.profil-ligne {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--bordure);
+    border-radius: 12px;
+    background: #fbfcfb;
+}
+
+.profil-etiquette {
+    display: block;
+    margin-bottom: 5px;
+    color: #68736e;
+    font-size: 13px;
+}
+
+.profil-valeur {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+}
+
+.profil-valeur-technique {
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.profil-session {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 24px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(0, 120, 73, 0.06);
+}
+
+.profil-session span {
+    color: #65716b;
+}
+
+.profil-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.profil-bouton-deconnexion {
+    border: 1px solid #b3261e;
+    background: white;
+    color: #9b1c16;
+}
+
+.profil-chargement {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px;
+    text-align: center;
+    color: #65716b;
+}
+
+@media (width <= 700px) {
+
+    .profil-carte {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .profil-avatar {
+        width: 60px;
+        height: 60px;
+        flex-basis: 60px;
+        font-size: 20px;
+    }
+
+    .profil-identite strong {
+        font-size: 20px;
+    }
+
+    .profil-grille {
+        grid-template-columns: 1fr;
+    }
+
+    .profil-actions {
+        flex-direction: column;
+    }
+
+    .profil-actions button {
+        width: 100%;
+    }
+}

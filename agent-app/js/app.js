@@ -2726,6 +2726,540 @@
             }
         );
 
+    let profilTerrainMemoire = null;
+
+
+    const formaterDateProfil = valeur => {
+
+        if (!valeur) {
+            return "Non renseignée";
+        }
+
+        const date =
+            new Date(valeur);
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return "Non renseignée";
+        }
+
+        return new Intl.DateTimeFormat(
+            "fr-FR",
+            {
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }
+        ).format(date);
+    };
+
+
+    const libelleRoleProfil = role => {
+
+        const valeur =
+            String(
+                role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        if (
+            valeur ===
+            "agent_valorisation_carbone"
+        ) {
+            return "Agent de valorisation carbone";
+        }
+
+        if (!valeur) {
+            return "Agent terrain";
+        }
+
+        return valeur
+            .replaceAll("_", " ");
+    };
+
+
+    const initialesProfil = nom => {
+
+        const parties =
+            String(
+                nom || "Agent"
+            )
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2);
+
+        const initiales =
+            parties
+                .map(
+                    partie =>
+                        partie.charAt(0)
+                )
+                .join("")
+                .toUpperCase();
+
+        return initiales || "A";
+    };
+
+
+    const valeurProfil = valeur => {
+
+        if (
+            valeur === null ||
+            valeur === undefined ||
+            String(valeur).trim() === ""
+        ) {
+            return "Non renseigné";
+        }
+
+        return String(valeur);
+    };
+
+
+    const rendreProfil =
+        (
+            contexte,
+            horsLigne = false
+        ) => {
+
+            const conteneur =
+                document.getElementById(
+                    "contenu-profil"
+                );
+
+            if (!conteneur) return;
+
+            const utilisateurLocal =
+                auth.obtenirUtilisateur() ||
+                {};
+
+            const utilisateur =
+                contexte?.utilisateur ||
+                utilisateurLocal;
+
+            const agent =
+                contexte?.agent ||
+                {};
+
+            const organisation =
+                contexte?.organisation ||
+                {};
+
+            const nom =
+                utilisateur?.nom ||
+                utilisateurLocal?.nom ||
+                "Agent";
+
+            const role =
+                utilisateur?.role ||
+                utilisateurLocal?.role ||
+                utilisateurLocal?.role_nom;
+
+            const statut =
+                valeurProfil(
+                    agent?.statut
+                );
+
+            const disponibilite =
+                agent?.disponible === true
+                    ? "Disponible"
+                    : agent?.disponible === false
+                        ? "Indisponible"
+                        : "Non renseignée";
+
+            const etatSession =
+                horsLigne
+                    ? "Mode hors ligne"
+                    : "Session vérifiée";
+
+            const detailSession =
+                horsLigne
+                    ? "Les informations disponibles sur cet appareil sont affichées."
+                    : "Votre identité Terrain a été vérifiée auprès du serveur.";
+
+            conteneur.innerHTML = `
+                <div class="profil-carte">
+
+                    <div class="profil-entete">
+
+                        <div
+                            class="profil-avatar"
+                            aria-hidden="true"
+                        >
+                            ${nettoyer(
+                                initialesProfil(
+                                    nom
+                                )
+                            )}
+                        </div>
+
+                        <div class="profil-identite">
+
+                            <strong>
+                                ${nettoyer(nom)}
+                            </strong>
+
+                            <span>
+                                ${nettoyer(
+                                    libelleRoleProfil(
+                                        role
+                                    )
+                                )}
+                            </span>
+
+                            <span class="profil-badge">
+                                ${nettoyer(
+                                    etatSession
+                                )}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profil-section">
+
+                        <h3>
+                            Informations personnelles
+                        </h3>
+
+                        <div class="profil-grille">
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Email
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        valeurProfil(
+                                            utilisateur
+                                                ?.email
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Téléphone du compte
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        valeurProfil(
+                                            utilisateur
+                                                ?.telephone
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Téléphone agent
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        valeurProfil(
+                                            agent
+                                                ?.telephone
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Rôle
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        libelleRoleProfil(
+                                            role
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profil-section">
+
+                        <h3>
+                            Statut terrain
+                        </h3>
+
+                        <div class="profil-grille">
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Statut
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        statut
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Disponibilité
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        disponibilite
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Date d'embauche
+                                </span>
+
+                                <strong class="profil-valeur">
+                                    ${nettoyer(
+                                        formaterDateProfil(
+                                            agent
+                                                ?.date_embauche
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">
+                                    Organisation
+                                </span>
+
+                                <strong class="profil-valeur profil-valeur-technique">
+                                    ${nettoyer(
+                                        valeurProfil(
+                                            organisation
+                                                ?.id
+                                        )
+                                    )}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profil-session">
+
+                        <strong>
+                            ${nettoyer(
+                                etatSession
+                            )}
+                        </strong>
+
+                        <span>
+                            ${nettoyer(
+                                detailSession
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="profil-actions">
+
+                        <button
+                            type="button"
+                            id="profil-actualiser"
+                            class="bouton bouton-principal"
+                        >
+                            Actualiser mon profil
+                        </button>
+
+                        <button
+                            type="button"
+                            id="profil-deconnexion"
+                            class="bouton profil-bouton-deconnexion"
+                        >
+                            Se déconnecter
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+        };
+
+
+    const afficherProfil =
+        async (
+            forcer = false
+        ) => {
+
+            const conteneur =
+                document.getElementById(
+                    "contenu-profil"
+                );
+
+            if (!conteneur) return;
+
+            if (
+                profilTerrainMemoire &&
+                !forcer
+            ) {
+                rendreProfil(
+                    profilTerrainMemoire,
+                    !navigator.onLine
+                );
+
+                return;
+            }
+
+            conteneur.innerHTML = `
+                <div class="profil-chargement">
+                    Chargement du profil…
+                </div>
+            `;
+
+            try {
+
+                const reponse =
+                    await api.get(
+                        "/terrain/me"
+                    );
+
+                const contexte =
+                    reponse?.data ||
+                    reponse;
+
+                profilTerrainMemoire =
+                    contexte;
+
+                rendreProfil(
+                    contexte,
+                    false
+                );
+
+            } catch (erreur) {
+
+                if (
+                    erreur.status === 401 ||
+                    erreur.status === 403
+                ) {
+                    clearTimeout(
+                        syncTimer
+                    );
+
+                    auth.deconnexion();
+
+                    afficherEcran(
+                        connexion
+                    );
+
+                    return;
+                }
+
+                if (
+                    erreur.code ===
+                    "NETWORK_ERROR"
+                ) {
+                    rendreProfil(
+                        profilTerrainMemoire ||
+                        {
+                            utilisateur:
+                                auth.obtenirUtilisateur()
+                                    || {}
+                        },
+                        true
+                    );
+
+                    return;
+                }
+
+                conteneur.innerHTML = `
+                    <div class="vide">
+                        <strong>
+                            Profil temporairement indisponible
+                        </strong>
+
+                        <p>
+                            ${nettoyer(
+                                erreur.message ||
+                                "Impossible de récupérer votre profil."
+                            )}
+                        </p>
+
+                        <button
+                            type="button"
+                            id="profil-actualiser"
+                            class="bouton bouton-principal"
+                        >
+                            Réessayer
+                        </button>
+                    </div>
+                `;
+            }
+        };
+
+
+    const contenuProfil =
+        document.getElementById(
+            "contenu-profil"
+        );
+
+    contenuProfil
+        ?.addEventListener(
+            "click",
+            async evenement => {
+
+                const actualiser =
+                    evenement.target.closest(
+                        "#profil-actualiser"
+                    );
+
+                if (actualiser) {
+
+                    if (
+                        actionEnCours ||
+                        synchronisation
+                    ) {
+                        return;
+                    }
+
+                    actualiser.disabled =
+                        true;
+
+                    await afficherProfil(
+                        true
+                    );
+
+                    return;
+                }
+
+                const deconnexion =
+                    evenement.target.closest(
+                        "#profil-deconnexion"
+                    );
+
+                if (deconnexion) {
+
+                    document
+                        .getElementById(
+                            "bouton-deconnexion"
+                        )
+                        ?.click();
+                }
+            }
+        );
+
 const vuesInternes = {
     accueil: document.getElementById("vue-accueil"),
     tournee: document.getElementById("vue-tournee"),
@@ -2756,6 +3290,10 @@ const afficherVueInterne = nom => {
 
     if (nom === "incident") {
         afficherIncident();
+    }
+
+    if (nom === "profil") {
+        afficherProfil();
     }
 
     Object.entries(boutonsNavigation).forEach(([cle, bouton]) => {
@@ -2800,7 +3338,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-11').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-12').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

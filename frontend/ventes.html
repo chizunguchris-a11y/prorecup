@@ -153,7 +153,7 @@
                     </strong>
 
                     <p>
-                        montant total des ventes
+                        totaux s&eacute;par&eacute;s par devise
                     </p>
 
                 </article>
@@ -443,6 +443,34 @@
 
                     <div class="groupe-champ">
 
+                        <label for="devise">
+                            Devise *
+                        </label>
+
+                        <select
+                            id="devise"
+                            name="devise"
+                            required
+                        >
+
+                            <option value="CDF">
+                                CDF &mdash; Franc congolais
+                            </option>
+
+                            <option value="USD">
+                                USD &mdash; Dollar am&eacute;ricain
+                            </option>
+
+                        </select>
+
+                        <p class="aide-champ">
+                            Devise utilis&eacute;e pour cette vente.
+                        </p>
+
+                    </div>
+
+                    <div class="groupe-champ champ-large">
+
                         <label for="montant_estime">
                             Montant total estimé
                         </label>
@@ -492,7 +520,7 @@
     <script src="./js/config.js"></script>
     <script src="./js/common.js"></script>
     <script src="./js/sidebar.js"></script>
-    <script src="./js/ventes.js"></script>
+    <script src="./js/ventes.js?v=20260928-1"></script>
 
 </body>
 

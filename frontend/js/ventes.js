@@ -103,6 +103,11 @@ const champPrixUnitaire =
         "prix_unitaire"
     );
 
+const selectDevise =
+    document.getElementById(
+        "devise"
+    );
+
 const champAcheteur =
     document.getElementById(
         "acheteur_nom"
@@ -125,6 +130,7 @@ const informationStock =
 
 let ventes = [];
 let stocks = [];
+let deviseOrganisation = "";
 
 const afficherErreurFormulaire = (
     message
@@ -169,19 +175,52 @@ const formaterStatut = (
 
 };
 
-const formaterMontant = (
+const normaliserDevise = (
     valeur
 ) => {
 
-    return Number(
-        valeur || 0
-    ).toLocaleString(
-        "fr-FR",
-        {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }
-    );
+    return String(
+        valeur || ""
+    )
+        .trim()
+        .toUpperCase();
+
+};
+
+const formaterMontant = (
+    valeur,
+    devise = ""
+) => {
+
+    const montant =
+        Number(
+            valeur || 0
+        ).toLocaleString(
+            "fr-FR",
+            {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }
+        );
+
+    const code =
+        normaliserDevise(
+            devise
+        );
+
+    if (!code) {
+        return montant;
+    }
+
+    if (code === "CDF") {
+        return montant + " FC";
+    }
+
+    if (code === "USD") {
+        return montant + " $";
+    }
+
+    return montant + " " + code;
 
 };
 
@@ -197,16 +236,34 @@ const mettreAJourCompteurs = () => {
                 "annulee"
         );
 
-    const totalMontant =
-        ventesConfirmees.reduce(
-            (somme, vente) =>
-                somme +
+    const totauxParDevise =
+        new Map();
+
+    ventesConfirmees.forEach(
+        (vente) => {
+
+            const devise =
+                normaliserDevise(
+                    vente.devise
+                ) || "NON_RENSEIGNEE";
+
+            const montant =
                 Number(
                     vente.montant_total ||
                     0
-                ),
-            0
-        );
+                );
+
+            totauxParDevise.set(
+                devise,
+                (
+                    totauxParDevise.get(
+                        devise
+                    ) || 0
+                ) + montant
+            );
+
+        }
+    );
 
     const totalQuantite =
         ventesConfirmees.reduce(
@@ -237,10 +294,51 @@ const mettreAJourCompteurs = () => {
                 vente.co2e_estime_kg === undefined
         ).length;
 
-    chiffreAffaires.textContent =
-        formaterMontant(
-            totalMontant
-        );
+    chiffreAffaires.innerHTML = "";
+
+    if (totauxParDevise.size === 0) {
+
+        chiffreAffaires.textContent =
+            "0";
+
+    } else {
+
+        [...totauxParDevise.entries()]
+            .sort(
+                ([a], [b]) =>
+                    a.localeCompare(b)
+            )
+            .forEach(
+                ([devise, montant]) => {
+
+                    const ligne =
+                        document.createElement(
+                            "span"
+                        );
+
+                    ligne.style.display =
+                        "block";
+
+                    ligne.textContent =
+                        devise === "NON_RENSEIGNEE"
+                            ? "Devise non renseignée : " +
+                                formaterMontant(
+                                    montant
+                                )
+                            : devise + " : " +
+                                formaterMontant(
+                                    montant,
+                                    devise
+                                );
+
+                    chiffreAffaires.appendChild(
+                        ligne
+                    );
+
+                }
+            );
+
+    }
 
     quantiteVendue.textContent =
         `${ProRecup.formaterNombre(
@@ -353,7 +451,8 @@ const afficherVentes = (
         ligne.appendChild(
             creerCellule(
                 formaterMontant(
-                    vente.prix_unitaire
+                    vente.prix_unitaire,
+                    vente.devise
                 )
             )
         );
@@ -361,7 +460,8 @@ const afficherVentes = (
         ligne.appendChild(
             creerCellule(
                 formaterMontant(
-                    vente.montant_total
+                    vente.montant_total,
+                    vente.devise
                 ),
                 "montant-vente"
             )
@@ -447,7 +547,8 @@ const filtrerVentes = () => {
                 vente.cree_par_nom,
                 vente.statut,
                 vente.quantite,
-                vente.montant_total
+                vente.montant_total,
+                vente.devise
             ]
                 .filter(Boolean)
                 .join(" ")
@@ -663,6 +764,85 @@ const actualiserInformationStock =
 
     };
 
+const assurerOptionDevise = (
+    devise
+) => {
+
+    const code =
+        normaliserDevise(
+            devise
+        );
+
+    if (!/^[A-Z]{3}$/.test(code)) {
+        return;
+    }
+
+    const existe =
+        [...selectDevise.options]
+            .some(
+                (option) =>
+                    option.value === code
+            );
+
+    if (existe) {
+        return;
+    }
+
+    const option =
+        document.createElement(
+            "option"
+        );
+
+    option.value = code;
+    option.textContent = code;
+
+    selectDevise.appendChild(
+        option
+    );
+
+};
+
+const chargerDeviseOrganisation =
+    async () => {
+
+        if (!deviseOrganisation) {
+
+            const resultat =
+                await ProRecup.requete(
+                    "/api/organisations/me"
+                );
+
+            const organisation =
+                resultat.data?.organisation ||
+                resultat.data ||
+                {};
+
+            deviseOrganisation =
+                normaliserDevise(
+                    organisation.devise
+                );
+
+            if (
+                !/^[A-Z]{3}$/.test(
+                    deviseOrganisation
+                )
+            ) {
+                throw new Error(
+                    "La devise de l'organisation est invalide."
+                );
+            }
+
+        }
+
+        assurerOptionDevise(
+            deviseOrganisation
+        );
+
+        selectDevise.value =
+            deviseOrganisation;
+
+};
+
 const calculerMontant = () => {
 
     const quantite =
@@ -683,7 +863,8 @@ const calculerMontant = () => {
 
     champMontantEstime.value =
         formaterMontant(
-            montant
+            montant,
+            selectDevise.value
         );
 
 };
@@ -708,7 +889,12 @@ const ouvrirModale = async () => {
 
     try {
 
-        await chargerStocksDisponibles();
+        await Promise.all([
+            chargerStocksDisponibles(),
+            chargerDeviseOrganisation()
+        ]);
+
+        calculerMontant();
 
         fenetreVente.classList.remove(
             "cache"
@@ -802,6 +988,11 @@ formulaireVente.addEventListener(
         const reference =
             champReference.value.trim();
 
+        const devise =
+            normaliserDevise(
+                selectDevise.value
+            );
+
         if (!stock) {
 
             afficherErreurFormulaire(
@@ -855,6 +1046,20 @@ formulaireVente.addEventListener(
 
         }
 
+        if (
+            !/^[A-Z]{3}$/.test(
+                devise
+            )
+        ) {
+
+            afficherErreurFormulaire(
+                "Veuillez sélectionner une devise valide."
+            );
+
+            return;
+
+        }
+
         if (!acheteur) {
 
             afficherErreurFormulaire(
@@ -874,6 +1079,8 @@ formulaireVente.addEventListener(
 
             prix_unitaire:
                 prixUnitaire,
+
+            devise,
 
             acheteur_nom:
                 acheteur,
@@ -957,6 +1164,11 @@ champQuantite.addEventListener(
 
 champPrixUnitaire.addEventListener(
     "input",
+    calculerMontant
+);
+
+selectDevise.addEventListener(
+    "change",
     calculerMontant
 );
 

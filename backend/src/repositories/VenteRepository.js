@@ -15,13 +15,14 @@ class VenteRepository {
                 quantite,
                 prix_unitaire,
                 montant_total,
+                devise,
                 acheteur_nom,
                 reference_vente,
                 statut,
                 cree_par,
                 provenance_lots_statut
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
             RETURNING *;
         `;
 
@@ -31,6 +32,7 @@ class VenteRepository {
             vente.quantite,
             vente.prix_unitaire,
             vente.montant_total,
+            vente.devise,
             vente.acheteur_nom,
             vente.reference_vente || null,
             vente.statut || "confirmee",
@@ -98,6 +100,7 @@ class VenteRepository {
                 v.quantite,
                 v.prix_unitaire,
                 v.montant_total,
+                v.devise,
                 v.acheteur_nom,
                 v.reference_vente,
                 v.statut,

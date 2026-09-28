@@ -27,6 +27,22 @@ const venteValidator = [
             "Le prix unitaire doit être supérieur ou égal à zéro."
         ),
 
+    body("devise")
+        .optional({
+            nullable: true,
+            checkFalsy: true
+        })
+        .customSanitizer(
+            valeur =>
+                String(valeur)
+                    .trim()
+                    .toUpperCase()
+        )
+        .matches(/^[A-Z]{3}$/)
+        .withMessage(
+            "La devise doit etre un code de trois lettres (ex. CDF, USD)."
+        ),
+
     body("acheteur_nom")
         .trim()
         .notEmpty()

@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 import venteRepository from "../repositories/VenteRepository.js";
 import venteLotRepository from "../repositories/VenteLotRepository.js";
+import organisationRepository from "../repositories/organisationRepository.js";
 import stockRepository from "../repositories/StockRepository.js";
 import lotRepository from "../repositories/LotRepository.js";
 import mouvementStockService from "./MouvementStockService.js";
@@ -10,6 +11,14 @@ import ApiError from "../utils/ApiError.js";
 const normaliserKg = valeur => Number(Number(valeur).toFixed(3));
 const quantitesEgales = (gauche, droite) =>
     Math.abs(Number(gauche) - Number(droite)) < 0.0005;
+
+const normaliserDevise = valeur =>
+    String(valeur || "")
+        .trim()
+        .toUpperCase();
+
+const deviseValide = valeur =>
+    /^[A-Z]{3}$/.test(valeur);
 
 class VenteService {
     construirePlanFifo(lots, quantiteDemandee) {
@@ -46,6 +55,21 @@ class VenteService {
             throw new ApiError(400, "Le nom de l'acheteur est obligatoire.");
         }
 
+        const deviseDemandee =
+            normaliserDevise(
+                vente.devise
+            );
+
+        if (
+            deviseDemandee &&
+            !deviseValide(deviseDemandee)
+        ) {
+            throw new ApiError(
+                400,
+                "La devise de la vente est invalide."
+            );
+        }
+
         const quantiteOriginale = Number(vente.quantite);
         const quantiteVendue = normaliserKg(quantiteOriginale);
         if (!quantitesEgales(quantiteOriginale, quantiteVendue)) {
@@ -56,6 +80,37 @@ class VenteService {
 
         try {
             await client.query("BEGIN");
+
+            let devise = deviseDemandee;
+
+            if (!devise) {
+
+                const organisation =
+                    await organisationRepository.findById(
+                        vente.organisation_id,
+                        client
+                    );
+
+                if (!organisation) {
+                    throw new ApiError(
+                        404,
+                        "Organisation introuvable."
+                    );
+                }
+
+                devise =
+                    normaliserDevise(
+                        organisation.devise
+                    );
+
+                if (!deviseValide(devise)) {
+                    throw new ApiError(
+                        409,
+                        "La devise par defaut de l'organisation est invalide."
+                    );
+                }
+
+            }
 
             const stock = await stockRepository.trouverParIdPourMiseAJour(
                 vente.stock_id,
@@ -129,6 +184,7 @@ class VenteService {
                 quantite: quantiteVendue,
                 prix_unitaire: prixUnitaire,
                 montant_total: montantTotal,
+                devise,
                 statut: "confirmee",
                 provenance_lots_statut: "non_determinee"
             }, client);

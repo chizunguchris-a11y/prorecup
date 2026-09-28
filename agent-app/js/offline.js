@@ -1,7 +1,7 @@
 (function () {
     'use strict';
     const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission'];
+    const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission', 'signaler_incident'];
     const photo = type => ['avant_collecte', 'apres_collecte', 'ticket_balance'].includes(type);
     const retryable = e => e.code === 'NETWORK_ERROR' || [408, 425, 429].includes(e.status) || e.status >= 500;
     const safeErrors = ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'UPLOAD_RESEAU', 'ERREUR_SERVEUR', 'REFUS_DEFINITIF', 'BLOB_ILLISIBLE'];
@@ -39,6 +39,57 @@
             if (codes.some(code => !/^PR-[CL]-[A-Z0-9-]{6,60}$/.test(code))) throw new Error('Code QR invalide.');
             Object.assign(out, { balance_id: p.balance_id, poids_brut: p.poids_brut, tare: p.tare, codes_qr: codes });
         }
+        if (type === 'signaler_incident') {
+            const categories = [
+                'panne_tricycle',
+                'accident',
+                'client_absent',
+                'acces_refuse',
+                'dechets_non_conformes',
+                'securite',
+                'autre'
+            ];
+
+            const gravites = [
+                'faible',
+                'moyenne',
+                'elevee',
+                'critique'
+            ];
+
+            const categorie =
+                String(p.categorie || '').trim().toLowerCase();
+
+            const gravite =
+                String(p.gravite || '').trim().toLowerCase();
+
+            const description =
+                String(p.description || '').trim();
+
+            const collecte =
+                p.collecte_id ? String(p.collecte_id) : null;
+
+            if (!categories.includes(categorie))
+                throw new Error("Cat?gorie d'incident invalide.");
+
+            if (!gravites.includes(gravite))
+                throw new Error("Gravit? d'incident invalide.");
+
+            if (description.length < 5)
+                throw new Error("La description de l'incident est obligatoire.");
+
+            if (collecte && !UUID.test(collecte))
+                throw new Error("Collecte d'incident invalide.");
+
+            Object.assign(out, {
+                collecte_id: collecte,
+                categorie,
+                gravite,
+                bloquant: p.bloquant === true,
+                description,
+                mode: p.mode === 'offline' ? 'offline' : 'online'
+            });
+        }
         return out;
     }
     function validateBlob(blob) {
@@ -59,25 +110,418 @@
     }
     // Explicit allowlist: never store the authenticated API response as a whole.
     function snapshot(day) {
-        return { balances: (day?.balances || []).map(b => ({
-            id: b.id, numero_interne: String(b.numero_interne || ''),
-            capacite_max_kg: Number(b.capacite_max_kg), precision_kg: Number(b.precision_kg),
-            tricycle_id: b.tricycle_id || null, site_id: b.site_id || null
-        })), unites_qr: (day?.unites_qr || []).map(u => ({
-            code_qr: String(u.code_qr || ''), type: String(u.type || ''),
-            tare_kg: u.tare_kg === null ? null : Number(u.tare_kg), statut: String(u.statut || ''),
-            site_courant_id: u.site_courant_id || null, client_courant_id: u.client_courant_id || null,
-            type_dechet_id: u.type_dechet_id || null
-        })), missions: (day?.missions || []).map(m => ({
-            id: m.id, statut: m.statut,
-            tricycle: { id: m.tricycle?.id || null, numero: String(m.tricycle?.numero || '') },
-            collectes: (m.collectes || []).map(c => ({
-                id: c.id, site: { id: c.site?.id || null, nom: String(c.site?.nom || '') },
-                progression: { arrivee: !!c.progression?.arrivee, collecte_demarree: !!c.progression?.collecte_demarree, collecte_terminee: !!c.progression?.collecte_terminee },
-                preuves: (c.preuves || []).filter(p => photo(p.type_preuve)).map(p => ({ type_preuve: p.type_preuve })),
-                pesees: (c.pesees || []).map(p => ({ id: p.id || null, type: p.type, poids_brut: Number(p.poids_brut), tare: Number(p.tare), poids_net: Number(p.poids_net), balance_id: p.balance_id }))
-            }))
-        })) };
+        return {
+            balances:
+                (day?.balances || []).map(b => ({
+                    id: b.id,
+                    numero_interne:
+                        String(b.numero_interne || ''),
+                    capacite_max_kg:
+                        Number(b.capacite_max_kg),
+                    precision_kg:
+                        Number(b.precision_kg),
+                    tricycle_id:
+                        b.tricycle_id || null,
+                    site_id:
+                        b.site_id || null
+                })),
+
+            unites_qr:
+                (day?.unites_qr || []).map(u => ({
+                    code_qr:
+                        String(u.code_qr || ''),
+                    type:
+                        String(u.type || ''),
+                    tare_kg:
+                        u.tare_kg === null
+                            ? null
+                            : Number(u.tare_kg),
+                    statut:
+                        String(u.statut || ''),
+                    site_courant_id:
+                        u.site_courant_id || null,
+                    client_courant_id:
+                        u.client_courant_id || null,
+                    type_dechet_id:
+                        u.type_dechet_id || null
+                })),
+
+            missions:
+                (day?.missions || []).map(m => ({
+
+                    id:
+                        m.id,
+
+                    statut:
+                        m.statut,
+
+                    date_prevue:
+                        m.date_prevue || null,
+
+                    heure_depart_prevue:
+                        m.heure_depart_prevue || null,
+
+                    heure_retour_prevue:
+                        m.heure_retour_prevue || null,
+
+                    heure_depart_reelle:
+                        m.heure_depart_reelle || null,
+
+                    heure_retour_reelle:
+                        m.heure_retour_reelle || null,
+
+                    observations:
+                        String(m.observations || ''),
+
+                    action_suivante:
+                        String(m.action_suivante || ''),
+
+                    prochaine_collecte:
+                        m.prochaine_collecte
+                            ? {
+                                id:
+                                    m.prochaine_collecte.id || null,
+
+                                ordre_collecte:
+                                    m.prochaine_collecte.ordre_collecte == null
+                                        ? null
+                                        : Number(
+                                            m.prochaine_collecte
+                                                .ordre_collecte
+                                        ),
+
+                                site_nom:
+                                    String(
+                                        m.prochaine_collecte.site_nom ||
+                                        ''
+                                    ),
+
+                                action:
+                                    String(
+                                        m.prochaine_collecte.action ||
+                                        ''
+                                    )
+                            }
+                            : null,
+
+                    tricycle: {
+
+                        id:
+                            m.tricycle?.id || null,
+
+                        numero:
+                            String(
+                                m.tricycle?.numero ||
+                                ''
+                            ),
+
+                        plaque:
+                            String(
+                                m.tricycle?.plaque ||
+                                ''
+                            ),
+
+                        capacite_kg:
+                            m.tricycle?.capacite_kg == null
+                                ? null
+                                : Number(
+                                    m.tricycle.capacite_kg
+                                ),
+
+                        capacite_max_kg:
+                            m.tricycle?.capacite_max_kg == null
+                                ? null
+                                : Number(
+                                    m.tricycle.capacite_max_kg
+                                )
+                    },
+
+                    collectes:
+                        (m.collectes || []).map(c => {
+
+                            const ordre =
+                                c.ordre_collecte ??
+                                c.ordre ??
+                                null;
+
+                            const estime =
+                                c.poids?.estime_kg ??
+                                c.poids_estime ??
+                                null;
+
+                            const reel =
+                                c.poids?.reel_kg ??
+                                c.poids_reel ??
+                                null;
+
+                            const client =
+                                c.client &&
+                                typeof c.client ===
+                                    'object'
+
+                                    ? {
+                                        id:
+                                            c.client.id ||
+                                            c.client_id ||
+                                            null,
+
+                                        nom:
+                                            String(
+                                                c.client.nom ||
+                                                ''
+                                            )
+                                    }
+
+                                    : {
+                                        id:
+                                            c.client_id ||
+                                            null,
+
+                                        nom:
+                                            String(
+                                                c.client ||
+                                                ''
+                                            )
+                                    };
+
+                            const typeDechet =
+                                c.type_dechet &&
+                                typeof c.type_dechet ===
+                                    'object'
+
+                                    ? {
+                                        id:
+                                            c.type_dechet.id ||
+                                            c.type_dechet_id ||
+                                            null,
+
+                                        nom:
+                                            String(
+                                                c.type_dechet.nom ||
+                                                ''
+                                            )
+                                    }
+
+                                    : {
+                                        id:
+                                            c.type_dechet_id ||
+                                            null,
+
+                                        nom:
+                                            String(
+                                                c.type_dechet ||
+                                                ''
+                                            )
+                                    };
+
+                            const zone =
+                                String(
+                                    c.site?.zone_geographique ||
+                                    c.site?.zone ||
+                                    ''
+                                );
+
+                            const responsable =
+                                String(
+                                    c.site?.responsable_nom ||
+                                    c.site?.responsable ||
+                                    ''
+                                );
+
+                            return {
+
+                                id:
+                                    c.id,
+
+                                ordre_collecte:
+                                    ordre == null
+                                        ? null
+                                        : Number(ordre),
+
+                                etat:
+                                    String(c.etat || ''),
+
+                                action_suivante:
+                                    String(
+                                        c.action_suivante ||
+                                        ''
+                                    ),
+
+                                client,
+
+                                type_dechet:
+                                    typeDechet,
+
+                                poids: {
+
+                                    estime_kg:
+                                        estime == null
+                                            ? null
+                                            : Number(estime),
+
+                                    reel_kg:
+                                        reel == null
+                                            ? null
+                                            : Number(reel),
+
+                                    reel_saisi_le:
+                                        c.poids
+                                            ?.reel_saisi_le ||
+                                        c.poids_reel_saisi_le ||
+                                        null
+                                },
+
+                                site: {
+
+                                    id:
+                                        c.site?.id ||
+                                        null,
+
+                                    nom:
+                                        String(
+                                            c.site?.nom ||
+                                            ''
+                                        ),
+
+                                    adresse:
+                                        String(
+                                            c.site?.adresse ||
+                                            ''
+                                        ),
+
+                                    zone_geographique:
+                                        zone,
+
+                                    zone,
+
+                                    responsable_nom:
+                                        responsable,
+
+                                    responsable,
+
+                                    latitude:
+                                        c.site?.latitude == null
+                                            ? null
+                                            : Number(
+                                                c.site.latitude
+                                            ),
+
+                                    longitude:
+                                        c.site?.longitude == null
+                                            ? null
+                                            : Number(
+                                                c.site.longitude
+                                            ),
+
+                                    precision_gps_reference:
+                                        c.site?.precision_gps_reference == null
+                                            ? null
+                                            : Number(
+                                                c.site
+                                                    .precision_gps_reference
+                                            ),
+
+                                    rayon_validation_m:
+                                        c.site?.rayon_validation_m == null
+                                            ? null
+                                            : Number(
+                                                c.site
+                                                    .rayon_validation_m
+                                            )
+                                },
+
+                                progression: {
+
+                                    arrivee:
+                                        !!c.progression
+                                            ?.arrivee,
+
+                                    collecte_demarree:
+                                        !!c.progression
+                                            ?.collecte_demarree,
+
+                                    collecte_terminee:
+                                        !!c.progression
+                                            ?.collecte_terminee
+                                },
+
+                                preuves:
+                                    (
+                                        c.preuves ||
+                                        []
+                                    )
+                                        .filter(
+                                            p =>
+                                                photo(
+                                                    p.type_preuve
+                                                )
+                                        )
+                                        .map(
+                                            p => ({
+                                                type_preuve:
+                                                    p.type_preuve
+                                            })
+                                        ),
+
+                                pesees:
+                                    (
+                                        c.pesees ||
+                                        []
+                                    ).map(
+                                        p => ({
+
+                                            id:
+                                                p.id ||
+                                                null,
+
+                                            operation_id:
+                                                p.operation_id ||
+                                                null,
+
+                                            type:
+                                                p.type,
+
+                                            poids_brut:
+                                                Number(
+                                                    p.poids_brut
+                                                ),
+
+                                            tare:
+                                                Number(
+                                                    p.tare
+                                                ),
+
+                                            poids_net:
+                                                Number(
+                                                    p.poids_net
+                                                ),
+
+                                            balance_id:
+                                                p.balance_id ||
+                                                null,
+
+                                            codes_qr:
+                                                Array.isArray(
+                                                    p.codes_qr
+                                                )
+                                                    ? [
+                                                        ...p.codes_qr
+                                                    ]
+                                                    : [],
+
+                                            date_heure:
+                                                p.date_heure ||
+                                                null,
+
+                                            est_courante:
+                                                p.est_courante ===
+                                                true
+                                        })
+                                    )
+                            };
+                        })
+                }))
+        };
     }
     function project(day, rows) {
         const result = snapshot(day);
@@ -110,12 +554,26 @@
         return result;
     }
     async function open(name) {
-        const r = indexedDB.open(name, 3);
+        const r = indexedDB.open(name, 4);
         r.onupgradeneeded = event => {
             if (!r.result.objectStoreNames.contains('queue')) {
                 const q = r.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
-                q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: true });
+                q.createIndex('context', ['mission_id', 'collecte_id', 'type'], { unique: false });
                 q.createIndex('operation', 'operation_id', { unique: true });
+            }
+            if (event.oldVersion > 0 && event.oldVersion < 4) {
+                const queue =
+                    event.target.transaction.objectStore('queue');
+
+                if (queue.indexNames.contains('context')) {
+                    queue.deleteIndex('context');
+                }
+
+                queue.createIndex(
+                    'context',
+                    ['mission_id', 'collecte_id', 'type'],
+                    { unique: false }
+                );
             }
             if (!r.result.objectStoreNames.contains('state')) r.result.createObjectStore('state');
             const meta = r.result.objectStoreNames.contains('queue_meta')
@@ -211,12 +669,33 @@
         const saveDay = day => transact(['state'], 'readwrite', tx => request(tx.objectStore('state').put(snapshot(day), 'day')));
         async function enqueue(context, payload, blob) {
             const type = context.action, mission_id = context.mission, collecte_id = context.collecte || '';
-            if (!UUID.test(mission_id) || (['demarrer_mission', 'terminer_mission'].includes(type) ? collecte_id !== '' : !UUID.test(collecte_id))) throw new Error('Contexte invalide.');
+            const missionOnly =
+                ['demarrer_mission', 'terminer_mission'].includes(type);
+
+            const incident =
+                type === 'signaler_incident';
+
+            const collecteInvalide =
+                missionOnly
+                    ? collecte_id !== ''
+                    : incident
+                        ? (
+                            collecte_id !== '' &&
+                            !UUID.test(collecte_id)
+                        )
+                        : !UUID.test(collecte_id);
+
+            if (
+                !UUID.test(mission_id) ||
+                collecteInvalide
+            ) {
+                throw new Error('Contexte invalide.');
+            }
             const safe = clean(type, payload);
             if (photo(type)) validateBlob(blob);
             return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
                 const q = tx.objectStore('queue');
-                const existing = await request(q.index('context').get([mission_id, collecte_id, type]));
+                const existing = type === 'signaler_incident' ? null : await request(q.index('context').get([mission_id, collecte_id, type]));
                 if (existing) return { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false, ...existing, ...((await request(tx.objectStore('queue_meta').get(existing.id))) || {}) };
                 const row = { type, mission_id, collecte_id, operation_id: safe.operation_id, payload: safe, created_at: new Date().toISOString(), ...(photo(type) ? { blob: blob.slice(0, blob.size, blob.type) } : {}) };
                 row.id = await request(q.add(row));
@@ -228,7 +707,16 @@
         const update = row => transact(['queue_meta'], 'readwrite', tx => request(tx.objectStore('queue_meta').put(metadata(row), row.id)));
         async function prepare(row) {
             const p = clean(row.type, row.payload);
-            let url = '/terrain/missions/' + encodeURIComponent(row.mission_id);
+            let url =
+                '/terrain/missions/' +
+                encodeURIComponent(row.mission_id);
+
+            if (row.type === 'signaler_incident') {
+                return {
+                    url: url + '/incidents',
+                    body: p
+                };
+            }
             if (row.collecte_id) url += '/collectes/' + encodeURIComponent(row.collecte_id);
             if (photo(row.type)) {
                 const blob = await freshBlob(row.blob);

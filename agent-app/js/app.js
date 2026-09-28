@@ -3521,7 +3521,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-14').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-15').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

@@ -855,12 +855,48 @@ const ouvrirFenetre = fenetre => { fenetre.classList.remove("cache"); fenetre.se
 
 const imprimerQr = async code => {
     const impression = window.open("", "_blank", "width=520,height=650");
-    if (!impression) throw new Error("Autorisez la fenêtre d’impression.");
+
+    if (!impression) {
+        throw new Error("Autorisez la fenêtre d’impression.");
+    }
+
     try {
-        const resultat = await ProRecup.requete(`/api/lots/etiquette/${encodeURIComponent(code)}`);
-        impression.document.write(`<title>${code}</title><main class="etiquette-impression" style="font-family:Arial;text-align:center;padding:30px"><h1>Pro Récup</h1>${resultat.data.svg}<h2>${code}</h2><p>${resultat.data.nature}</p></main>`);
-        impression.document.close(); impression.focus(); impression.print();
-    } catch (erreur) { impression.close(); throw erreur; }
+        const resultat = await ProRecup.requete(
+            `/api/lots/etiquette/${encodeURIComponent(code)}`
+        );
+
+        impression.document.write(
+            `<title>${code}</title>` +
+            `<main class="etiquette-impression" ` +
+            `style="font-family:Arial;text-align:center;padding:30px">` +
+            `<h1>Pro Récup</h1>` +
+            `${resultat.data.svg}` +
+            `<h2>${code}</h2>` +
+            `<p>${resultat.data.nature}</p>` +
+            `</main>`
+        );
+
+        impression.addEventListener(
+            "afterprint",
+            () => {
+                if (!impression.closed) {
+                    impression.close();
+                }
+            },
+            { once: true }
+        );
+
+        impression.document.close();
+        impression.focus();
+        impression.print();
+
+    } catch (erreur) {
+        if (!impression.closed) {
+            impression.close();
+        }
+
+        throw erreur;
+    }
 };
 
 const afficherUnites = () => {

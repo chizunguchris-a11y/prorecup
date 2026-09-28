@@ -1422,3 +1422,93 @@ input:focus {
         font-size: 18px;
     }
 }
+/* === UX TERRAIN 2 === */
+
+.synchronisation[hidden] {
+    display: none;
+}
+
+.synchronisation {
+    width: min(760px, calc(100% - 24px));
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px 14px;
+    border: 1px solid var(--bordure);
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -4px 18px rgba(20, 45, 33, 0.08);
+}
+
+#resume-journee[hidden] {
+    display: none;
+}
+
+.vide {
+    min-height: 0;
+    padding: 28px 22px;
+}
+
+.vide strong {
+    font-size: 18px;
+}
+
+.vide p {
+    max-width: 520px;
+    margin: 10px auto 0;
+    line-height: 1.45;
+}
+
+.navigation-icone {
+    display: grid;
+    place-items: center;
+    height: 24px;
+}
+
+.navigation-icone svg {
+    width: 22px;
+    height: 22px;
+}
+
+.navigation-item {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 3px;
+}
+
+@media (width <= 700px) {
+
+    .vide {
+        padding: 24px 18px;
+    }
+
+    .vide strong {
+        font-size: 17px;
+    }
+
+    .synchronisation {
+        width: calc(100% - 16px);
+        padding: 9px 12px;
+    }
+
+    .navigation-icone svg {
+        width: 21px;
+        height: 21px;
+    }
+}
+
+@media (width <= 420px) {
+
+    .vide {
+        padding: 22px 16px;
+    }
+
+    .navigation-item {
+        gap: 2px;
+    }
+
+    .navigation-icone svg {
+        width: 20px;
+        height: 20px;
+    }
+}

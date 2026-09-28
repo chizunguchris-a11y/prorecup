@@ -17,7 +17,7 @@
 
     <link
         rel="stylesheet"
-        href="./css/app.css?v=1-9"
+        href="./css/app.css?v=1-10"
     >
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#176b45">
@@ -333,7 +333,7 @@
 </main>
 
 
-        <aside class="synchronisation" aria-live="polite">
+        <aside class="synchronisation" aria-live="polite" hidden>
             <span id="statut-synchronisation">0 action en attente</span>
             <button id="bouton-synchroniser" type="button" hidden>Synchroniser</button>
             <button id="bouton-remplacer-preuve" type="button" hidden>Remplacer la photo illisible</button>
@@ -355,9 +355,7 @@
                 class="navigation-item actif"
                 type="button"
             >
-                <span class="navigation-icone">
-                    ⌂
-                </span>
+                <span class="navigation-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-5h5v5"/></svg></span>
 
                 <span>
                     Accueil
@@ -370,9 +368,7 @@
                 class="navigation-item"
                 type="button"
             >
-                <span class="navigation-icone">
-                    ◎
-                </span>
+                <span class="navigation-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="17" r="3"/><path d="M9.5 8.5c4 1.5 1 5 5 7"/></svg></span>
 
                 <span>
                     Tournée
@@ -385,9 +381,7 @@
                 class="navigation-item"
                 type="button"
             >
-                <span class="navigation-icone">
-                    !
-                </span>
+                <span class="navigation-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 22 20H2L12 3Z"/><path d="M12 9v5"/><path d="M12 17.5h.01"/></svg></span>
 
                 <span>
                     Incident
@@ -400,9 +394,7 @@
                 class="navigation-item"
                 type="button"
             >
-                <span class="navigation-icone">
-                    ○
-                </span>
+                <span class="navigation-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.8-4.3 3.2-6.5 7.5-6.5s6.7 2.2 7.5 6.5"/></svg></span>
 
                 <span>
                     Profil
@@ -418,7 +410,7 @@
     <script src="./js/api.js?v=1-6"></script>
     <script src="./js/auth.js?v=1-6"></script>
     <script src="./js/offline.js?v=1-8"></script>
-    <script src="./js/app.js?v=1-13"></script>
+    <script src="./js/app.js?v=1-14"></script>
 
 </body>
 </html>

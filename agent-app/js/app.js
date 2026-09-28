@@ -191,6 +191,7 @@
     let reconnexionRequise = false;
     const syncStatus = document.getElementById('statut-synchronisation');
     const syncButton = document.getElementById('bouton-synchroniser');
+    const syncPanel = syncStatus?.closest('.synchronisation');
     const rejectButton = document.getElementById('bouton-refus');
     const replaceProofButton = document.getElementById('bouton-remplacer-preuve');
     const replaceProofForm = document.getElementById('remplacement-preuve');
@@ -198,24 +199,211 @@
     const authorized = () => !reconnexionRequise && terrainOwner && auth.obtenirUtilisateur()?.id === terrainOwner &&
         !!localStorage.getItem(window.ProRecup.config.TOKEN_KEY);
     const updateQueueUI = async () => {
+
         if (!terrainStore) return;
-        const rows = await terrainStore.list();
-        const first = rows[0];
-        const firstType = first && ({ avant_collecte: 'photo avant collecte', apres_collecte: 'photo après collecte' }[first.type] || 'action ' + first.type.replaceAll('_', ' '));
-        const firstState = first && (first.last_error === 'BLOB_ILLISIBLE' ?
-            first.post_initiated ? 'preuve locale illisible, vérification requise avant remplacement' : 'preuve locale illisible, remplacement requis' :
-            first.statut === 'erreur' ? 'refusée' : first.statut === 'envoi' ? 'envoi en cours' :
-            first.last_error === 'RECONNEXION' ? 'reconnexion requise' : first.last_error === 'UPLOAD_RESEAU' ? 'réseau indisponible, nouvel essai prévu' :
-            ['ERREUR_SERVEUR', 'RESEAU_OU_SERVEUR'].includes(first.last_error) ? 'serveur indisponible, nouvel essai prévu' :
-            first.next_attempt_at > Date.now() ? 'nouvel essai différé' : 'prête');
-        syncStatus.textContent = rows.length + ' action(s) en attente' +
-            (first ? ' — première : ' + firstType + ', ' + firstState : '');
-        syncButton.hidden = !rows.length;
-        syncButton.disabled = !rows.length || !navigator.onLine || !!synchronisation || first?.statut === 'recuperation';
-        replaceProofButton.hidden = first?.statut !== 'recuperation' || first?.last_error !== 'BLOB_ILLISIBLE' || first?.post_initiated === true;
-        if (first?.statut !== 'recuperation') replaceProofForm.hidden = true;
-        rejectButton.hidden = !rows.some(r => r.statut === 'erreur');
+
+        const rows =
+            await terrainStore.list();
+
+        const first =
+            rows[0];
+
+        const firstType =
+            first &&
+            (
+                {
+                    avant_collecte:
+                        "photo avant collecte",
+
+                    apres_collecte:
+                        "photo après collecte"
+
+                }[first.type] ||
+                "action " +
+                first.type.replaceAll(
+                    "_",
+                    " "
+                )
+            );
+
+        const firstState =
+            first &&
+            (
+                first.last_error === 'BLOB_ILLISIBLE'
+
+                    ? first.post_initiated
+
+                        ? "preuve locale illisible, vérification requise"
+
+                        : "preuve locale illisible, remplacement requis"
+
+                    : first.statut ===
+                        "erreur"
+
+                        ? "action refusée"
+
+                        : first.statut ===
+                            "envoi"
+
+                            ? "envoi en cours"
+
+                            : first.last_error ===
+                                "RECONNEXION"
+
+                                ? "reconnexion requise"
+
+                                : first.last_error ===
+                                    "UPLOAD_RESEAU"
+
+                                    ? "réseau indisponible"
+
+                                    : [
+                                        "ERREUR_SERVEUR",
+                                        "RESEAU_OU_SERVEUR"
+                                    ].includes(
+                                        first.last_error
+                                    )
+
+                                        ? "serveur temporairement indisponible"
+
+                                        : first.next_attempt_at >
+                                            Date.now()
+
+                                            ? "nouvel essai prévu"
+
+                                            : "prête à être envoyée"
+            );
+
+        const recuperation =
+            first?.statut ===
+            "recuperation";
+
+        const erreur =
+            rows.some(
+                ligne =>
+                    ligne.statut ===
+                    "erreur"
+            );
+
+        const envoi =
+            rows.some(
+                ligne =>
+                    ligne.statut ===
+                    "envoi"
+            );
+
+        const horsLigne =
+            !navigator.onLine;
+
+        if (syncPanel) {
+
+            syncPanel.hidden =
+                rows.length === 0;
+        }
+
+        if (!rows.length) {
+
+            syncStatus.textContent =
+                "";
+
+            syncButton.hidden =
+                true;
+
+            replaceProofButton.hidden =
+                true;
+
+            replaceProofForm.hidden =
+                true;
+
+            rejectButton.hidden =
+                true;
+
+            return;
+        }
+
+        const nombre =
+            rows.length;
+
+        const actions =
+            nombre > 1
+                ? "actions"
+                : "action";
+
+        if (recuperation) {
+
+            syncStatus.textContent =
+                "Action à vérifier — " +
+                firstType +
+                ", " +
+                firstState;
+
+        } else if (horsLigne) {
+
+            syncStatus.textContent =
+                nombre +
+                " " +
+                actions +
+                " enregistrée" +
+                (nombre > 1 ? "s" : "") +
+                " · envoi automatique au retour du réseau";
+
+        } else if (
+            synchronisation ||
+            envoi
+        ) {
+
+            syncStatus.textContent =
+                "Synchronisation en cours…";
+
+        } else if (erreur) {
+
+            syncStatus.textContent =
+                nombre +
+                " " +
+                actions +
+                " à vérifier";
+
+        } else {
+
+            syncStatus.textContent =
+                nombre +
+                " " +
+                actions +
+                " à envoyer";
+        }
+
+        syncButton.hidden =
+            horsLigne ||
+            !!synchronisation ||
+            recuperation;
+
+        syncButton.disabled =
+            !rows.length ||
+            horsLigne ||
+            !!synchronisation ||
+            first?.statut ===
+                "recuperation";
+
+        replaceProofButton.hidden =
+            first?.statut !==
+                "recuperation" ||
+            first?.last_error !==
+                "BLOB_ILLISIBLE" ||
+            first?.post_initiated ===
+                true;
+
+        if (
+            first?.statut !==
+            "recuperation"
+        ) {
+            replaceProofForm.hidden =
+                true;
+        }
+
+        rejectButton.hidden =
+            !erreur;
     };
+
     const synchroniser = async ({ forceBackoff = false } = {}) => {
         if (!terrainStore || !authorized() || synchronisation || actionEnCours) return;
         clearTimeout(syncTimer);
@@ -546,6 +734,18 @@
             const missions =
                 journee?.missions || [];
 
+            const resumeJournee =
+                document.getElementById(
+                    "resume-journee"
+                );
+
+            if (resumeJournee) {
+
+                resumeJournee.hidden =
+                    missions.length ===
+                    0;
+            }
+
 
             if (
                 missions.length === 0
@@ -560,8 +760,7 @@
                         </strong>
 
                         <p>
-                            Lorsqu'une mission vous sera affectée,
-                            elle apparaîtra ici.
+                            Vous êtes à jour. Une nouvelle mission apparaîtra ici automatiquement.
                         </p>
 
                     </div>
@@ -1465,8 +1664,7 @@
                     </strong>
 
                     <p>
-                        Aucune mission ne vous est
-                        actuellement affectée.
+                        Votre prochaine mission apparaîtra ici automatiquement.
                     </p>
                 </div>
             `;
@@ -2015,9 +2213,7 @@
                     </strong>
 
                     <p>
-                        Pour signaler un incident,
-                        démarrez d'abord votre mission
-                        depuis l'onglet Tournée.
+                        Démarrez une mission depuis l'onglet Tournée pour pouvoir signaler un incident.
                     </p>
                 </div>
             `;
@@ -3325,7 +3521,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-13').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-14').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

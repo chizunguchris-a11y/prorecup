@@ -173,6 +173,34 @@ class MissionCollecteRepository {
                 c.poids_estime,
                 c.type_dechet_id,
 
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM mission_evenements me
+                        WHERE me.mission_id = mc.mission_id
+                          AND me.collecte_id = mc.collecte_id
+                          AND me.type_evenement = 'collecte_terminee'
+                    ) THEN 'terminee'
+
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM mission_evenements me
+                        WHERE me.mission_id = mc.mission_id
+                          AND me.collecte_id = mc.collecte_id
+                          AND me.type_evenement = 'collecte_demarree'
+                    ) THEN 'en_collecte'
+
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM mission_evenements me
+                        WHERE me.mission_id = mc.mission_id
+                          AND me.collecte_id = mc.collecte_id
+                          AND me.type_evenement = 'arrivee_site'
+                    ) THEN 'sur_site'
+
+                    ELSE 'a_faire'
+                END AS avancement_terrain,
+
                 cl.nom AS client_nom,
 
                 s.nom AS site_nom,

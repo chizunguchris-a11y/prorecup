@@ -430,6 +430,69 @@
 
     };
 
+    const formaterStatutCollecte = (
+        statut
+    ) => {
+
+        const libelles = {
+            en_attente:
+                "En attente",
+
+            valide:
+                "Validée"
+        };
+
+        if (!statut) {
+            return "Non renseigné";
+        }
+
+        return (
+            libelles[statut] ||
+            String(statut)
+                .replaceAll("_", " ")
+                .replace(
+                    /^./,
+                    (lettre) =>
+                        lettre.toUpperCase()
+                )
+        );
+
+    };
+
+    const formaterAvancementTerrain = (
+        avancement
+    ) => {
+
+        const libelles = {
+            a_faire:
+                "À faire",
+
+            sur_site:
+                "Sur le site",
+
+            en_collecte:
+                "Collecte en cours",
+
+            terminee:
+                "Terminée"
+        };
+
+        if (!avancement) {
+            return "À faire";
+        }
+
+        return (
+            libelles[avancement] ||
+            String(avancement)
+                .replaceAll("_", " ")
+                .replace(
+                    /^./,
+                    (lettre) =>
+                        lettre.toUpperCase()
+                )
+        );
+
+    };
     const formaterTypeEvenement = (
         type
     ) => {
@@ -1423,7 +1486,7 @@
             corpsCollectesMission.innerHTML = `
                 <tr>
                     <td
-                        colspan="7"
+                        colspan="8"
                         class="etat-tableau"
                     >
                         Aucune collecte associée.
@@ -1486,8 +1549,13 @@
                     `${ProRecup.formaterNombre(
                         collecte.poids_estime
                     )} kg`,
-                    collecte.statut_collecte ||
-                    collecte.statut
+                    formaterStatutCollecte(
+                        collecte.statut_collecte ||
+                        collecte.statut
+                    ),
+                    formaterAvancementTerrain(
+                        collecte.avancement_terrain
+                    )
                 ].forEach(
                     (valeur) => {
 

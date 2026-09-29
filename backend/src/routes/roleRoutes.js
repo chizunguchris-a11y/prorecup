@@ -30,6 +30,9 @@ const router =
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "admin"
+    ]),
     roleController.getAll
 );
 

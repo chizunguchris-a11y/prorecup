@@ -34,9 +34,7 @@ router.get(
     authMiddleware,
     roleMiddleware([
         "admin",
-        "manager",
-        "agent",
-        "agent_valorisation_carbone"
+        "manager"
     ]),
     carteController.obtenirPositions
 );

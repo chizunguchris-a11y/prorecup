@@ -27,8 +27,7 @@
 
     const tousLesRoles = [
         "admin",
-        "manager",
-        "agent"
+        "manager"
     ];
 
     const liens = [

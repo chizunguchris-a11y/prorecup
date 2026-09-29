@@ -7,7 +7,7 @@ import ApiError
 const rolesSysteme = [
     "admin",
     "manager",
-    "agent"
+    "agent_valorisation_carbone"
 ];
 
 const roleService = {
@@ -45,7 +45,7 @@ const roleService = {
 
             throw new ApiError(
                 400,
-                "Le rôle doit être admin, manager ou agent."
+                "Le rôle doit être admin, manager ou agent_valorisation_carbone."
             );
 
         }

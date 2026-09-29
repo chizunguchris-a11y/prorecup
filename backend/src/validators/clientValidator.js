@@ -13,11 +13,28 @@ const clientValidator = [
         ),
 
     body("type_client")
+        .trim()
+        .toLowerCase()
+        .notEmpty()
+        .withMessage("Le type de client est obligatoire.")
+        .bail()
+        .isIn([
+            "entreprise",
+            "institution",
+            "menage",
+            "association",
+            "collectivite"
+        ])
+        .withMessage(
+            "Le type de client est invalide."
+        ),
+
+    body("secteur_activite")
         .optional({ nullable: true, checkFalsy: true })
         .trim()
         .isLength({ max: 100 })
         .withMessage(
-            "Le type de client ne doit pas dépasser 100 caractères."
+            "Le secteur d'activité ne doit pas dépasser 100 caractères."
         ),
 
     body("contact_email")

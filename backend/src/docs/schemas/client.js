@@ -12,7 +12,19 @@
             },
             type_client: {
                 type: "string",
-                example: "Hôpital"
+                enum: [
+                    "entreprise",
+                    "institution",
+                    "menage",
+                    "association",
+                    "collectivite"
+                ],
+                example: "institution"
+            },
+            secteur_activite: {
+                type: "string",
+                nullable: true,
+                example: "sante"
             },
             contact_email: {
                 type: "string",

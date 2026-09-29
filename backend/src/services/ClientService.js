@@ -4,6 +4,36 @@
 import ApiError
     from "../utils/ApiError.js";
 
+const TYPES_CLIENT_AUTORISES = [
+    "entreprise",
+    "institution",
+    "menage",
+    "association",
+    "collectivite"
+];
+
+const normaliserTypeClient = (
+    valeur
+) =>
+    String(
+        valeur || ""
+    )
+        .trim()
+        .toLowerCase();
+
+const normaliserTexteOptionnel = (
+    valeur
+) => {
+
+    const texte =
+        String(
+            valeur || ""
+        ).trim();
+
+    return texte || null;
+
+};
+
 class ClientService {
 
     validerDonnees(client) {
@@ -16,6 +46,41 @@ class ClientService {
                 400,
                 "Le nom du client est obligatoire."
             );
+        }
+
+        const typeClient =
+            normaliserTypeClient(
+                client.type_client
+            );
+
+        if (
+            !TYPES_CLIENT_AUTORISES.includes(
+                typeClient
+            )
+        ) {
+
+            throw new ApiError(
+                400,
+                "Le type de client est invalide."
+            );
+
+        }
+
+        const secteurActivite =
+            normaliserTexteOptionnel(
+                client.secteur_activite
+            );
+
+        if (
+            secteurActivite &&
+            secteurActivite.length > 100
+        ) {
+
+            throw new ApiError(
+                400,
+                "Le secteur d'activité ne doit pas dépasser 100 caractères."
+            );
+
         }
 
         if (
@@ -46,7 +111,17 @@ class ClientService {
             {
                 ...client,
                 nom:
-                    String(client.nom).trim()
+                    String(client.nom).trim(),
+
+                type_client:
+                    normaliserTypeClient(
+                        client.type_client
+                    ),
+
+                secteur_activite:
+                    normaliserTexteOptionnel(
+                        client.secteur_activite
+                    )
             }
         );
 
@@ -114,7 +189,14 @@ class ClientService {
                     String(donnees.nom).trim(),
 
                 type_client:
-                    donnees.type_client,
+                    normaliserTypeClient(
+                        donnees.type_client
+                    ),
+
+                secteur_activite:
+                    normaliserTexteOptionnel(
+                        donnees.secteur_activite
+                    ),
 
                 contact_email:
                     donnees.contact_email,

@@ -205,6 +205,9 @@ const ouvrirModaleModification = (
     obtenirChamp("type_client").value =
         client.type_client || "";
 
+    obtenirChamp("secteur_activite").value =
+        client.secteur_activite || "";
+
     obtenirChamp("contact_email").value =
         client.contact_email || "";
 
@@ -486,6 +489,7 @@ const filtrerClients = () => {
                 const contenu = [
                     client.nom,
                     client.type_client,
+                    client.secteur_activite,
                     client.contact_email,
                     client.contact_telephone,
                     client.adresse_siege
@@ -593,6 +597,11 @@ formulaireClient.addEventListener(
                     "type_client"
                 ),
 
+            secteur_activite:
+                obtenirValeur(
+                    "secteur_activite"
+                ),
+
             contact_email:
                 obtenirValeur(
                     "contact_email"
@@ -614,6 +623,16 @@ formulaireClient.addEventListener(
 
             afficherErreurFormulaire(
                 "Le nom du client est obligatoire."
+            );
+
+            return;
+
+        }
+
+        if (!donneesClient.type_client) {
+
+            afficherErreurFormulaire(
+                "Le type de client est obligatoire."
             );
 
             return;

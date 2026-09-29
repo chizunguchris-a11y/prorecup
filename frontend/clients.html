@@ -285,15 +285,48 @@
                     <div class="groupe-champ">
 
                         <label for="type_client">
-                            Type de client
+                            Type de client *
+                        </label>
+
+                        <select
+                            id="type_client"
+                            name="type_client"
+                            required
+                        >
+                            <option value="">
+                                Sélectionner un type
+                            </option>
+                            <option value="entreprise">
+                                Entreprise
+                            </option>
+                            <option value="institution">
+                                Institution
+                            </option>
+                            <option value="menage">
+                                Ménage
+                            </option>
+                            <option value="association">
+                                Association
+                            </option>
+                            <option value="collectivite">
+                                Collectivité
+                            </option>
+                        </select>
+
+                    </div>
+
+                    <div class="groupe-champ">
+
+                        <label for="secteur_activite">
+                            Secteur d’activité
                         </label>
 
                         <input
                             type="text"
-                            id="type_client"
-                            name="type_client"
+                            id="secteur_activite"
+                            name="secteur_activite"
                             maxlength="100"
-                            placeholder="Entreprise, hôpital..."
+                            placeholder="Exemple : santé, commerce, éducation..."
                         >
 
                     </div>

@@ -12,18 +12,20 @@ class ClientRepository {
             (
                 nom,
                 type_client,
+                secteur_activite,
                 contact_email,
                 contact_telephone,
                 adresse_siege,
                 organisation_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
 
         const valeurs = [
             client.nom,
             client.type_client || null,
+            client.secteur_activite || null,
             client.contact_email || null,
             client.contact_telephone || null,
             client.adresse_siege || null,
@@ -50,6 +52,7 @@ class ClientRepository {
                 id,
                 nom,
                 type_client,
+                secteur_activite,
                 contact_email,
                 contact_telephone,
                 adresse_siege,
@@ -80,6 +83,7 @@ class ClientRepository {
                 id,
                 nom,
                 type_client,
+                secteur_activite,
                 contact_email,
                 contact_telephone,
                 adresse_siege,
@@ -114,17 +118,19 @@ class ClientRepository {
             SET
                 nom = $1,
                 type_client = $2,
-                contact_email = $3,
-                contact_telephone = $4,
-                adresse_siege = $5
-            WHERE id = $6
-              AND organisation_id = $7
+                secteur_activite = $3,
+                contact_email = $4,
+                contact_telephone = $5,
+                adresse_siege = $6
+            WHERE id = $7
+              AND organisation_id = $8
             RETURNING *;
         `;
 
         const valeurs = [
             client.nom,
             client.type_client || null,
+            client.secteur_activite || null,
             client.contact_email || null,
             client.contact_telephone || null,
             client.adresse_siege || null,

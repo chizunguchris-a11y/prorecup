@@ -56,6 +56,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     missionController.lister
 );
 
@@ -275,6 +279,10 @@ router.patch(
 router.get(
     "/:id/collectes",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     missionCollecteController.lister
 );
 
@@ -471,6 +479,10 @@ router.delete(
 router.get(
     "/:id/evenements",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     missionEvenementController.lister
 );
 
@@ -540,6 +552,10 @@ router.get(
 router.post(
     "/:id/evenements",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     missionEvenementValidator,
     validationMiddleware,
     missionEvenementController.creer

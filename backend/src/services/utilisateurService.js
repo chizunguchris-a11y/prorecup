@@ -432,6 +432,19 @@ class UtilisateurService {
 
         }
 
+        if (
+            normaliserNomRole(
+                utilisateurExistant.role_nom
+            ) === "client"
+        ) {
+
+            throw new ApiError(
+                400,
+                "Le compte client doit être géré depuis le module clients."
+            );
+
+        }
+
         const nom =
             donnees.nom !==
             undefined

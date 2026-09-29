@@ -75,6 +75,28 @@ const portailClientController = {
             );
 
         }
+    ),
+
+
+    collectes: asyncHandler(
+        async (req, res) => {
+
+            const collectes =
+                await portailClientRepository
+                    .listerCollectesAutorisees(
+                        req.portailClient
+                            .utilisateur_id,
+                        req.portailClient
+                            .organisation_id
+                    );
+
+            return ApiResponse.success(
+                res,
+                "Collectes du portail client recuperees avec succes.",
+                collectes
+            );
+
+        }
     )
 
 };

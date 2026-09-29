@@ -64,4 +64,28 @@ router.get(
     portailClientContextMiddleware,
     portailClientController.sites
 );
+
+/**
+ * @swagger
+ * /api/portail-client/collectes:
+ *   get:
+ *     summary: Consulter les collectes autorisees du portail client
+ *     tags:
+ *       - Portail Client
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Collectes autorisees recuperees avec succes.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Acces portail client refuse.
+ */
+router.get(
+    "/collectes",
+    authMiddleware,
+    portailClientContextMiddleware,
+    portailClientController.collectes
+);
 export default router;

@@ -181,6 +181,108 @@ class PortailClientRepository {
         return resultat.rows;
 
     }
+
+    async listerCollectesAutorisees(
+        utilisateurId,
+        organisationId,
+        connexion = pool
+    ) {
+
+        const resultat =
+            await connexion.query(
+                `
+                    SELECT
+                        co.id AS collecte_id,
+                        co.client_id,
+                        c.nom AS client_nom,
+                        c.type_client,
+
+                        co.site_id,
+                        s.nom AS site_nom,
+                        s.adresse AS site_adresse,
+                        s.zone_geographique,
+
+                        co.type_dechet_id,
+                        td.nom AS type_dechet,
+
+                        co.agent_id,
+                        u.nom AS agent_nom,
+
+                        co.date_collecte,
+                        co.poids_estime,
+                        co.poids_reel,
+                        co.statut,
+                        co.resultat_terrain,
+                        co.motif_terrain,
+
+                        COUNT(
+                            DISTINCT pc.id
+                        )::integer
+                            AS nombre_preuves
+
+                    FROM client_utilisateurs cu
+
+                    JOIN clients c
+                      ON c.id = cu.client_id
+                     AND c.organisation_id =
+                         cu.organisation_id
+
+                    JOIN collectes co
+                      ON co.client_id = c.id
+
+                    JOIN sites_de_collecte s
+                      ON s.id = co.site_id
+                     AND s.organisation_id =
+                         cu.organisation_id
+
+                    LEFT JOIN types_dechets td
+                      ON td.id = co.type_dechet_id
+
+                    LEFT JOIN utilisateurs u
+                      ON u.id = co.agent_id
+
+                    LEFT JOIN preuves_collecte pc
+                      ON pc.collecte_id = co.id
+                     AND pc.organisation_id =
+                         cu.organisation_id
+
+                    WHERE cu.utilisateur_id = $1
+                      AND cu.organisation_id = $2
+                      AND cu.actif = TRUE
+
+                    GROUP BY
+                        co.id,
+                        co.client_id,
+                        c.nom,
+                        c.type_client,
+                        co.site_id,
+                        s.nom,
+                        s.adresse,
+                        s.zone_geographique,
+                        co.type_dechet_id,
+                        td.nom,
+                        co.agent_id,
+                        u.nom,
+                        co.date_collecte,
+                        co.poids_estime,
+                        co.poids_reel,
+                        co.statut,
+                        co.resultat_terrain,
+                        co.motif_terrain
+
+                    ORDER BY
+                        co.date_collecte DESC,
+                        co.id DESC;
+                `,
+                [
+                    utilisateurId,
+                    organisationId
+                ]
+            );
+
+        return resultat.rows;
+
+    }
 }
 
 export default new PortailClientRepository();

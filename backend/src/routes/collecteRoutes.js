@@ -116,6 +116,10 @@ router.get(
 router.post(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     collecteValidator,
     validationMiddleware,
     collecteController.creer

@@ -3,6 +3,9 @@
 import clientController
     from "../controllers/ClientController.js";
 
+import clientCompteController
+    from "../controllers/ClientCompteController.js";
+
 import authMiddleware
     from "../middlewares/authMiddleware.js";
 
@@ -83,6 +86,67 @@ router.get(
  *       401:
  *         description: Token manquant ou invalide.
  */
+/**
+ * @swagger
+ * /api/clients/{id}/comptes:
+ *   post:
+ *     summary: Créer un compte d'accès au portail pour un client
+ *     tags:
+ *       - Clients
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nom
+ *               - email
+ *               - motDePasse
+ *             properties:
+ *               nom:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               motDePasse:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *               telephone:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Compte client créé avec succès.
+ *       400:
+ *         description: Données invalides.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Réservé aux administrateurs.
+ *       404:
+ *         description: Client introuvable.
+ *       409:
+ *         description: Adresse e-mail déjà utilisée.
+ */
+router.post(
+    "/:id/comptes",
+    authMiddleware,
+    roleMiddleware([
+        "admin"
+    ]),
+    clientCompteController.creer
+);
+
 router.post(
     "/",
     authMiddleware,

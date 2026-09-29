@@ -35,6 +35,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     clientController.lister
 );
 
@@ -82,6 +86,10 @@ router.get(
 router.post(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     clientValidator,
     validationMiddleware,
     clientController.creer
@@ -135,6 +143,10 @@ router.post(
 router.put(
     "/:id",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     clientValidator,
     validationMiddleware,
     clientController.modifier

@@ -96,6 +96,91 @@ class PortailClientRepository {
 
     }
 
+
+    async listerSitesAutorises(
+        utilisateurId,
+        organisationId,
+        connexion = pool
+    ) {
+
+        const resultat =
+            await connexion.query(
+                `
+                    SELECT
+                        s.id AS site_id,
+                        s.nom AS site_nom,
+                        s.adresse,
+                        s.zone_geographique,
+                        s.responsable_nom,
+                        s.date_creation,
+                        s.latitude,
+                        s.longitude,
+                        s.precision_gps_reference,
+                        s.rayon_validation_m,
+                        s.organisation_id,
+
+                        jsonb_agg(
+                            jsonb_build_object(
+                                'client_id',
+                                c.id,
+                                'client_nom',
+                                c.nom,
+                                'type_client',
+                                c.type_client
+                            )
+                            ORDER BY
+                                c.nom ASC,
+                                c.id ASC
+                        ) AS clients_autorises
+
+                    FROM client_utilisateurs cu
+
+                    JOIN clients c
+                      ON c.id = cu.client_id
+                     AND c.organisation_id =
+                         cu.organisation_id
+
+                    JOIN client_sites cs
+                      ON cs.client_id = c.id
+                     AND cs.organisation_id =
+                         cu.organisation_id
+                     AND cs.actif = TRUE
+
+                    JOIN sites_de_collecte s
+                      ON s.id = cs.site_id
+                     AND s.organisation_id =
+                         cs.organisation_id
+
+                    WHERE cu.utilisateur_id = $1
+                      AND cu.organisation_id = $2
+                      AND cu.actif = TRUE
+
+                    GROUP BY
+                        s.id,
+                        s.nom,
+                        s.adresse,
+                        s.zone_geographique,
+                        s.responsable_nom,
+                        s.date_creation,
+                        s.latitude,
+                        s.longitude,
+                        s.precision_gps_reference,
+                        s.rayon_validation_m,
+                        s.organisation_id
+
+                    ORDER BY
+                        s.nom ASC,
+                        s.id ASC;
+                `,
+                [
+                    utilisateurId,
+                    organisationId
+                ]
+            );
+
+        return resultat.rows;
+
+    }
 }
 
 export default new PortailClientRepository();

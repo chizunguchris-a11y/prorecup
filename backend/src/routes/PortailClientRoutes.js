@@ -40,4 +40,28 @@ router.get(
 );
 
 
+
+/**
+ * @swagger
+ * /api/portail-client/sites:
+ *   get:
+ *     summary: Consulter les sites autorises du portail client
+ *     tags:
+ *       - Portail Client
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sites autorises recuperes avec succes.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Acces portail client refuse.
+ */
+router.get(
+    "/sites",
+    authMiddleware,
+    portailClientContextMiddleware,
+    portailClientController.sites
+);
 export default router;

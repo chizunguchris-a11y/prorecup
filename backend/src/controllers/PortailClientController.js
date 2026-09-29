@@ -1,3 +1,9 @@
+import asyncHandler
+    from "../middlewares/asyncHandler.js";
+
+import portailClientRepository
+    from "../repositories/PortailClientRepository.js";
+
 import ApiResponse
     from "../utils/ApiResponse.js";
 
@@ -47,7 +53,29 @@ const portailClientController = {
             }
         );
 
-    }
+    },
+
+
+    sites: asyncHandler(
+        async (req, res) => {
+
+            const sites =
+                await portailClientRepository
+                    .listerSitesAutorises(
+                        req.portailClient
+                            .utilisateur_id,
+                        req.portailClient
+                            .organisation_id
+                    );
+
+            return ApiResponse.success(
+                res,
+                "Sites du portail client recuperes avec succes.",
+                sites
+            );
+
+        }
+    )
 
 };
 

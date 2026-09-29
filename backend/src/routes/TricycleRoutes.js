@@ -41,6 +41,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     tricycleController.lister
 );
 

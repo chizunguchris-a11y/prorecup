@@ -33,6 +33,9 @@ import authRoutes
 import clientRoutes
     from "./routes/clientRoutes.js";
 
+import portailClientRoutes
+    from "./routes/PortailClientRoutes.js";
+
 import siteRoutes
     from "./routes/siteRoutes.js";
 
@@ -190,6 +193,11 @@ app.use(
 app.use(
     "/api/clients",
     clientRoutes
+);
+
+app.use(
+    "/api/portail-client",
+    portailClientRoutes
 );
 
 app.use(

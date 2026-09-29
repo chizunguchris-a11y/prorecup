@@ -11,19 +11,6 @@ const router =
 
 /**
  * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Créer un nouvel utilisateur
- *     tags:
- *       - Authentification
- */
-router.post(
-    "/register",
-    authController.inscription
-);
-
-/**
- * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Connecter un utilisateur

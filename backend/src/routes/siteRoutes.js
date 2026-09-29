@@ -35,6 +35,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     siteController.lister
 );
 
@@ -79,6 +83,10 @@ router.get(
 router.post(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     siteValidator,
     validationMiddleware,
     siteController.creer
@@ -130,6 +138,10 @@ router.post(
 router.put(
     "/:id",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     siteValidator,
     validationMiddleware,
     siteController.modifier

@@ -88,4 +88,61 @@ router.get(
     portailClientContextMiddleware,
     portailClientController.collectes
 );
+
+/**
+ * @swagger
+ * /api/portail-client/collectes/{id}:
+ *   get:
+ *     summary: Consulter le detail d'une collecte autorisee
+ *     tags:
+ *       - Portail Client
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Detail de collecte recupere.
+ *       400:
+ *         description: Identifiant invalide.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Acces portail client refuse.
+ *       404:
+ *         description: Collecte introuvable ou non autorisee.
+ */
+router.get(
+    "/collectes/:id",
+    authMiddleware,
+    portailClientContextMiddleware,
+    portailClientController.detailCollecte
+);
+
+
+/**
+ * @swagger
+ * /api/portail-client/collectes/{id}/preuves/{preuveId}/url:
+ *   get:
+ *     summary: Generer une URL temporaire pour une preuve autorisee
+ *     tags:
+ *       - Portail Client
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: URL signee generee.
+ *       400:
+ *         description: Identifiant invalide.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Acces portail client refuse.
+ *       404:
+ *         description: Preuve introuvable ou non autorisee.
+ */
+router.get(
+    "/collectes/:id/preuves/:preuveId/url",
+    authMiddleware,
+    portailClientContextMiddleware,
+    portailClientController.urlPreuve
+);
 export default router;

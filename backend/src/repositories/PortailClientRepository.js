@@ -283,6 +283,209 @@ class PortailClientRepository {
         return resultat.rows;
 
     }
+
+    async trouverCollecteAutorisee(
+        utilisateurId,
+        organisationId,
+        collecteId,
+        connexion = pool
+    ) {
+
+        const resultat =
+            await connexion.query(
+                `
+                    SELECT
+                        co.id AS collecte_id,
+                        co.client_id,
+                        c.nom AS client_nom,
+                        c.type_client,
+
+                        co.site_id,
+                        s.nom AS site_nom,
+                        s.adresse AS site_adresse,
+                        s.zone_geographique,
+                        s.responsable_nom,
+
+                        co.type_dechet_id,
+                        td.nom AS type_dechet,
+
+                        co.agent_id,
+                        u.nom AS agent_nom,
+
+                        co.date_collecte,
+                        co.poids_estime,
+                        co.poids_reel,
+                        co.poids_reel_saisi_le,
+                        co.statut,
+                        co.resultat_terrain,
+                        co.motif_terrain,
+
+                        COALESCE(
+                            (
+                                SELECT
+                                    jsonb_agg(
+                                        jsonb_build_object(
+                                            'id', pc.id,
+                                            'mission_id', pc.mission_id,
+                                            'type_preuve', pc.type_preuve,
+                                            'mime_type', pc.mime_type,
+                                            'taille_octets', pc.taille_octets,
+                                            'pris_le', pc.pris_le,
+                                            'recu_le', pc.recu_le
+                                        )
+                                        ORDER BY
+                                            pc.pris_le ASC,
+                                            pc.id ASC
+                                    )
+
+                                FROM preuves_collecte pc
+
+                                WHERE pc.collecte_id =
+                                      co.id
+
+                                  AND pc.organisation_id =
+                                      cu.organisation_id
+                            ),
+                            '[]'::jsonb
+                        ) AS preuves,
+
+                        COALESCE(
+                            (
+                                SELECT
+                                    jsonb_agg(
+                                        jsonb_build_object(
+                                            'id', p.id,
+                                            'mission_id', p.mission_id,
+                                            'type', p.type,
+                                            'poids_brut', p.poids_brut,
+                                            'tare', p.tare,
+                                            'poids_net', p.poids_net,
+                                            'date_heure', p.date_heure,
+                                            'preuve_id', p.preuve_id
+                                        )
+                                        ORDER BY
+                                            p.date_heure ASC,
+                                            p.id ASC
+                                    )
+
+                                FROM pesees p
+
+                                WHERE p.collecte_id =
+                                      co.id
+
+                                  AND p.organisation_id =
+                                      cu.organisation_id
+                            ),
+                            '[]'::jsonb
+                        ) AS pesees
+
+                    FROM client_utilisateurs cu
+
+                    JOIN clients c
+                      ON c.id = cu.client_id
+                     AND c.organisation_id =
+                         cu.organisation_id
+
+                    JOIN collectes co
+                      ON co.client_id = c.id
+
+                    JOIN sites_de_collecte s
+                      ON s.id = co.site_id
+                     AND s.organisation_id =
+                         cu.organisation_id
+
+                    LEFT JOIN types_dechets td
+                      ON td.id = co.type_dechet_id
+
+                    LEFT JOIN utilisateurs u
+                      ON u.id = co.agent_id
+
+                    WHERE cu.utilisateur_id = $1
+                      AND cu.organisation_id = $2
+                      AND cu.actif = TRUE
+                      AND co.id = $3
+
+                    LIMIT 1;
+                `,
+                [
+                    utilisateurId,
+                    organisationId,
+                    collecteId
+                ]
+            );
+
+        return resultat.rows[0] || null;
+
+    }
+
+
+    async trouverPreuveAutorisee(
+        utilisateurId,
+        organisationId,
+        collecteId,
+        preuveId,
+        connexion = pool
+    ) {
+
+        const resultat =
+            await connexion.query(
+                `
+                    SELECT
+                        pc.id,
+                        pc.collecte_id,
+                        pc.mission_id,
+                        pc.type_preuve,
+                        pc.mime_type,
+                        pc.taille_octets,
+                        pc.pris_le,
+                        pc.recu_le,
+
+                        /*
+                         * Interne uniquement :
+                         * jamais retourne directement
+                         * au navigateur.
+                         */
+                        pc.storage_path
+
+                    FROM client_utilisateurs cu
+
+                    JOIN clients c
+                      ON c.id = cu.client_id
+                     AND c.organisation_id =
+                         cu.organisation_id
+
+                    JOIN collectes co
+                      ON co.client_id = c.id
+
+                    JOIN preuves_collecte pc
+                      ON pc.collecte_id = co.id
+                     AND pc.organisation_id =
+                         cu.organisation_id
+
+                    JOIN sites_de_collecte s
+                      ON s.id = co.site_id
+                     AND s.organisation_id =
+                         cu.organisation_id
+
+                    WHERE cu.utilisateur_id = $1
+                      AND cu.organisation_id = $2
+                      AND cu.actif = TRUE
+                      AND co.id = $3
+                      AND pc.id = $4
+
+                    LIMIT 1;
+                `,
+                [
+                    utilisateurId,
+                    organisationId,
+                    collecteId,
+                    preuveId
+                ]
+            );
+
+        return resultat.rows[0] || null;
+
+    }
 }
 
 export default new PortailClientRepository();

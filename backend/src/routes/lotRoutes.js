@@ -19,9 +19,9 @@ import traceabiliteController
 
 const router = express.Router();
 
-router.get("/unites", authMiddleware, traceabiliteController.lister);
-router.get("/tracabilite/:code", authMiddleware, traceabiliteController.historique);
-router.get("/etiquette/:code", authMiddleware, traceabiliteController.etiquette);
+router.get("/unites", authMiddleware, roleMiddleware(["manager", "admin"]), traceabiliteController.lister);
+router.get("/tracabilite/:code", authMiddleware, roleMiddleware(["manager", "admin"]), traceabiliteController.historique);
+router.get("/etiquette/:code", authMiddleware, roleMiddleware(["manager", "admin"]), traceabiliteController.etiquette);
 router.post("/contenants", authMiddleware, roleMiddleware(["manager", "admin"]),
     traceabiliteController.creerContenant);
 router.post("/regroupements", authMiddleware, roleMiddleware(["manager", "admin"]),
@@ -85,6 +85,10 @@ router.post("/regroupements", authMiddleware, roleMiddleware(["manager", "admin"
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     lotController.lister
 );
 

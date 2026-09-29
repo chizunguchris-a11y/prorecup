@@ -28,6 +28,10 @@ const router =
 router.get(
     "/me",
     authMiddleware,
+    roleMiddleware([
+        "admin",
+        "manager"
+    ]),
     organisationController
         .consulterMonOrganisation
 );

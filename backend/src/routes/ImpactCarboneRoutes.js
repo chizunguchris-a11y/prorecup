@@ -5,6 +5,7 @@ import impactCarboneController
 
 import authMiddleware
     from "../middlewares/authMiddleware.js";
+import roleMiddleware from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
@@ -87,6 +88,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     impactCarboneController.lister
 );
 

@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import utilisateurRepository
     from "../repositories/utilisateurRepository.js";
 
+import roleRepository
+    from "../repositories/roleRepository.js";
+
 import ApiError
     from "../utils/ApiError.js";
 
@@ -37,6 +40,60 @@ const normaliserTexte = (
         ).trim();
 
     return texte || null;
+
+};
+
+const normaliserNomRole = (
+    role
+) =>
+    String(
+        role || ""
+    )
+        .trim()
+        .toLowerCase();
+
+const verifierRoleInterne = async (
+    roleId
+) => {
+
+    if (!roleId) {
+
+        throw new ApiError(
+            400,
+            "Le rôle de l'utilisateur est obligatoire."
+        );
+
+    }
+
+    const role =
+        await roleRepository
+            .trouverParId(
+                roleId
+            );
+
+    if (!role) {
+
+        throw new ApiError(
+            400,
+            "Le rôle de l'utilisateur est invalide."
+        );
+
+    }
+
+    if (
+        normaliserNomRole(
+            role.nom
+        ) === "client"
+    ) {
+
+        throw new ApiError(
+            400,
+            "Le rôle client doit être géré depuis le module clients."
+        );
+
+    }
+
+    return role;
 
 };
 
@@ -217,10 +274,18 @@ class UtilisateurService {
 
         }
 
-        return utilisateurRepository
-            .listerParOrganisation(
-                organisationId
-            );
+        const utilisateurs =
+            await utilisateurRepository
+                .listerParOrganisation(
+                    organisationId
+                );
+
+        return utilisateurs.filter(
+            (utilisateur) =>
+                normaliserNomRole(
+                    utilisateur.role_nom
+                ) !== "client"
+        );
 
     }
 
@@ -251,7 +316,7 @@ class UtilisateurService {
             donnees.motDePasse
         );
 
-        this.validerRole(
+        await verifierRoleInterne(
             donnees.role_id
         );
 
@@ -393,7 +458,7 @@ class UtilisateurService {
                 ? donnees.role_id
                 : utilisateurExistant.role_id;
 
-        this.validerRole(
+        await verifierRoleInterne(
             roleId
         );
 
@@ -536,6 +601,19 @@ class UtilisateurService {
             throw new ApiError(
                 409,
                 "Vous ne pouvez pas désactiver votre propre compte."
+            );
+
+        }
+
+        if (
+            normaliserNomRole(
+                utilisateurExistant.role_nom
+            ) === "client"
+        ) {
+
+            throw new ApiError(
+                400,
+                "Le compte client doit être géré depuis le module clients."
             );
 
         }

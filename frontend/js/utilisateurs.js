@@ -1048,6 +1048,14 @@
         roles =
             extraireListe(
                 resultat
+            ).filter(
+                (role) =>
+                    String(
+                        role?.nom || ""
+                    )
+                        .trim()
+                        .toLowerCase() !==
+                    "client"
             );
 
         remplirRoles();

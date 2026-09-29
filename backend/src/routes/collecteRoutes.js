@@ -38,6 +38,10 @@ const router = express.Router();
 router.get(
     "/",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     collecteController.lister
 );
 
@@ -58,6 +62,10 @@ router.post(
 router.get(
     "/:id/preuves/:preuveId/url",
     authMiddleware,
+    roleMiddleware([
+        "manager",
+        "admin"
+    ]),
     collecteController.urlPreuve
 );
 

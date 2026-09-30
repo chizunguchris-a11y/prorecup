@@ -1002,13 +1002,10 @@ const afficherCollecte = (
         );
 
 
-    const statut =
-        String(
-            collecte.statut ||
-            ""
-        )
-            .trim()
-            .toLowerCase();
+    const statutClient =
+        PortailRecup.statutClient(
+            collecte
+        );
 
 
     const badge =
@@ -1018,18 +1015,12 @@ const afficherCollecte = (
 
 
     badge.textContent =
-        libellesStatut[
-            statut
-        ] ||
-        collecte.statut ||
-        "Statut";
+        statutClient.label;
 
 
     badge.className =
         "cockpit-status " +
-        classeStatut(
-            statut
-        );
+        statutClient.classe;
 
 
     const poidsReel =

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        Mes collectes | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page collectes-page">
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="cockpit-nav-wrap">
+
+            <nav
+                id="portailNavigation"
+                class="cockpit-container cockpit-nav"
+                data-page="collectes"
+                aria-label="Navigation du portail client"
+            ></nav>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container collectes-main">
+
+
+        <section class="collectes-intro">
+
+            <div>
+
+                <p class="cockpit-kicker">
+                    TRA&Ccedil;ABILIT&Eacute;
+                </p>
+
+                <h1>
+                    Vos collectes
+                </h1>
+
+                <p id="collectesContexte">
+
+                    Retrouvez l'ensemble des op&eacute;rations
+                    accessibles &agrave; votre compte.
+
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-secure">
+
+                <span class="cockpit-secure-point"></span>
+
+                Donn&eacute;es s&eacute;curis&eacute;es
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             RESUME
+             ========================= -->
+
+        <section class="collectes-stats">
+
+            <article>
+
+                <span>
+                    Collectes
+                </span>
+
+                <strong id="statTotalCollectes">
+                    &mdash;
+                </strong>
+
+                <small>
+                    dans la s&eacute;lection
+                </small>
+
+            </article>
+
+
+            <article>
+
+                <span>
+                    Poids r&eacute;el
+                </span>
+
+                <strong id="statPoidsCollectes">
+                    &mdash;
+                </strong>
+
+                <small>
+                    cumul enregistr&eacute;
+                </small>
+
+            </article>
+
+
+            <article>
+
+                <span>
+                    Preuves
+                </span>
+
+                <strong id="statPreuvesCollectes">
+                    &mdash;
+                </strong>
+
+                <small>
+                    disponibles
+                </small>
+
+            </article>
+
+        </section>
+
+
+
+        <!-- =========================
+             FILTRES
+             ========================= -->
+
+        <section class="cockpit-card collectes-filtres">
+
+            <div class="collectes-search">
+
+                <label for="rechercheCollectes">
+                    Rechercher
+                </label>
+
+                <input
+                    id="rechercheCollectes"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Site, mati&egrave;re, client, agent..."
+                >
+
+            </div>
+
+
+            <div class="collectes-filter">
+
+                <label for="filtreStatut">
+                    Statut
+                </label>
+
+                <select id="filtreStatut">
+
+                    <option value="">
+                        Tous les statuts
+                    </option>
+
+                    <option value="documentee">
+                        Document&eacute;e
+                    </option>
+
+                    <option value="realisee">
+                        R&eacute;alis&eacute;e
+                    </option>
+
+                    <option value="validee">
+                        Valid&eacute;e
+                    </option>
+
+                    <option value="en_cours">
+                        En cours
+                    </option>
+
+                    <option value="planifiee">
+                        Planifi&eacute;e
+                    </option>
+
+                    <option value="en_attente">
+                        En attente
+                    </option>
+
+                    <option value="non_realisee">
+                        Non r&eacute;alis&eacute;e
+                    </option>
+
+                    <option value="annulee">
+                        Annul&eacute;e
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="collectes-filter">
+
+                <label for="filtreSite">
+                    Site
+                </label>
+
+                <select id="filtreSite">
+
+                    <option value="">
+                        Tous les sites
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="collectes-filter">
+
+                <label for="filtrePeriode">
+                    P&eacute;riode
+                </label>
+
+                <select id="filtrePeriode">
+
+                    <option value="">
+                        Toutes les dates
+                    </option>
+
+                    <option value="30">
+                        30 derniers jours
+                    </option>
+
+                    <option value="90">
+                        90 derniers jours
+                    </option>
+
+                    <option value="annee">
+                        Cette ann&eacute;e
+                    </option>
+
+                </select>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             RESULTATS
+             ========================= -->
+
+        <section class="cockpit-card collectes-resultats">
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        HISTORIQUE
+                    </p>
+
+                    <h2>
+                        Collectes enregistr&eacute;es
+                    </h2>
+
+                </div>
+
+
+                <span
+                    id="nombreResultats"
+                    class="cockpit-counter"
+                >
+                    &mdash;
+                </span>
+
+            </div>
+
+
+            <div
+                id="listeCollectes"
+                class="collectes-list"
+            >
+
+                <div class="cockpit-empty">
+                    Chargement des collectes...
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/navigation.js"></script>
+
+    <script src="./js/collectes.js"></script>
+
+</body>
+
+</html>

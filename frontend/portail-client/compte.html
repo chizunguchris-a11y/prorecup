@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        Mon compte | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page compte-page">
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="cockpit-nav-wrap">
+
+            <nav
+                id="portailNavigation"
+                class="cockpit-container cockpit-nav"
+                data-page="compte"
+                aria-label="Navigation du portail client"
+            ></nav>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container compte-main">
+
+
+        <!-- =========================
+             INTRO
+             ========================= -->
+
+        <section class="compte-intro">
+
+            <div>
+
+                <p class="cockpit-kicker">
+                    VOTRE PROFIL
+                </p>
+
+                <h1>
+                    Mon compte
+                </h1>
+
+                <p>
+                    Consultez les informations associ&eacute;es
+                    &agrave; votre acc&egrave;s Pro R&eacute;cup.
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-secure">
+
+                <span class="cockpit-secure-point"></span>
+
+                Acc&egrave;s actif
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             PROFIL
+             ========================= -->
+
+        <section class="compte-grid">
+
+            <article class="cockpit-card compte-profile">
+
+                <div class="compte-profile-head">
+
+                    <div
+                        id="compteAvatar"
+                        class="compte-avatar"
+                    >
+                        C
+                    </div>
+
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            UTILISATEUR
+                        </p>
+
+                        <h2 id="compteNom">
+                            Client
+                        </h2>
+
+                        <span class="compte-role">
+                            Client Pro R&eacute;cup
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <dl class="compte-infos">
+
+                    <div>
+
+                        <dt>
+                            Adresse e-mail
+                        </dt>
+
+                        <dd id="compteEmail">
+                            &mdash;
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt>
+                            T&eacute;l&eacute;phone
+                        </dt>
+
+                        <dd id="compteTelephone">
+                            &mdash;
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt>
+                            Type d'acc&egrave;s
+                        </dt>
+
+                        <dd>
+                            Portail client
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt>
+                            S&eacute;curit&eacute;
+                        </dt>
+
+                        <dd class="compte-ok">
+                            Compte authentifi&eacute;
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+            </article>
+
+
+
+            <article class="cockpit-card compte-security">
+
+                <p class="cockpit-section-label">
+                    CONFIDENTIALIT&Eacute;
+                </p>
+
+                <h2>
+                    Vos donn&eacute;es restent isol&eacute;es
+                </h2>
+
+                <p>
+
+                    Votre compte acc&egrave;de uniquement aux
+                    entit&eacute;s, sites, collectes et preuves
+                    qui lui sont explicitement autoris&eacute;s.
+
+                </p>
+
+
+                <div class="compte-security-point">
+
+                    <span>
+                        01
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Acc&egrave;s personnel
+                        </strong>
+
+                        <small>
+                            Votre session est distincte du back-office.
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="compte-security-point">
+
+                    <span>
+                        02
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Donn&eacute;es cloisonn&eacute;es
+                        </strong>
+
+                        <small>
+                            Les ressources d'autres clients ne sont
+                            pas accessibles depuis votre compte.
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="compte-security-point">
+
+                    <span>
+                        03
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Preuves prot&eacute;g&eacute;es
+                        </strong>
+
+                        <small>
+                            Les fichiers priv&eacute;s sont ouverts
+                            au moyen de liens temporaires autoris&eacute;s.
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+
+        <!-- =========================
+             ENTITES
+             ========================= -->
+
+        <section class="cockpit-card compte-entites">
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        ACC&Egrave;S CLIENT
+                    </p>
+
+                    <h2>
+                        Entit&eacute;s accessibles
+                    </h2>
+
+                </div>
+
+
+                <span
+                    id="nombreEntites"
+                    class="cockpit-counter"
+                >
+                    &mdash;
+                </span>
+
+            </div>
+
+
+            <div
+                id="listeEntites"
+                class="compte-entites-list"
+            >
+
+                <div class="cockpit-empty">
+                    Chargement...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             ACTION
+             ========================= -->
+
+        <section class="compte-actions">
+
+            <div>
+
+                <strong>
+                    Besoin de modifier vos informations ?
+                </strong>
+
+                <p>
+
+                    La modification des donn&eacute;es du compte
+                    n'est pas encore disponible depuis le portail.
+
+                </p>
+
+            </div>
+
+
+            <button
+                id="boutonDeconnexionBas"
+                class="compte-logout"
+                type="button"
+            >
+                Se d&eacute;connecter
+            </button>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/navigation.js"></script>
+
+    <script src="./js/compte.js"></script>
+
+</body>
+
+</html>

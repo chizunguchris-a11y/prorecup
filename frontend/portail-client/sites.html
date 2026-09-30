@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        Mes sites | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page sites-page">
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="cockpit-nav-wrap">
+
+            <nav
+                id="portailNavigation"
+                class="cockpit-container cockpit-nav"
+                data-page="sites"
+                aria-label="Navigation du portail client"
+            ></nav>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container sites-main">
+
+
+        <section class="sites-intro">
+
+            <div>
+
+                <p class="cockpit-kicker">
+                    VOS IMPLANTATIONS
+                </p>
+
+                <h1>
+                    Vos sites
+                </h1>
+
+                <p id="sitesContexte">
+
+                    Retrouvez les sites accessibles
+                    &agrave; votre compte Pro R&eacute;cup.
+
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-secure">
+
+                <span class="cockpit-secure-point"></span>
+
+                Acc&egrave;s autoris&eacute;
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             RESUME
+             ========================= -->
+
+        <section class="sites-stats">
+
+            <article>
+
+                <span>
+                    Sites suivis
+                </span>
+
+                <strong id="statSitesTotal">
+                    &mdash;
+                </strong>
+
+                <small>
+                    accessibles
+                </small>
+
+            </article>
+
+
+            <article>
+
+                <span>
+                    Zones
+                </span>
+
+                <strong id="statZones">
+                    &mdash;
+                </strong>
+
+                <small>
+                    repr&eacute;sent&eacute;es
+                </small>
+
+            </article>
+
+
+            <article>
+
+                <span>
+                    R&eacute;f&eacute;rence GPS
+                </span>
+
+                <strong id="statGps">
+                    &mdash;
+                </strong>
+
+                <small>
+                    sites g&eacute;olocalis&eacute;s
+                </small>
+
+            </article>
+
+        </section>
+
+
+
+        <!-- =========================
+             RECHERCHE
+             ========================= -->
+
+        <section class="cockpit-card sites-search-card">
+
+            <label for="rechercheSites">
+                Rechercher un site
+            </label>
+
+            <input
+                id="rechercheSites"
+                type="search"
+                autocomplete="off"
+                placeholder="Nom, adresse, zone, responsable..."
+            >
+
+        </section>
+
+
+
+        <!-- =========================
+             LISTE
+             ========================= -->
+
+        <section class="cockpit-card sites-resultats">
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        IMPLANTATIONS
+                    </p>
+
+                    <h2>
+                        Sites suivis
+                    </h2>
+
+                </div>
+
+
+                <span
+                    id="nombreSitesResultats"
+                    class="cockpit-counter"
+                >
+                    &mdash;
+                </span>
+
+            </div>
+
+
+            <div
+                id="listeSitesPage"
+                class="sites-grid"
+            >
+
+                <div class="cockpit-empty">
+                    Chargement des sites...
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/navigation.js"></script>
+
+    <script src="./js/sites.js"></script>
+
+</body>
+
+</html>

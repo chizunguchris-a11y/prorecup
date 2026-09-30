@@ -365,7 +365,198 @@ const PortailRecup = {
             nombre
         ) + " kg";
 
-    }
+    },
+
+
+    statutClient: function (
+        collecte
+    ) {
+
+        const brut =
+            String(
+                collecte?.statut ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const poidsReel =
+            Number(
+                collecte?.poids_reel
+            );
+
+
+        const aPoidsReel =
+            collecte?.poids_reel !== null &&
+            collecte?.poids_reel !== undefined &&
+            Number.isFinite(
+                poidsReel
+            );
+
+
+        const preuves =
+            Number(
+                collecte?.nombre_preuves ??
+                (
+                    Array.isArray(
+                        collecte?.preuves
+                    )
+                        ? collecte.preuves.length
+                        : 0
+                )
+            );
+
+
+        const nombrePreuves =
+            Number.isFinite(
+                preuves
+            )
+                ? preuves
+                : 0;
+
+
+        if (
+            brut === "annule" ||
+            brut === "annulee"
+        ) {
+
+            return {
+                code:
+                    "annulee",
+
+                label:
+                    "Annul\u00e9e",
+
+                classe:
+                    "danger"
+            };
+
+        }
+
+
+        if (
+            brut === "echec"
+        ) {
+
+            return {
+                code:
+                    "non_realisee",
+
+                label:
+                    "Non r\u00e9alis\u00e9e",
+
+                classe:
+                    "danger"
+            };
+
+        }
+
+
+        if (
+            brut === "valide" ||
+            brut === "terminee"
+        ) {
+
+            return {
+                code:
+                    "validee",
+
+                label:
+                    "Valid\u00e9e",
+
+                classe:
+                    "success"
+            };
+
+        }
+
+
+        if (
+            aPoidsReel &&
+            nombrePreuves > 0
+        ) {
+
+            return {
+                code:
+                    "documentee",
+
+                label:
+                    "Document\u00e9e",
+
+                classe:
+                    "success"
+            };
+
+        }
+
+
+        if (
+            aPoidsReel
+        ) {
+
+            return {
+                code:
+                    "realisee",
+
+                label:
+                    "R\u00e9alis\u00e9e",
+
+                classe:
+                    "success"
+            };
+
+        }
+
+
+        if (
+            brut === "en_cours"
+        ) {
+
+            return {
+                code:
+                    "en_cours",
+
+                label:
+                    "En cours",
+
+                classe:
+                    "progress"
+            };
+
+        }
+
+
+        if (
+            brut === "planifiee"
+        ) {
+
+            return {
+                code:
+                    "planifiee",
+
+                label:
+                    "Planifi\u00e9e",
+
+                classe:
+                    "progress"
+            };
+
+        }
+
+
+        return {
+            code:
+                "en_attente",
+
+            label:
+                "En attente",
+
+            classe:
+                "neutral"
+        };
+
+    },
 
 };
 

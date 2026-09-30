@@ -51,6 +51,17 @@
         },
         {
             page:
+                "impact",
+
+            href:
+                "./impact.html",
+
+            label:
+                "Impact"
+        },
+
+        {
+            page:
                 "compte",
 
             href:

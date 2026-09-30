@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        Impact environnemental | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page impact-page">
+
+    <!-- P3.14d Impact environnemental -->
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="cockpit-nav-wrap">
+
+            <nav
+                id="portailNavigation"
+                class="cockpit-container cockpit-nav"
+                data-page="impact"
+                aria-label="Navigation du portail client"
+            ></nav>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container impact-main">
+
+
+        <section class="impact-intro">
+
+            <div>
+
+                <p class="cockpit-kicker">
+                    TRA&Ccedil;ABILIT&Eacute; ENVIRONNEMENTALE
+                </p>
+
+                <h1>
+                    Votre impact environnemental
+                </h1>
+
+                <p id="impactContexte">
+
+                    Visualisez les quantit&eacute;s r&eacute;ellement
+                    collect&eacute;es et leur niveau de documentation.
+
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-secure">
+
+                <span class="cockpit-secure-point"></span>
+
+                Donn&eacute;es mesur&eacute;es
+
+            </div>
+
+        </section>
+
+
+        <div
+            id="messageImpact"
+            class="impact-message cache"
+            role="status"
+        ></div>
+
+
+
+        <section
+            class="impact-stats"
+            aria-label="Indicateurs environnementaux"
+        >
+
+            <article class="impact-stat impact-stat-principal">
+
+                <span>
+                    Poids r&eacute;el collect&eacute;
+                </span>
+
+                <strong id="statPoidsReel">
+                    &mdash;
+                </strong>
+
+                <small>
+                    mesure terrain
+                </small>
+
+            </article>
+
+
+            <article class="impact-stat">
+
+                <span>
+                    Collectes mesur&eacute;es
+                </span>
+
+                <strong id="statCollectesMesurees">
+                    &mdash;
+                </strong>
+
+                <small id="statCollectesDetail">
+                    collectes exploitables
+                </small>
+
+            </article>
+
+
+            <article class="impact-stat">
+
+                <span>
+                    Collectes document&eacute;es
+                </span>
+
+                <strong id="statCollectesDocumentees">
+                    &mdash;
+                </strong>
+
+                <small id="statDocumentationTaux">
+                    niveau de documentation
+                </small>
+
+            </article>
+
+
+            <article class="impact-stat">
+
+                <span>
+                    Poids document&eacute;
+                </span>
+
+                <strong id="statPoidsDocumente">
+                    &mdash;
+                </strong>
+
+                <small>
+                    associ&eacute; &agrave; des preuves
+                </small>
+
+            </article>
+
+
+            <article class="impact-stat">
+
+                <span>
+                    Sites concern&eacute;s
+                </span>
+
+                <strong id="statSites">
+                    &mdash;
+                </strong>
+
+                <small>
+                    implantations mesur&eacute;es
+                </small>
+
+            </article>
+
+
+            <article class="impact-stat">
+
+                <span>
+                    Mati&egrave;res
+                </span>
+
+                <strong id="statMatieres">
+                    &mdash;
+                </strong>
+
+                <small>
+                    cat&eacute;gories distinctes
+                </small>
+
+            </article>
+
+        </section>
+
+
+
+        <section class="impact-carbone">
+
+            <div class="impact-carbone-head">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        ESTIMATION CO2e
+                    </p>
+
+                    <h2 id="carboneTitre">
+                        Impact carbone en cours de consolidation
+                    </h2>
+
+                </div>
+
+                <span
+                    id="carboneBadge"
+                    class="impact-carbone-badge"
+                >
+                    En consolidation
+                </span>
+
+            </div>
+
+
+            <strong
+                id="carboneValeur"
+                class="impact-carbone-valeur"
+            >
+                Indisponible
+            </strong>
+
+
+            <p id="carboneMessage">
+
+                Les donn&eacute;es de collecte sont disponibles.
+                L'estimation CO2e individuelle sera affich&eacute;e
+                lorsque la provenance des mati&egrave;res jusqu'&agrave;
+                leur valorisation sera suffisamment trac&eacute;e.
+
+            </p>
+
+        </section>
+
+
+
+        <section class="impact-grid">
+
+            <article class="cockpit-card impact-panel">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            MATI&Egrave;RES
+                        </p>
+
+                        <h2>
+                            R&eacute;partition du poids
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="listeMatieres"
+                    class="impact-bars"
+                >
+
+                    <div class="cockpit-empty">
+                        Chargement...
+                    </div>
+
+                </div>
+
+            </article>
+
+
+
+            <article class="cockpit-card impact-panel">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            &Eacute;VOLUTION
+                        </p>
+
+                        <h2>
+                            Historique mensuel
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="evolutionMensuelle"
+                    class="impact-evolution"
+                >
+
+                    <div class="cockpit-empty">
+                        Chargement...
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+
+        <section
+            id="blocClients"
+            class="cockpit-card impact-clients cache"
+        >
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        ENTIT&Eacute;S
+                    </p>
+
+                    <h2>
+                        Ventilation par entit&eacute; cliente
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="listeClients"
+                class="impact-clients-grid"
+            ></div>
+
+        </section>
+
+
+
+        <section class="cockpit-card impact-methodologie">
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        M&Eacute;THODOLOGIE
+                    </p>
+
+                    <h2>
+                        Comment lire ces indicateurs ?
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <p
+                id="methodologieDescription"
+                class="impact-methodologie-description"
+            >
+                Chargement de la m&eacute;thodologie...
+            </p>
+
+
+            <div class="impact-methodologie-meta">
+
+                <div>
+
+                    <span>
+                        Version
+                    </span>
+
+                    <strong id="methodologieVersion">
+                        &mdash;
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Base de mesure
+                    </span>
+
+                    <strong id="methodologieBase">
+                        &mdash;
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <section class="cockpit-promise impact-promise">
+
+            <div class="cockpit-promise-logo">
+                PR
+            </div>
+
+            <div>
+
+                <strong>
+                    Mesurer avant d'affirmer.
+                </strong>
+
+                <p>
+
+                    Pro R&eacute;cup distingue les donn&eacute;es
+                    effectivement mesur&eacute;es des estimations
+                    environnementales encore en consolidation.
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/navigation.js"></script>
+
+    <script src="./js/impact.js"></script>
+
+</body>
+
+</html>

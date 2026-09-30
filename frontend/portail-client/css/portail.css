@@ -4267,3 +4267,431 @@ a {
     }
 
 }
+/* === P3.14d IMPACT ENVIRONNEMENTAL === */
+
+.impact-main {
+    padding-top: 35px;
+    padding-bottom: 65px;
+}
+
+.impact-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 28px;
+    margin-bottom: 25px;
+}
+
+.impact-intro h1 {
+    margin: 0;
+    font-size: clamp(36px, 4.8vw, 54px);
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+.impact-intro > div > p:last-child {
+    max-width: 650px;
+    margin: 10px 0 0;
+    color: #6f7b75;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.impact-message {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border: 1px solid #efcfca;
+    border-radius: 13px;
+    background: #fef5f3;
+    color: #a73529;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.impact-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.impact-stat {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #dfe6e2;
+    border-radius: 17px;
+    background: #ffffff;
+}
+
+.impact-stat-principal {
+    border-color: #cfe3d9;
+    background:
+        linear-gradient(
+            145deg,
+            #fbfdfc,
+            #edf6f1
+        );
+}
+
+.impact-stat > span {
+    display: block;
+    color: #76817c;
+    font-size: 8px;
+}
+
+.impact-stat > strong {
+    display: block;
+    margin-top: 9px;
+    color: #17241f;
+    font-size: clamp(23px, 3vw, 29px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+}
+
+.impact-stat > small {
+    display: block;
+    margin-top: 6px;
+    color: #919a96;
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+.impact-carbone {
+    margin-bottom: 16px;
+    padding: 24px;
+    border: 1px solid #e7dcc6;
+    border-radius: 19px;
+    background:
+        linear-gradient(
+            145deg,
+            #fffdf8,
+            #faf5e9
+        );
+}
+
+.impact-carbone-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 22px;
+}
+
+.impact-carbone-head h2 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.025em;
+}
+
+.impact-carbone-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid #e5d5b7;
+    border-radius: 999px;
+    background: #fff9ec;
+    color: #8b6424;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.impact-carbone-badge.disponible {
+    border-color: #cce4d7;
+    background: #edf8f2;
+    color: #16794b;
+}
+
+.impact-carbone-valeur {
+    display: block;
+    margin-top: 22px;
+    color: #65512e;
+    font-size: clamp(25px, 3.5vw, 34px);
+    letter-spacing: -0.035em;
+}
+
+.impact-carbone > p {
+    max-width: 820px;
+    margin: 9px 0 0;
+    color: #796d59;
+    font-size: 9px;
+    line-height: 1.65;
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.impact-panel {
+    padding-top: 22px;
+}
+
+.impact-bars,
+.impact-evolution {
+    display: grid;
+    gap: 4px;
+}
+
+.impact-bar-row,
+.impact-month-row {
+    padding: 16px 0;
+    border-top: 1px solid #edf0ee;
+}
+
+.impact-bar-row:first-child,
+.impact-month-row:first-child {
+    padding-top: 2px;
+    border-top: 0;
+}
+
+.impact-bar-head,
+.impact-month-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.impact-bar-head strong,
+.impact-month-top strong {
+    display: block;
+    font-size: 10px;
+}
+
+.impact-bar-head small,
+.impact-month-top small {
+    display: block;
+    margin-top: 4px;
+    color: #838d88;
+    font-size: 7.5px;
+}
+
+.impact-bar-head > span,
+.impact-month-top > span {
+    flex: 0 0 auto;
+    color: #23342e;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.impact-bar-track,
+.impact-month-track {
+    overflow: hidden;
+    height: 7px;
+    margin-top: 10px;
+    border-radius: 999px;
+    background: #edf2ef;
+}
+
+.impact-bar-track > span,
+.impact-month-track > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(
+            90deg,
+            #2b745d,
+            #65a98f
+        );
+}
+
+.impact-month-track > span {
+    background:
+        linear-gradient(
+            90deg,
+            #356f5d,
+            #88b7a5
+        );
+}
+
+.impact-bar-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 7px;
+    color: #909994;
+    font-size: 7px;
+}
+
+.impact-clients {
+    margin-bottom: 16px;
+    padding-top: 22px;
+}
+
+.impact-clients-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+        );
+    gap: 12px;
+}
+
+.impact-client-card {
+    padding: 17px;
+    border: 1px solid #e1e8e4;
+    border-radius: 14px;
+    background: #fbfcfb;
+}
+
+.impact-client-card > span {
+    display: block;
+    color: #7c8782;
+    font-size: 7px;
+    text-transform: capitalize;
+}
+
+.impact-client-card > strong {
+    display: block;
+    margin-top: 5px;
+    font-size: 10px;
+}
+
+.impact-client-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.impact-client-meta > div {
+    padding-top: 10px;
+    border-top: 1px solid #e9eeeb;
+}
+
+.impact-client-meta small {
+    display: block;
+    color: #8a938f;
+    font-size: 6.8px;
+}
+
+.impact-client-meta b {
+    display: block;
+    margin-top: 4px;
+    color: #2b3933;
+    font-size: 8px;
+}
+
+.impact-methodologie {
+    margin-bottom: 16px;
+    padding-top: 22px;
+}
+
+.impact-methodologie-description {
+    max-width: 850px;
+    margin: 0;
+    color: #717d77;
+    font-size: 9px;
+    line-height: 1.7;
+}
+
+.impact-methodologie-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.impact-methodologie-meta > div {
+    padding: 13px;
+    border-radius: 11px;
+    background: #f5f8f6;
+}
+
+.impact-methodologie-meta span {
+    display: block;
+    color: #85908a;
+    font-size: 7px;
+}
+
+.impact-methodologie-meta strong {
+    display: block;
+    margin-top: 4px;
+    color: #2c3934;
+    font-size: 8.5px;
+    overflow-wrap: anywhere;
+}
+
+.impact-promise {
+    margin-top: 0;
+}
+
+
+@media (max-width: 860px) {
+
+    .impact-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .impact-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 620px) {
+
+    .impact-main {
+        padding-top: 26px;
+    }
+
+    .impact-intro {
+        display: block;
+    }
+
+    .impact-intro h1 {
+        font-size: 38px;
+    }
+
+    .impact-intro .cockpit-secure {
+        margin-top: 14px;
+    }
+
+    .impact-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .impact-carbone {
+        padding: 19px;
+    }
+
+    .impact-carbone-head {
+        display: block;
+    }
+
+    .impact-carbone-badge {
+        margin-top: 13px;
+    }
+
+    .impact-bar-head,
+    .impact-month-top {
+        align-items: flex-start;
+    }
+
+    .impact-bar-foot {
+        display: block;
+    }
+
+    .impact-bar-foot span {
+        display: block;
+        margin-top: 3px;
+    }
+
+    .impact-client-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .impact-methodologie-meta {
+        grid-template-columns: 1fr;
+    }
+
+}

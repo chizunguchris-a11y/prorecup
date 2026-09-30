@@ -92,13 +92,21 @@ const estProduction =
 
 const originesAutorisees = [
     "http://localhost:5000",
-    "http://127.0.0.1:5000"
+    "http://127.0.0.1:5000",
+    "https://prorecup-frontend.onrender.com"
 ];
 
-if (process.env.FRONTEND_URL) {
+if (
+    process.env.FRONTEND_URL &&
+    !originesAutorisees.includes(
+        process.env.FRONTEND_URL
+    )
+) {
+
     originesAutorisees.push(
         process.env.FRONTEND_URL
     );
+
 }
 
 app.use(
@@ -109,15 +117,26 @@ app.use(
         ) => {
 
             /*
-             * En développement, Pro Récup est encore
-             * ouvert directement depuis le disque.
+             * Sans Origin : script, monitoring, API client,
+             * serveur-a-serveur. Ce n est pas une requete
+             * CORS provenant d un navigateur.
+             */
+            if (!origine) {
+
+                return callback(
+                    null,
+                    true
+                );
+
+            }
+
+            /*
+             * Autorise l ouverture locale depuis le disque
+             * uniquement hors production.
              */
             if (
                 !estProduction &&
-                (
-                    !origine ||
-                    origine === "null"
-                )
+                origine === "null"
             ) {
 
                 return callback(
@@ -128,7 +147,6 @@ app.use(
             }
 
             if (
-                origine &&
                 originesAutorisees.includes(
                     origine
                 )
@@ -141,10 +159,16 @@ app.use(
 
             }
 
-            return callback(
+            const erreurCors =
                 new Error(
-                    "Origine non autorisée par CORS."
-                )
+                    "Origine non autorisee par CORS."
+                );
+
+            erreurCors.statut =
+                403;
+
+            return callback(
+                erreurCors
             );
 
         },
@@ -153,7 +177,6 @@ app.use(
             true
     })
 );
-
 app.use(
     express.json({
         limit:

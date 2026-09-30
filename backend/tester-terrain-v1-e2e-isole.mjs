@@ -228,7 +228,7 @@ async function fixtures() {
         await insert(connection, 'utilisateurs', { id: ids.user, nom: label, email, mot_de_passe: await bcrypt.hash(password, 10), organisation_id: ids.org, role_id: role.id, actif: true });
         await insert(connection, 'agents', { id: ids.agent, utilisateur_id: ids.user, statut: 'actif', disponible: true });
         await insert(connection, 'tricycles', { id: ids.tricycle, organisation_id: ids.org, numero_interne: label, plaque_identification: label, capacite_kg: 300, statut: 'disponible', etat: 'bon' });
-        await insert(connection, 'clients', { id: ids.client, organisation_id: ids.org, nom: label, type_client: 'Entreprise' });
+        await insert(connection, 'clients', { id: ids.client, organisation_id: ids.org, nom: label, type_client: 'entreprise' });
         await insert(connection, 'sites_de_collecte', { id: ids.site, organisation_id: ids.org, nom: label, latitude: gps.latitude, longitude: gps.longitude, precision_gps_reference: 5, rayon_validation_m: 100 });
         await insert(connection, 'collectes', { id: ids.collecte, site_id: ids.site, client_id: ids.client, agent_id: ids.user, type_dechet_id: type.id, poids_estime: 12, statut: 'en_attente' });
         await insert(connection, 'missions', { id: ids.mission, organisation_id: ids.org, agent_id: ids.agent, tricycle_id: ids.tricycle, date_prevue: new Date().toISOString().slice(0, 10), heure_depart_prevue: '08:00', heure_retour_prevue: '16:00', statut: 'planifiee', observations: label, cree_par: ids.user });

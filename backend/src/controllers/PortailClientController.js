@@ -133,6 +133,80 @@ const portailClientController = {
     ),
 
 
+    impact: asyncHandler(
+        async (req, res) => {
+
+            const mesures =
+                await portailClientRepository
+                    .obtenirImpactAutorise(
+                        req.portailClient
+                            .utilisateur_id,
+                        req.portailClient
+                            .organisation_id
+                    );
+
+
+            const donnees = {
+
+                resume:
+                    mesures.resume,
+
+                repartition_matieres:
+                    mesures.repartition_matieres,
+
+                evolution_mensuelle:
+                    mesures.evolution_mensuelle,
+
+                par_client:
+                    mesures.par_client,
+
+
+                carbone: {
+
+                    disponible:
+                        false,
+
+                    co2e_estime_kg:
+                        null,
+
+                    statut:
+                        "en_consolidation",
+
+                    raison_code:
+                        "PROVENANCE_VALORISATION_INSUFFISANTE",
+
+                    message:
+                        "L'estimation CO2e individuelle sera disponible lorsque la provenance des matieres jusqu'a leur valorisation sera suffisamment tracee."
+
+                },
+
+
+                methodologie: {
+
+                    version:
+                        "collectes-mesurees-v1",
+
+                    base_mesure:
+                        "poids_reel",
+
+                    description:
+                        "Les indicateurs affiches reposent sur les poids reels des collectes autorisees au compte. Les collectes annulees ou explicitement echouees sont exclues des mesures d'impact."
+
+                }
+
+            };
+
+
+            return ApiResponse.success(
+                res,
+                "Impact environnemental du portail client recupere avec succes.",
+                donnees
+            );
+
+        }
+    ),
+
+
     detailCollecte: asyncHandler(
         async (req, res) => {
 

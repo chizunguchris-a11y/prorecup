@@ -284,6 +284,316 @@ class PortailClientRepository {
 
     }
 
+    async obtenirImpactAutorise(
+        utilisateurId,
+        organisationId,
+        connexion = pool
+    ) {
+
+        const requete = [
+
+            "WITH clients_autorises AS (",
+
+            "    SELECT DISTINCT",
+            "        c.id AS client_id,",
+            "        c.nom AS client_nom,",
+            "        c.type_client,",
+            "        c.organisation_id",
+
+            "    FROM client_utilisateurs cu",
+
+            "    JOIN clients c",
+            "      ON c.id = cu.client_id",
+            "     AND c.organisation_id = cu.organisation_id",
+
+            "    WHERE cu.utilisateur_id = $1",
+            "      AND cu.organisation_id = $2",
+            "      AND cu.actif = TRUE",
+
+            "),",
+
+            "collectes_autorisees AS (",
+
+            "    SELECT",
+            "        co.id AS collecte_id,",
+            "        ca.client_id,",
+            "        ca.client_nom,",
+            "        ca.type_client,",
+            "        s.id AS site_id,",
+            "        s.nom AS site_nom,",
+            "        co.type_dechet_id,",
+            "        COALESCE(td.nom, 'Non renseigne') AS type_dechet,",
+            "        co.date_collecte,",
+            "        co.poids_reel,",
+            "        co.statut,",
+            "        co.resultat_terrain,",
+
+            "        EXISTS (",
+            "            SELECT 1",
+            "            FROM preuves_collecte pc",
+            "            WHERE pc.collecte_id = co.id",
+            "              AND pc.organisation_id = ca.organisation_id",
+            "        ) AS documentee",
+
+            "    FROM clients_autorises ca",
+
+            "    JOIN collectes co",
+            "      ON co.client_id = ca.client_id",
+
+            "    JOIN sites_de_collecte s",
+            "      ON s.id = co.site_id",
+            "     AND s.organisation_id = ca.organisation_id",
+
+            "    LEFT JOIN types_dechets td",
+            "      ON td.id = co.type_dechet_id",
+
+            "),",
+
+            "collectes_mesurees AS (",
+
+            "    SELECT *",
+
+            "    FROM collectes_autorisees",
+
+            "    WHERE poids_reel IS NOT NULL",
+            "      AND poids_reel > 0",
+
+            "      AND LOWER(COALESCE(statut, ''))",
+            "          NOT IN ('annule', 'annulee', 'echec')",
+
+            "      AND LOWER(COALESCE(resultat_terrain, ''))",
+            "          <> 'echec'",
+
+            "),",
+
+            "resume AS (",
+
+            "    SELECT",
+
+            "        (",
+            "            SELECT COUNT(*)::integer",
+            "            FROM collectes_autorisees",
+            "        ) AS collectes_total,",
+
+            "        COUNT(*)::integer",
+            "            AS collectes_mesurees,",
+
+            "        COUNT(*) FILTER (",
+            "            WHERE documentee = TRUE",
+            "        )::integer",
+            "            AS collectes_documentees,",
+
+            "        COALESCE(",
+            "            SUM(poids_reel),",
+            "            0",
+            "        ) AS poids_reel_kg,",
+
+            "        COALESCE(",
+            "            SUM(poids_reel) FILTER (",
+            "                WHERE documentee = TRUE",
+            "            ),",
+            "            0",
+            "        ) AS poids_documente_kg,",
+
+            "        COUNT(DISTINCT site_id) FILTER (",
+            "            WHERE site_id IS NOT NULL",
+            "        )::integer",
+            "            AS sites_concernes,",
+
+            "        COUNT(DISTINCT type_dechet_id) FILTER (",
+            "            WHERE type_dechet_id IS NOT NULL",
+            "        )::integer",
+            "            AS matieres_distinctes,",
+
+            "        (",
+            "            SELECT COUNT(*)::integer",
+            "            FROM clients_autorises",
+            "        ) AS clients_couverts",
+
+            "    FROM collectes_mesurees",
+
+            "),",
+
+            "matieres AS (",
+
+            "    SELECT",
+            "        type_dechet_id,",
+            "        type_dechet,",
+            "        COUNT(*)::integer AS nombre_collectes,",
+            "        SUM(poids_reel) AS poids_reel_kg,",
+
+            "        COALESCE(",
+            "            SUM(poids_reel) FILTER (",
+            "                WHERE documentee = TRUE",
+            "            ),",
+            "            0",
+            "        ) AS poids_documente_kg",
+
+            "    FROM collectes_mesurees",
+
+            "    GROUP BY",
+            "        type_dechet_id,",
+            "        type_dechet",
+
+            "),",
+
+            "evolution AS (",
+
+            "    SELECT",
+            "        DATE_TRUNC('month', date_collecte) AS mois,",
+            "        COUNT(*)::integer AS nombre_collectes,",
+            "        SUM(poids_reel) AS poids_reel_kg,",
+
+            "        COALESCE(",
+            "            SUM(poids_reel) FILTER (",
+            "                WHERE documentee = TRUE",
+            "            ),",
+            "            0",
+            "        ) AS poids_documente_kg",
+
+            "    FROM collectes_mesurees",
+
+            "    WHERE date_collecte IS NOT NULL",
+
+            "    GROUP BY",
+            "        DATE_TRUNC('month', date_collecte)",
+
+            "),",
+
+            "par_client AS (",
+
+            "    SELECT",
+            "        client_id,",
+            "        client_nom,",
+            "        type_client,",
+            "        COUNT(*)::integer AS nombre_collectes,",
+            "        SUM(poids_reel) AS poids_reel_kg,",
+
+            "        COALESCE(",
+            "            SUM(poids_reel) FILTER (",
+            "                WHERE documentee = TRUE",
+            "            ),",
+            "            0",
+            "        ) AS poids_documente_kg",
+
+            "    FROM collectes_mesurees",
+
+            "    GROUP BY",
+            "        client_id,",
+            "        client_nom,",
+            "        type_client",
+
+            ")",
+
+            "SELECT",
+
+            "    jsonb_build_object(",
+            "        'collectes_total',",
+            "            r.collectes_total,",
+            "        'collectes_mesurees',",
+            "            r.collectes_mesurees,",
+            "        'collectes_documentees',",
+            "            r.collectes_documentees,",
+            "        'poids_reel_kg',",
+            "            r.poids_reel_kg,",
+            "        'poids_documente_kg',",
+            "            r.poids_documente_kg,",
+            "        'taux_documentation_poids_pct',",
+            "            CASE",
+            "                WHEN r.poids_reel_kg > 0",
+            "                THEN ROUND(",
+            "                    (",
+            "                        r.poids_documente_kg",
+            "                        / r.poids_reel_kg",
+            "                    ) * 100,",
+            "                    2",
+            "                )",
+            "                ELSE 0",
+            "            END,",
+            "        'sites_concernes',",
+            "            r.sites_concernes,",
+            "        'matieres_distinctes',",
+            "            r.matieres_distinctes,",
+            "        'clients_couverts',",
+            "            r.clients_couverts",
+            "    ) AS resume,",
+
+            "    COALESCE(",
+            "        (",
+            "            SELECT jsonb_agg(",
+            "                jsonb_build_object(",
+            "                    'type_dechet_id', m.type_dechet_id,",
+            "                    'type_dechet', m.type_dechet,",
+            "                    'nombre_collectes', m.nombre_collectes,",
+            "                    'poids_reel_kg', m.poids_reel_kg,",
+            "                    'poids_documente_kg', m.poids_documente_kg",
+            "                )",
+            "                ORDER BY",
+            "                    m.poids_reel_kg DESC,",
+            "                    m.type_dechet ASC",
+            "            )",
+            "            FROM matieres m",
+            "        ),",
+            "        '[]'::jsonb",
+            "    ) AS repartition_matieres,",
+
+            "    COALESCE(",
+            "        (",
+            "            SELECT jsonb_agg(",
+            "                jsonb_build_object(",
+            "                    'periode', TO_CHAR(e.mois, 'YYYY-MM'),",
+            "                    'date_debut', e.mois,",
+            "                    'nombre_collectes', e.nombre_collectes,",
+            "                    'poids_reel_kg', e.poids_reel_kg,",
+            "                    'poids_documente_kg', e.poids_documente_kg",
+            "                )",
+            "                ORDER BY e.mois ASC",
+            "            )",
+            "            FROM evolution e",
+            "        ),",
+            "        '[]'::jsonb",
+            "    ) AS evolution_mensuelle,",
+
+            "    COALESCE(",
+            "        (",
+            "            SELECT jsonb_agg(",
+            "                jsonb_build_object(",
+            "                    'client_id', p.client_id,",
+            "                    'client_nom', p.client_nom,",
+            "                    'type_client', p.type_client,",
+            "                    'nombre_collectes', p.nombre_collectes,",
+            "                    'poids_reel_kg', p.poids_reel_kg,",
+            "                    'poids_documente_kg', p.poids_documente_kg",
+            "                )",
+            "                ORDER BY",
+            "                    p.client_nom ASC,",
+            "                    p.client_id ASC",
+            "            )",
+            "            FROM par_client p",
+            "        ),",
+            "        '[]'::jsonb",
+            "    ) AS par_client",
+
+            "FROM resume r;"
+
+        ].join("\n");
+
+
+        const resultat =
+            await connexion.query(
+                requete,
+                [
+                    utilisateurId,
+                    organisationId
+                ]
+            );
+
+
+        return resultat.rows[0];
+
+    }
+
+
     async trouverCollecteAutorisee(
         utilisateurId,
         organisationId,

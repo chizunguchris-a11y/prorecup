@@ -91,6 +91,31 @@ router.get(
 
 /**
  * @swagger
+ * /api/portail-client/impact:
+ *   get:
+ *     summary: Consulter les indicateurs environnementaux autorises
+ *     tags:
+ *       - Portail Client
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Indicateurs environnementaux recuperes.
+ *       401:
+ *         description: Authentification requise.
+ *       403:
+ *         description: Acces portail client refuse.
+ */
+router.get(
+    "/impact",
+    authMiddleware,
+    portailClientContextMiddleware,
+    portailClientController.impact
+);
+
+
+/**
+ * @swagger
  * /api/portail-client/collectes/{id}:
  *   get:
  *     summary: Consulter le detail d'une collecte autorisee

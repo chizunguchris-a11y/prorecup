@@ -355,6 +355,30 @@ const afficherDerniereCollecte = (
         collectes[0];
 
 
+    const lienDetail =
+        element(
+            "lienDerniereCollecte"
+        );
+
+
+    if (
+        lienDetail &&
+        collecte.collecte_id
+    ) {
+
+        lienDetail.href =
+            "./collecte.html?id=" +
+            encodeURIComponent(
+                collecte.collecte_id
+            );
+
+        lienDetail.classList.remove(
+            "cache"
+        );
+
+    }
+
+
     element(
         "derniereCollecteSite"
     ).textContent =
@@ -589,11 +613,17 @@ const afficherHistorique = (
 
                 const ligne =
                     document.createElement(
-                        "article"
+                        "a"
                     );
 
                 ligne.className =
                     "cockpit-history-row";
+
+                ligne.href =
+                    "./collecte.html?id=" +
+                    encodeURIComponent(
+                        collecte.collecte_id
+                    );
 
 
                 const principal =

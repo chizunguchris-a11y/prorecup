@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        D&eacute;tail collecte | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page detail-page">
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container detail-main">
+
+        <a
+            class="detail-back"
+            href="./accueil.html"
+        >
+            &larr; Retour au cockpit
+        </a>
+
+
+        <section id="detailChargement">
+
+            <div class="detail-loading">
+
+                Chargement de la collecte...
+
+            </div>
+
+        </section>
+
+
+        <section
+            id="detailErreur"
+            class="detail-error cache"
+            aria-live="polite"
+        >
+
+            <strong>
+                Impossible d'afficher cette collecte.
+            </strong>
+
+            <p id="detailErreurTexte">
+                Une erreur est survenue.
+            </p>
+
+            <a href="./accueil.html">
+                Retour au cockpit
+            </a>
+
+        </section>
+
+
+        <div
+            id="detailContenu"
+            class="cache"
+        >
+
+
+            <!-- =========================
+                 EN-TETE COLLECTE
+                 ========================= -->
+
+            <section class="detail-hero">
+
+                <div>
+
+                    <p class="cockpit-kicker">
+                        D&Eacute;TAIL DE LA COLLECTE
+                    </p>
+
+                    <h1 id="detailSite">
+                        Collecte
+                    </h1>
+
+                    <p
+                        id="detailClient"
+                        class="detail-client"
+                    >
+                        &mdash;
+                    </p>
+
+                </div>
+
+
+                <span
+                    id="detailStatut"
+                    class="cockpit-status neutral"
+                >
+                    &mdash;
+                </span>
+
+            </section>
+
+
+
+            <!-- =========================
+                 RESUME
+                 ========================= -->
+
+            <section class="detail-summary">
+
+                <article>
+
+                    <span>
+                        Date
+                    </span>
+
+                    <strong id="detailDate">
+                        &mdash;
+                    </strong>
+
+                </article>
+
+
+                <article>
+
+                    <span>
+                        Mati&egrave;re
+                    </span>
+
+                    <strong id="detailType">
+                        &mdash;
+                    </strong>
+
+                </article>
+
+
+                <article>
+
+                    <span id="detailPoidsLabel">
+                        Poids
+                    </span>
+
+                    <strong id="detailPoids">
+                        &mdash;
+                    </strong>
+
+                </article>
+
+
+                <article>
+
+                    <span>
+                        Preuves
+                    </span>
+
+                    <strong id="detailNombrePreuves">
+                        &mdash;
+                    </strong>
+
+                </article>
+
+            </section>
+
+
+
+            <!-- =========================
+                 INFORMATIONS
+                 ========================= -->
+
+            <section class="detail-grid">
+
+                <article class="cockpit-card detail-info">
+
+                    <div class="cockpit-card-heading">
+
+                        <div>
+
+                            <p class="cockpit-section-label">
+                                OP&Eacute;RATION
+                            </p>
+
+                            <h2>
+                                Informations de collecte
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <dl class="detail-list">
+
+                        <div>
+
+                            <dt>
+                                Site
+                            </dt>
+
+                            <dd id="detailSiteInfo">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+
+                        <div>
+
+                            <dt>
+                                Adresse
+                            </dt>
+
+                            <dd id="detailAdresse">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+
+                        <div>
+
+                            <dt>
+                                Zone
+                            </dt>
+
+                            <dd id="detailZone">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+
+                        <div>
+
+                            <dt>
+                                Agent de valorisation carbone
+                            </dt>
+
+                            <dd id="detailAgent">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+
+                        <div>
+
+                            <dt>
+                                Poids estim&eacute;
+                            </dt>
+
+                            <dd id="detailPoidsEstime">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+
+                        <div>
+
+                            <dt>
+                                Poids r&eacute;el
+                            </dt>
+
+                            <dd id="detailPoidsReel">
+                                &mdash;
+                            </dd>
+
+                        </div>
+
+                    </dl>
+
+                </article>
+
+
+
+                <article class="cockpit-card detail-trace-card">
+
+                    <div class="cockpit-card-heading">
+
+                        <div>
+
+                            <p class="cockpit-section-label">
+                                TRA&Ccedil;ABILIT&Eacute;
+                            </p>
+
+                            <h2>
+                                Parcours de la collecte
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="detail-trace">
+
+                        <div
+                            id="detailTraceCollecte"
+                            class="cockpit-trace-step"
+                        >
+
+                            <span class="cockpit-trace-dot">
+                                1
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Collecte
+                                </strong>
+
+                                <small>
+                                    Op&eacute;ration enregistr&eacute;e
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="detailTracePesee"
+                            class="cockpit-trace-step"
+                        >
+
+                            <span class="cockpit-trace-dot">
+                                2
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Pes&eacute;e
+                                </strong>
+
+                                <small id="detailTracePeseeTexte">
+                                    &mdash;
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="detailTracePreuves"
+                            class="cockpit-trace-step"
+                        >
+
+                            <span class="cockpit-trace-dot">
+                                3
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Preuves
+                                </strong>
+
+                                <small id="detailTracePreuvesTexte">
+                                    &mdash;
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="cockpit-trace-step cockpit-trace-future">
+
+                            <span class="cockpit-trace-dot">
+                                4
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Valorisation
+                                </strong>
+
+                                <small>
+                                    Donn&eacute;e non disponible
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+
+            <!-- =========================
+                 PESEES
+                 ========================= -->
+
+            <section class="cockpit-card detail-section">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            MESURES
+                        </p>
+
+                        <h2>
+                            Pes&eacute;es
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="detailNombrePesees"
+                        class="cockpit-counter"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="listePesees"
+                    class="detail-measures"
+                ></div>
+
+            </section>
+
+
+
+            <!-- =========================
+                 PREUVES
+                 ========================= -->
+
+            <section class="cockpit-card detail-section">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            PREUVES TERRAIN
+                        </p>
+
+                        <h2>
+                            &Eacute;l&eacute;ments de tra&ccedil;abilit&eacute;
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="detailNombrePreuvesBis"
+                        class="cockpit-counter"
+                    >
+                        0
+                    </span>
+
+                </div>
+
+
+                <p class="detail-proof-intro">
+
+                    Les fichiers sont ouverts au moyen d'un lien
+                    priv&eacute; temporaire g&eacute;n&eacute;r&eacute;
+                    au moment de votre demande.
+
+                </p>
+
+
+                <div
+                    id="listePreuves"
+                    class="detail-proofs"
+                ></div>
+
+            </section>
+
+
+        </div>
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/collecte.js"></script>
+
+</body>
+
+</html>

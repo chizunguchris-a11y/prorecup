@@ -803,7 +803,7 @@
                     ? pourcentage(
                         resume.taux_documentation_poids_pct
                     ) +
-                        " du poids document\u00e9"
+                        " du poids mesur\u00e9 est document\u00e9"
                     : "taux indisponible";
 
 

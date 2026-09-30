@@ -4695,3 +4695,29 @@ a {
     }
 
 }
+
+
+/* === P3.14e FINITIONS MOBILE PORTAIL === */
+
+@media (max-width: 640px) {
+
+    .cockpit-header {
+        min-height: auto;
+    }
+
+    .cockpit-header-inner {
+        padding-top: 14px;
+        padding-bottom: 14px;
+    }
+
+    .cockpit-user {
+        gap: 8px;
+    }
+
+    .cockpit-logout {
+        min-height: 44px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+}

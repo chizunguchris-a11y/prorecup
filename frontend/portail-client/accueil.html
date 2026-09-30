@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#f4f7f5"
+    >
+
+    <title>
+        Mon espace | Pro R&eacute;cup
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./css/portail.css"
+    >
+
+</head>
+
+
+<body class="cockpit-page">
+
+    <header class="cockpit-header">
+
+        <div class="cockpit-container cockpit-header-inner">
+
+            <a
+                class="cockpit-brand"
+                href="./accueil.html"
+            >
+
+                <span class="cockpit-logo">
+                    PR
+                </span>
+
+                <span class="cockpit-brand-text">
+
+                    <strong>
+                        Pro R&eacute;cup
+                    </strong>
+
+                    <small>
+                        Portail Client
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <div class="cockpit-user">
+
+                <div class="cockpit-user-identite">
+
+                    <span
+                        id="initialeUtilisateur"
+                        class="cockpit-avatar"
+                    >
+                        C
+                    </span>
+
+                    <span class="cockpit-user-text">
+
+                        <strong id="nomUtilisateurEntete">
+                            Client
+                        </strong>
+
+                        <small>
+                            Espace s&eacute;curis&eacute;
+                        </small>
+
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="boutonDeconnexion"
+                    class="cockpit-logout"
+                    type="button"
+                >
+                    D&eacute;connexion
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <main class="cockpit-container cockpit-main">
+
+
+        <!-- =========================
+             INTRO
+             ========================= -->
+
+        <section class="cockpit-intro">
+
+            <div>
+
+                <p class="cockpit-kicker">
+                    VOTRE ESPACE PRO R&Eacute;CUP
+                </p>
+
+                <h1>
+
+                    Bonjour,
+                    <span id="nomUtilisateur">
+                        Client
+                    </span>.
+
+                </h1>
+
+                <p
+                    id="contexteClient"
+                    class="cockpit-client"
+                >
+                    Chargement de votre espace...
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-secure">
+
+                <span class="cockpit-secure-point"></span>
+
+                Donn&eacute;es s&eacute;curis&eacute;es
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             RESUME DU MOIS
+             ========================= -->
+
+        <section class="cockpit-summary">
+
+            <div class="cockpit-summary-main">
+
+                <p class="cockpit-summary-label">
+                    CE MOIS
+                </p>
+
+                <div class="cockpit-summary-value">
+
+                    <strong id="statPoids">
+                        &mdash;
+                    </strong>
+
+                </div>
+
+                <p class="cockpit-summary-caption">
+                    de poids r&eacute;el enregistr&eacute;
+                    sur vos collectes ce mois-ci
+                </p>
+
+            </div>
+
+
+            <div class="cockpit-summary-stats">
+
+                <article>
+
+                    <span>
+                        Collectes
+                    </span>
+
+                    <strong id="statCollectes">
+                        &mdash;
+                    </strong>
+
+                    <small>
+                        ce mois
+                    </small>
+
+                </article>
+
+
+                <article>
+
+                    <span>
+                        Sites
+                    </span>
+
+                    <strong id="statSites">
+                        &mdash;
+                    </strong>
+
+                    <small>
+                        suivis
+                    </small>
+
+                </article>
+
+
+                <article>
+
+                    <span>
+                        Preuves
+                    </span>
+
+                    <strong id="statPreuves">
+                        &mdash;
+                    </strong>
+
+                    <small>
+                        ce mois
+                    </small>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             DERNIERE COLLECTE
+             ========================= -->
+
+        <section class="cockpit-grid-principal">
+
+            <article class="cockpit-card cockpit-latest">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            DERNI&Egrave;RE COLLECTE
+                        </p>
+
+                        <h2 id="derniereCollecteSite">
+                            Chargement...
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="derniereCollecteStatut"
+                        class="cockpit-status"
+                    >
+                        &mdash;
+                    </span>
+
+                </div>
+
+
+                <div class="cockpit-latest-meta">
+
+                    <div>
+
+                        <span>
+                            Date
+                        </span>
+
+                        <strong id="derniereCollecteDate">
+                            &mdash;
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Mati&egrave;re
+                        </span>
+
+                        <strong id="derniereCollecteType">
+                            &mdash;
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span id="derniereCollectePoidsLabel">
+                            Poids
+                        </span>
+
+                        <strong id="derniereCollectePoids">
+                            &mdash;
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="cockpit-trace">
+
+                    <div class="cockpit-trace-title">
+
+                        <strong>
+                            Parcours de tra&ccedil;abilit&eacute;
+                        </strong>
+
+                        <span>
+                            &Eacute;tat actuel
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="traceCollecte"
+                        class="cockpit-trace-step"
+                    >
+
+                        <span class="cockpit-trace-dot">
+                            1
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Collecte
+                            </strong>
+
+                            <small id="traceCollecteTexte">
+                                Enregistr&eacute;e
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="tracePesee"
+                        class="cockpit-trace-step"
+                    >
+
+                        <span class="cockpit-trace-dot">
+                            2
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Pes&eacute;e
+                            </strong>
+
+                            <small id="tracePeseeTexte">
+                                &mdash;
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="tracePreuves"
+                        class="cockpit-trace-step"
+                    >
+
+                        <span class="cockpit-trace-dot">
+                            3
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Preuves
+                            </strong>
+
+                            <small id="tracePreuvesTexte">
+                                &mdash;
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="traceValorisation"
+                        class="cockpit-trace-step cockpit-trace-future"
+                    >
+
+                        <span class="cockpit-trace-dot">
+                            4
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Valorisation
+                            </strong>
+
+                            <small>
+                                Suivi d&eacute;taill&eacute; &agrave; venir
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+
+            <!-- =========================
+                 SITES
+                 ========================= -->
+
+            <article class="cockpit-card cockpit-sites">
+
+                <div class="cockpit-card-heading">
+
+                    <div>
+
+                        <p class="cockpit-section-label">
+                            VOS SITES
+                        </p>
+
+                        <h2>
+                            Implantations suivies
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="totalSites"
+                        class="cockpit-counter"
+                    >
+                        &mdash;
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="listeSites"
+                    class="cockpit-sites-list"
+                >
+
+                    <div class="cockpit-empty">
+                        Chargement...
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+
+        <!-- =========================
+             HISTORIQUE
+             ========================= -->
+
+        <section
+            id="historique"
+            class="cockpit-card cockpit-history"
+        >
+
+            <div class="cockpit-card-heading">
+
+                <div>
+
+                    <p class="cockpit-section-label">
+                        ACTIVIT&Eacute; R&Eacute;CENTE
+                    </p>
+
+                    <h2>
+                        Historique des collectes
+                    </h2>
+
+                </div>
+
+
+                <span
+                    id="totalCollectes"
+                    class="cockpit-counter"
+                >
+                    &mdash;
+                </span>
+
+            </div>
+
+
+            <div
+                id="listeCollectesRecentes"
+                class="cockpit-history-list"
+            >
+
+                <div class="cockpit-empty">
+                    Chargement des collectes...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             PROMESSE
+             ========================= -->
+
+        <section class="cockpit-promise">
+
+            <div class="cockpit-promise-logo">
+                PR
+            </div>
+
+            <div>
+
+                <strong>
+                    Voir. Contr&ocirc;ler. Comprendre.
+                </strong>
+
+                <p>
+
+                    Votre espace Pro R&eacute;cup vous aide
+                    &agrave; suivre ce qui arrive &agrave; vos
+                    d&eacute;chets, de la collecte aux preuves terrain.
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="../js/config.js"></script>
+
+    <script src="./js/commun.js"></script>
+
+    <script src="./js/accueil.js"></script>
+
+</body>
+
+</html>

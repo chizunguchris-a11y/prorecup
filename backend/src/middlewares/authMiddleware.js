@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { obtenirJwtSecret } from "../config/security.js";
 
 const authMiddleware = (
     req,
@@ -44,8 +45,7 @@ const authMiddleware = (
         const contenuToken =
             jwt.verify(
                 parties[1],
-                process.env.JWT_SECRET ||
-                "votre_cle_secrete_temporaire"
+                obtenirJwtSecret()
             );
 
         const utilisateurId =

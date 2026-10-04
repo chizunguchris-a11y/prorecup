@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { obtenirJwtSecret } from "../config/security.js";
 
 import utilisateurRepository
     from "../repositories/utilisateurRepository.js";
@@ -293,8 +294,7 @@ const authController = {
                         roleId:
                             utilisateur.role_id
                     },
-                    process.env.JWT_SECRET ||
-                    "votre_cle_secrete_temporaire",
+                    obtenirJwtSecret(),
                     {
                         expiresIn:
                             "24h"

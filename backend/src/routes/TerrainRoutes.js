@@ -31,6 +31,22 @@ import terrainContextMiddleware
 import terrainController
     from "../controllers/TerrainController.js";
 
+import validationMiddleware
+    from "../middlewares/validationMiddleware.js";
+
+import {
+    missionIdValidator,
+    missionCollecteIdsValidator,
+    preuveIdsValidator,
+    actionMissionValidator,
+    arriveeCollecteValidator,
+    actionCollecteValidator,
+    finCollecteValidator,
+    peseeTerrainValidator,
+    incidentTerrainValidator,
+    preuveTerrainValidator
+} from "../validators/terrainValidator.js";
+
 
 const router =
     express.Router();
@@ -64,6 +80,9 @@ router.post(
     "/missions/:id/demarrer",
     authMiddleware,
     terrainContextMiddleware,
+    missionIdValidator,
+    actionMissionValidator,
+    validationMiddleware,
     terrainMissionController.demarrer
 );
 
@@ -72,6 +91,9 @@ router.post(
     "/missions/:id/collectes/:collecteId/arrivee",
     authMiddleware,
     terrainContextMiddleware,
+    missionCollecteIdsValidator,
+    arriveeCollecteValidator,
+    validationMiddleware,
     terrainCollecteController.arrivee
 );
 
@@ -80,6 +102,9 @@ router.post(
     "/missions/:id/collectes/:collecteId/demarrer",
     authMiddleware,
     terrainContextMiddleware,
+    missionCollecteIdsValidator,
+    actionCollecteValidator,
+    validationMiddleware,
     terrainCollecteController.demarrer
 );
 
@@ -88,6 +113,9 @@ router.post(
     "/missions/:id/collectes/:collecteId/terminer",
     authMiddleware,
     terrainContextMiddleware,
+    missionCollecteIdsValidator,
+    finCollecteValidator,
+    validationMiddleware,
     terrainCollecteController.terminer
 );
 
@@ -96,6 +124,9 @@ router.post(
     "/missions/:id/collectes/:collecteId/pesees",
     authMiddleware,
     terrainContextMiddleware,
+    missionCollecteIdsValidator,
+    peseeTerrainValidator,
+    validationMiddleware,
     terrainPeseeController.creer
 );
 
@@ -104,6 +135,9 @@ router.post(
     "/missions/:id/terminer",
     authMiddleware,
     terrainContextMiddleware,
+    missionIdValidator,
+    actionMissionValidator,
+    validationMiddleware,
     terrainMissionController.terminer
 );
 
@@ -112,6 +146,9 @@ router.post(
     "/missions/:id/incidents",
     authMiddleware,
     terrainContextMiddleware,
+    missionIdValidator,
+    incidentTerrainValidator,
+    validationMiddleware,
     terrainIncidentController.signaler
 );
 
@@ -120,6 +157,8 @@ router.get(
     "/missions/:id/collectes/:collecteId/preuves/:preuveId/url",
     authMiddleware,
     terrainContextMiddleware,
+    preuveIdsValidator,
+    validationMiddleware,
     terrainPreuveController.url
 );
 
@@ -142,9 +181,13 @@ router.post(
     "/missions/:id/collectes/:collecteId/preuves",
     authMiddleware,
     terrainContextMiddleware,
+    missionCollecteIdsValidator,
+    validationMiddleware,
     terrainPreuveUpload.single(
         "fichier"
     ),
+    preuveTerrainValidator,
+    validationMiddleware,
     terrainPreuveController.creer
 );
 

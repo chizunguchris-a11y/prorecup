@@ -1163,3 +1163,104 @@ th {
         var(--pr-color-danger, #B42318);
     background: #FEECEB;
 }
+
+
+/* ==========================================================
+   P5.3e - PERFORMANCE COMMAND CENTER
+   ========================================================== */
+
+.command-center-performance {
+    margin-top: 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--pr-color-border, #DFE7E3);
+}
+
+.command-center-performance-entete {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.command-center-performance-entete strong {
+    display: block;
+    color: var(--pr-color-text, #17211C);
+    font-size: 13px;
+}
+
+.command-center-performance-entete small {
+    color: var(--pr-color-text-secondary, #66736D);
+    font-size: 9px;
+}
+
+.command-center-performance-sur-titre {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--pr-color-primary, #176B4D);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.command-center-performance-grille {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.performance-carte {
+    min-width: 0;
+    padding: 13px 14px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid var(--pr-color-border, #DFE7E3);
+    border-radius: 12px;
+}
+
+.performance-carte > span {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--pr-color-text-secondary, #66736D);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.performance-carte > strong {
+    display: block;
+    margin-bottom: 4px;
+    overflow-wrap: anywhere;
+    color: var(--pr-color-text, #17211C);
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.performance-carte > small {
+    display: block;
+    color: var(--pr-color-text-secondary, #66736D);
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+
+    .command-center-performance-grille {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 620px) {
+
+    .command-center-performance-entete {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .command-center-performance-grille {
+        grid-template-columns: 1fr;
+    }
+
+}

@@ -2214,6 +2214,244 @@
 
     }
 
+    function formaterQuantiteKg(valeur) {
+
+        var nombre = Number(valeur);
+
+        if (!Number.isFinite(nombre)) {
+            return "?";
+        }
+
+        return nombre.toLocaleString(
+            "fr-FR",
+            {
+                maximumFractionDigits: 2
+            }
+        ) + " kg";
+
+    }
+
+
+    function formaterChiffreAffaires(valeurs) {
+
+        if (
+            !valeurs ||
+            typeof valeurs !== "object"
+        ) {
+
+            return {
+                principal: "?",
+                detail: "Aucune donn?e disponible"
+            };
+
+        }
+
+        var entrees =
+            Object.entries(valeurs)
+                .filter(
+                    function (entree) {
+
+                        return Number.isFinite(
+                            Number(entree[1])
+                        );
+
+                    }
+                )
+                .sort(
+                    function (a, b) {
+
+                        return String(a[0])
+                            .localeCompare(
+                                String(b[0])
+                            );
+
+                    }
+                );
+
+        if (!entrees.length) {
+
+            return {
+                principal: "0",
+                detail: "Aucune vente confirm?e"
+            };
+
+        }
+
+        var lignes =
+            entrees.map(
+                function (entree) {
+
+                    return Number(entree[1])
+                        .toLocaleString(
+                            "fr-FR",
+                            {
+                                maximumFractionDigits: 2
+                            }
+                        ) +
+                        " " +
+                        String(entree[0] || "");
+
+                }
+            );
+
+        return {
+            principal: lignes[0],
+            detail:
+                lignes.length > 1
+                    ? lignes.slice(1).join(" ? ")
+                    : "Montant confirm?"
+        };
+
+    }
+
+
+    function afficherPerformanceCommandCenter(
+        dashboard,
+        missionsJour,
+        santeSources
+    ) {
+
+        var sourceDashboardOk =
+            Boolean(
+                santeSources &&
+                santeSources.dashboardDisponible
+            );
+
+        var sourceMissionsOk =
+            Boolean(
+                santeSources &&
+                santeSources.indisponibles.indexOf(
+                    "Missions"
+                ) === -1
+            );
+
+
+        if (sourceMissionsOk) {
+
+            var terminees =
+                missionsJour.filter(
+                    function (mission) {
+
+                        var statut =
+                            normaliserStatutCommandCenter(
+                                mission.statut
+                            );
+
+                        return (
+                            statut === "terminee" ||
+                            statut === "validee" ||
+                            statut === "valide"
+                        );
+
+                    }
+                ).length;
+
+            var total =
+                missionsJour.length;
+
+            var taux =
+                total > 0
+                    ? Math.round(
+                        (terminees / total) * 100
+                      )
+                    : 0;
+
+            definirTexte(
+                "ccTauxExecution",
+                taux + "%"
+            );
+
+            definirTexte(
+                "ccExecutionDetail",
+                terminees +
+                " termin?e(s) sur " +
+                total +
+                " mission(s) aujourd?hui"
+            );
+
+        }
+        else {
+
+            definirTexte(
+                "ccTauxExecution",
+                "?"
+            );
+
+            definirTexte(
+                "ccExecutionDetail",
+                "Source Missions indisponible"
+            );
+
+        }
+
+
+        if (!sourceDashboardOk) {
+
+            definirTexte("ccStockTotal", "?");
+            definirTexte("ccStockDetail", "R?sum? indisponible");
+            definirTexte("ccVentesConfirmees", "?");
+            definirTexte("ccChiffreAffaires", "?");
+            definirTexte(
+                "ccChiffreAffairesDetail",
+                "R?sum? indisponible"
+            );
+
+            return;
+
+        }
+
+
+        var stock =
+            dashboard.stocks || {};
+
+        var ventes =
+            dashboard.ventes || {};
+
+
+        definirTexte(
+            "ccStockTotal",
+            formaterQuantiteKg(
+                stock.quantite_totale
+            )
+        );
+
+        definirTexte(
+            "ccStockDetail",
+            formaterNombre(
+                Number(
+                    stock.nombre_types || 0
+                )
+            ) +
+            " type(s) de mati?re en stock"
+        );
+
+        definirTexte(
+            "ccVentesConfirmees",
+            formaterNombre(
+                Number(
+                    ventes.nombre || 0
+                )
+            )
+        );
+
+
+        var chiffreAffaires =
+            formaterChiffreAffaires(
+                ventes.chiffre_affaires_par_devise
+            );
+
+        definirTexte(
+            "ccChiffreAffaires",
+            chiffreAffaires.principal
+        );
+
+        definirTexte(
+            "ccChiffreAffairesDetail",
+            chiffreAffaires.detail
+        );
+
+    }
+
     async function chargerDashboard() {
 
         cacherErreur();
@@ -2429,6 +2667,13 @@
 
 
             appliquerAlerteSanteSources(
+                santeSources
+            );
+
+
+            afficherPerformanceCommandCenter(
+                dashboard,
+                missionsJour,
                 santeSources
             );
 

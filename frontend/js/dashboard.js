@@ -1388,6 +1388,402 @@
 
     }
 
+    function normaliserStatutCommandCenter(
+        valeur
+    ) {
+
+        return String(
+            valeur || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    }
+
+
+    function mettreAJourCommandCenter(
+        missionsJour,
+        collectes,
+        agents,
+        tricycles
+    ) {
+
+        var missionsEnCours =
+            missionsJour.filter(
+                function (mission) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            mission.statut
+                        ) === "en_cours"
+                    );
+
+                }
+            ).length;
+
+
+        var missionsTerminees =
+            missionsJour.filter(
+                function (mission) {
+
+                    var statut =
+                        normaliserStatutCommandCenter(
+                            mission.statut
+                        );
+
+                    return (
+                        statut === "terminee" ||
+                        statut === "validee" ||
+                        statut === "valide"
+                    );
+
+                }
+            ).length;
+
+
+        var collectesAction =
+            collectes.filter(
+                function (collecte) {
+
+                    var statut =
+                        normaliserStatutCommandCenter(
+                            collecte.statut
+                        );
+
+                    return (
+                        statut === "en_attente" ||
+                        statut === "planifiee"
+                    );
+
+                }
+            ).length;
+
+
+        var collectesEchec =
+            collectes.filter(
+                function (collecte) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            collecte.statut
+                        ) === "echec"
+                    );
+
+                }
+            ).length;
+
+
+        var agentsDisponibles =
+            agents.filter(
+                function (agent) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            agent.statut
+                        ) !== "suspendu" &&
+                        estDisponible(agent)
+                    );
+
+                }
+            ).length;
+
+
+        var agentsSuspendus =
+            agents.filter(
+                function (agent) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            agent.statut
+                        ) === "suspendu"
+                    );
+
+                }
+            ).length;
+
+
+        var tricyclesDisponibles =
+            tricycles.filter(
+                function (tricycle) {
+
+                    return estDisponible(
+                        tricycle
+                    );
+
+                }
+            ).length;
+
+
+        var tricyclesMaintenance =
+            tricycles.filter(
+                function (tricycle) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            tricycle.statut
+                        ) === "maintenance"
+                    );
+
+                }
+            ).length;
+
+
+        definirTexte(
+            "ccMissionsJour",
+            formaterNombre(
+                missionsJour.length
+            )
+        );
+
+
+        definirTexte(
+            "ccMissionsDetail",
+            missionsEnCours +
+            " en cours ? " +
+            missionsTerminees +
+            " termin?e(s)"
+        );
+
+
+        definirTexte(
+            "ccCollectesAction",
+            formaterNombre(
+                collectesAction
+            )
+        );
+
+
+        definirTexte(
+            "ccCollectesDetail",
+            collectesAction
+                ? "Collectes n?cessitant une action"
+                : "Aucune collecte en attente"
+        );
+
+
+        definirTexte(
+            "ccAgentsDisponibles",
+            agentsDisponibles +
+            " / " +
+            agents.length
+        );
+
+
+        definirTexte(
+            "ccAgentsDetail",
+            agentsSuspendus
+                ? agentsSuspendus +
+                  " agent(s) suspendu(s)"
+                : "Aucune suspension d?tect?e"
+        );
+
+
+        definirTexte(
+            "ccTricyclesDisponibles",
+            tricyclesDisponibles +
+            " / " +
+            tricycles.length
+        );
+
+
+        definirTexte(
+            "ccTricyclesDetail",
+            tricyclesMaintenance
+                ? tricyclesMaintenance +
+                  " en maintenance"
+                : "Parc disponible normalement"
+        );
+
+
+        var statutGlobal =
+            element(
+                "ccStatutGlobal"
+            );
+
+        var prioriteAction =
+            element(
+                "ccPrioriteAction"
+            );
+
+        var titrePriorite =
+            "Situation op?rationnelle normale";
+
+        var detailPriorite =
+            "Aucune action urgente d?tect?e par le syst?me.";
+
+        var lienPriorite =
+            "./missions.html";
+
+        var libelleAction =
+            "Voir les missions";
+
+        var classeStatut =
+            "statut-actif";
+
+        var texteStatut =
+            missionsEnCours
+                ? "Op?rations en cours"
+                : "Situation sous contr?le";
+
+
+        if (collectesEchec > 0) {
+
+            classeStatut =
+                "statut-critique";
+
+            texteStatut =
+                "Intervention requise";
+
+            titrePriorite =
+                "Traiter les collectes en ?chec";
+
+            detailPriorite =
+                collectesEchec +
+                " collecte(s) n?cessitent une v?rification imm?diate.";
+
+            lienPriorite =
+                "./collectes.html";
+
+            libelleAction =
+                "Voir les collectes";
+
+        }
+        else if (tricyclesMaintenance > 0) {
+
+            classeStatut =
+                "statut-vigilance";
+
+            texteStatut =
+                "Capacit? r?duite";
+
+            titrePriorite =
+                "S?curiser la capacit? logistique";
+
+            detailPriorite =
+                tricyclesMaintenance +
+                " tricycle(s) sont actuellement en maintenance.";
+
+            lienPriorite =
+                "./tricycles.html";
+
+            libelleAction =
+                "Voir les tricycles";
+
+        }
+        else if (agentsSuspendus > 0) {
+
+            classeStatut =
+                "statut-vigilance";
+
+            texteStatut =
+                "Ressources ? v?rifier";
+
+            titrePriorite =
+                "V?rifier les agents suspendus";
+
+            detailPriorite =
+                agentsSuspendus +
+                " agent(s) sont actuellement suspendu(s).";
+
+            lienPriorite =
+                "./agents.html";
+
+            libelleAction =
+                "Voir les agents";
+
+        }
+        else if (collectesAction > 0) {
+
+            classeStatut =
+                "statut-vigilance";
+
+            texteStatut =
+                "Planification requise";
+
+            titrePriorite =
+                "Planifier les prochaines collectes";
+
+            detailPriorite =
+                collectesAction +
+                " collecte(s) attendent une action op?rationnelle.";
+
+            lienPriorite =
+                "./collectes.html";
+
+            libelleAction =
+                "Planifier";
+
+        }
+        else if (missionsEnCours > 0) {
+
+            titrePriorite =
+                "Suivre les missions en cours";
+
+            detailPriorite =
+                missionsEnCours +
+                " mission(s) sont actuellement sur le terrain.";
+
+            lienPriorite =
+                "./missions.html";
+
+            libelleAction =
+                "Suivre les missions";
+
+        }
+
+
+        if (statutGlobal) {
+
+            statutGlobal.className =
+                "command-center-statut " +
+                classeStatut;
+
+            statutGlobal.textContent =
+                texteStatut;
+
+        }
+
+
+        definirTexte(
+            "ccPrioriteTitre",
+            titrePriorite
+        );
+
+
+        definirTexte(
+            "ccPrioriteDetail",
+            detailPriorite
+        );
+
+
+        if (prioriteAction) {
+
+            prioriteAction.href =
+                lienPriorite;
+
+            prioriteAction.textContent =
+                libelleAction;
+
+        }
+
+
+        var maintenant =
+            new Date();
+
+        definirTexte(
+            "ccDerniereActualisation",
+            "Actualis? ? " +
+            maintenant.toLocaleTimeString(
+                "fr-FR",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            )
+        );
+
+    }
+
     async function chargerDashboard() {
 
         cacherErreur();
@@ -1572,6 +1968,13 @@
                         obtenirQuantite(stock);
 
                 }
+            );
+
+            mettreAJourCommandCenter(
+                missionsJour,
+                collectes,
+                agents,
+                tricycles
             );
 
             var ventes =

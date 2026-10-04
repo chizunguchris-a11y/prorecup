@@ -146,6 +146,150 @@
                 role="alert"
             ></div>
 
+            <section
+                class="command-center-jour"
+                id="commandCenterJour"
+                aria-labelledby="titreCommandCenter"
+            >
+
+                <div class="command-center-entete">
+
+                    <div>
+
+                        <p class="command-center-sur-titre">
+                            PILOTAGE EN TEMPS R?EL
+                        </p>
+
+                        <h2 id="titreCommandCenter">
+                            Situation du jour
+                        </h2>
+
+                        <p>
+                            Les informations essentielles pour d?cider
+                            et agir imm?diatement.
+                        </p>
+
+                    </div>
+
+                    <div class="command-center-etat">
+
+                        <span
+                            class="command-center-statut statut-neutre"
+                            id="ccStatutGlobal"
+                            aria-live="polite"
+                        >
+                            Analyse en cours
+                        </span>
+
+                        <small id="ccDerniereActualisation">
+                            Actualisation...
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <div class="command-center-grille">
+
+                    <article class="command-center-carte">
+
+                        <span class="command-center-label">
+                            Missions aujourd?hui
+                        </span>
+
+                        <strong id="ccMissionsJour">
+                            0
+                        </strong>
+
+                        <small id="ccMissionsDetail">
+                            Aucune mission active
+                        </small>
+
+                    </article>
+
+                    <article class="command-center-carte">
+
+                        <span class="command-center-label">
+                            ? traiter
+                        </span>
+
+                        <strong id="ccCollectesAction">
+                            0
+                        </strong>
+
+                        <small id="ccCollectesDetail">
+                            Aucune collecte en attente
+                        </small>
+
+                    </article>
+
+                    <article class="command-center-carte">
+
+                        <span class="command-center-label">
+                            Agents disponibles
+                        </span>
+
+                        <strong id="ccAgentsDisponibles">
+                            0 / 0
+                        </strong>
+
+                        <small id="ccAgentsDetail">
+                            Ressources humaines
+                        </small>
+
+                    </article>
+
+                    <article class="command-center-carte">
+
+                        <span class="command-center-label">
+                            Tricycles disponibles
+                        </span>
+
+                        <strong id="ccTricyclesDisponibles">
+                            0 / 0
+                        </strong>
+
+                        <small id="ccTricyclesDetail">
+                            Capacit? logistique
+                        </small>
+
+                    </article>
+
+                </div>
+
+                <div
+                    class="command-center-priorite"
+                    id="ccPriorite"
+                >
+
+                    <div class="command-center-priorite-contenu">
+
+                        <span>
+                            ACTION PRIORITAIRE
+                        </span>
+
+                        <strong id="ccPrioriteTitre">
+                            Analyse de la situation...
+                        </strong>
+
+                        <small id="ccPrioriteDetail">
+                            Le syst?me d?termine le prochain point ? traiter.
+                        </small>
+
+                    </div>
+
+                    <a
+                        href="./missions.html"
+                        class="command-center-action"
+                        id="ccPrioriteAction"
+                    >
+                        Ouvrir
+                    </a>
+
+                </div>
+
+            </section>
+
             <section class="grille-indicateurs">
 
                 <article class="carte-indicateur">

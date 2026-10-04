@@ -10,6 +10,18 @@ import {
     creerLimiteurConnexion
 } from "../middlewares/httpSecurityMiddleware.js";
 
+import validationMiddleware
+    from "../middlewares/validationMiddleware.js";
+
+import {
+    champsConnexion,
+    connexionValidator,
+    champsProfil,
+    profilValidator,
+    champsMotDePasse,
+    motDePasseValidator
+} from "../validators/authValidator.js";
+
 const router =
     express.Router();
 
@@ -52,6 +64,9 @@ const limiteurConnexion =
 router.post(
     "/login",
     limiteurConnexion,
+    champsConnexion,
+    connexionValidator,
+    validationMiddleware,
     authController.connexion
 );
 
@@ -128,6 +143,9 @@ router.get(
 router.put(
     "/me",
     authMiddleware,
+    champsProfil,
+    profilValidator,
+    validationMiddleware,
     authController.modifierProfil
 );
 
@@ -144,6 +162,9 @@ router.put(
 router.patch(
     "/me/password",
     authMiddleware,
+    champsMotDePasse,
+    motDePasseValidator,
+    validationMiddleware,
     authController.changerMotDePasse
 );
 

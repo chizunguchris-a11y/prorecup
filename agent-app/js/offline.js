@@ -667,43 +667,252 @@
             return project(await s, await q);
         });
         const saveDay = day => transact(['state'], 'readwrite', tx => request(tx.objectStore('state').put(snapshot(day), 'day')));
-        async function enqueue(context, payload, blob) {
-            const type = context.action, mission_id = context.mission, collecte_id = context.collecte || '';
-            const missionOnly =
-                ['demarrer_mission', 'terminer_mission'].includes(type);
+        const preparerEntree =
+            function (
+                context,
+                payload,
+                blob
+            ) {
 
-            const incident =
-                type === 'signaler_incident';
+                const type =
+                    context.action;
 
-            const collecteInvalide =
-                missionOnly
-                    ? collecte_id !== ''
-                    : incident
-                        ? (
-                            collecte_id !== '' &&
-                            !UUID.test(collecte_id)
-                        )
-                        : !UUID.test(collecte_id);
+                const mission_id =
+                    context.mission;
+
+                const collecte_id =
+                    context.collecte || "";
+
+                const missionOnly =
+                    [
+                        "demarrer_mission",
+                        "terminer_mission"
+                    ].includes(type);
+
+                const incident =
+                    type ===
+                    "signaler_incident";
+
+                const collecteInvalide =
+                    missionOnly
+                        ? collecte_id !== ""
+                        : incident
+                            ? (
+                                collecte_id !== "" &&
+                                !UUID.test(collecte_id)
+                              )
+                            : !UUID.test(collecte_id);
+
+                if (
+                    !UUID.test(mission_id) ||
+                    collecteInvalide
+                ) {
+
+                    throw new Error(
+                        "Contexte invalide."
+                    );
+
+                }
+
+                const safe =
+                    clean(
+                        type,
+                        payload
+                    );
+
+                if (photo(type)) {
+                    validateBlob(blob);
+                }
+
+                return {
+                    type,
+                    mission_id,
+                    collecte_id,
+                    safe,
+                    blob
+                };
+
+            };
+
+
+        async function enqueueBatch(
+            items
+        ) {
 
             if (
-                !UUID.test(mission_id) ||
-                collecteInvalide
+                !Array.isArray(items) ||
+                items.length === 0
             ) {
-                throw new Error('Contexte invalide.');
+
+                throw new Error(
+                    "Aucune action a enregistrer."
+                );
+
             }
-            const safe = clean(type, payload);
-            if (photo(type)) validateBlob(blob);
-            return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
-                const q = tx.objectStore('queue');
-                const existing = type === 'signaler_incident' ? null : await request(q.index('context').get([mission_id, collecte_id, type]));
-                if (existing) return { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false, ...existing, ...((await request(tx.objectStore('queue_meta').get(existing.id))) || {}) };
-                const row = { type, mission_id, collecte_id, operation_id: safe.operation_id, payload: safe, created_at: new Date().toISOString(), ...(photo(type) ? { blob: blob.slice(0, blob.size, blob.type) } : {}) };
-                row.id = await request(q.add(row));
-                const meta = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false };
-                await request(tx.objectStore('queue_meta').put(meta, row.id));
-                return { ...row, ...meta };
-            });
+
+            const entrees =
+                items.map(
+                    function (item) {
+
+                        return preparerEntree(
+                            item.context,
+                            item.payload,
+                            item.blob
+                        );
+
+                    }
+                );
+
+            return transact(
+                [
+                    "queue",
+                    "queue_meta"
+                ],
+                "readwrite",
+                async function (tx) {
+
+                    const q =
+                        tx.objectStore(
+                            "queue"
+                        );
+
+                    const metaStore =
+                        tx.objectStore(
+                            "queue_meta"
+                        );
+
+                    const resultat = [];
+
+                    for (
+                        const entree
+                        of entrees
+                    ) {
+
+                        const existing =
+                            entree.type ===
+                            "signaler_incident"
+                                ? null
+                                : await request(
+                                    q
+                                        .index("context")
+                                        .get([
+                                            entree.mission_id,
+                                            entree.collecte_id,
+                                            entree.type
+                                        ])
+                                  );
+
+                        if (existing) {
+
+                            const metaExistant =
+                                await request(
+                                    metaStore.get(
+                                        existing.id
+                                    )
+                                );
+
+                            resultat.push({
+                                statut: "en_attente",
+                                retry_count: 0,
+                                last_error: null,
+                                next_attempt_at: 0,
+                                post_initiated: false,
+                                ...existing,
+                                ...(metaExistant || {})
+                            });
+
+                            continue;
+
+                        }
+
+                        const row = {
+
+                            type:
+                                entree.type,
+
+                            mission_id:
+                                entree.mission_id,
+
+                            collecte_id:
+                                entree.collecte_id,
+
+                            operation_id:
+                                entree.safe.operation_id,
+
+                            payload:
+                                entree.safe,
+
+                            created_at:
+                                new Date()
+                                    .toISOString(),
+
+                            ...(photo(entree.type)
+                                ? {
+                                    blob:
+                                        entree.blob.slice(
+                                            0,
+                                            entree.blob.size,
+                                            entree.blob.type
+                                        )
+                                  }
+                                : {})
+
+                        };
+
+                        row.id =
+                            await request(
+                                q.add(row)
+                            );
+
+                        const meta = {
+                            statut: "en_attente",
+                            retry_count: 0,
+                            last_error: null,
+                            next_attempt_at: 0,
+                            post_initiated: false
+                        };
+
+                        await request(
+                            metaStore.put(
+                                meta,
+                                row.id
+                            )
+                        );
+
+                        resultat.push({
+                            ...row,
+                            ...meta
+                        });
+
+                    }
+
+                    return resultat;
+
+                }
+            );
+
         }
+
+
+        async function enqueue(
+            context,
+            payload,
+            blob
+        ) {
+
+            const resultat =
+                await enqueueBatch([
+                    {
+                        context,
+                        payload,
+                        blob
+                    }
+                ]);
+
+            return resultat[0];
+
+        }
+
         const update = row => transact(['queue_meta'], 'readwrite', tx => request(tx.objectStore('queue_meta').put(metadata(row), row.id)));
         async function prepare(row) {
             const p = clean(row.type, row.payload);
@@ -811,7 +1020,7 @@
             const first = rows.find(r => r.statut === 'erreur');
             if (first) for (const r of rows) if (r.id >= first.id) { q.delete(r.id); tx.objectStore('queue_meta').delete(r.id); }
         });
-        return { list, view, saveDay, enqueue, sync, replaceUnreadablePhoto, discardRejected, close: () => db.close() };
+        return { list, view, saveDay, enqueue, enqueueBatch, sync, replaceUnreadablePhoto, discardRejected, close: () => db.close() };
     }
     window.ProRecup.offline = { open, clean, snapshot, project, retryable };
 })();

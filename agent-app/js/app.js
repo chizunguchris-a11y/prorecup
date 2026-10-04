@@ -1247,7 +1247,14 @@
             ...(estPhoto(contexte.action) ? { empreinte } : {})
         };
         // Sauvegarder avant le POST : pas d'envoi si la sauvegarde échoue.
-        localStorage.setItem(cleOperation(contexte), JSON.stringify(tentative));
+        if (!estPhoto(contexte.action)) {
+
+            localStorage.setItem(
+                cleOperation(contexte),
+                JSON.stringify(tentative)
+            );
+
+        }
         return tentative;
     };
 
@@ -2189,21 +2196,94 @@
             Object.assign(donnees, await obtenirGps());
             tentative = enregistrerTentative(contexte, donnees, empreinte);
         }
-        if (photo) fichiersTentatives.set(cle, fichier);
-        await terrainStore.enqueue(contexte, filtrerPayload(contexte.action, tentative.payload), fichier);
-        if (contexte.action === "enregistrer_pesee" && fichier) {
-            const ticketContexte = { ...contexte, action: "ticket_balance" };
-            const ticketPayload = {
-                operation_id: crypto.randomUUID(),
-                pesee_operation_id: tentative.payload.operation_id,
-                type_preuve: "ticket_balance",
-                pris_le: instantAction,
-                latitude: tentative.payload.latitude,
-                longitude: tentative.payload.longitude,
-                precision_gps: tentative.payload.precision_gps
-            };
-            await terrainStore.enqueue(ticketContexte, ticketPayload, fichier);
+        if (photo) {
+
+            fichiersTentatives.set(
+                cle,
+                fichier
+            );
+
         }
+
+
+        const entrees = [
+            {
+
+                context:
+                    contexte,
+
+                payload:
+                    filtrerPayload(
+                        contexte.action,
+                        tentative.payload
+                    ),
+
+                blob:
+                    photo
+                        ? fichier
+                        : undefined
+
+            }
+        ];
+
+
+        if (
+            contexte.action ===
+                "enregistrer_pesee" &&
+            fichier
+        ) {
+
+            const ticketContexte = {
+                ...contexte,
+                action:
+                    "ticket_balance"
+            };
+
+            const ticketPayload = {
+
+                operation_id:
+                    crypto.randomUUID(),
+
+                pesee_operation_id:
+                    tentative.payload.operation_id,
+
+                type_preuve:
+                    "ticket_balance",
+
+                pris_le:
+                    instantAction,
+
+                latitude:
+                    tentative.payload.latitude,
+
+                longitude:
+                    tentative.payload.longitude,
+
+                precision_gps:
+                    tentative.payload.precision_gps
+
+            };
+
+            entrees.push({
+
+                context:
+                    ticketContexte,
+
+                payload:
+                    ticketPayload,
+
+                blob:
+                    fichier
+
+            });
+
+        }
+
+
+        await terrainStore.enqueueBatch(
+            entrees
+        );
+
         effacerTentative(contexte);
         afficherJournee(await terrainStore.view());
         await updateQueueUI();

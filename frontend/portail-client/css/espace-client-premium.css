@@ -1,0 +1,288 @@
+/* ==========================================================
+   PRO RECUP - PORTAIL CLIENT
+   SITES / IMPACT / COMPTE PREMIUM
+   ========================================================== */
+
+.pce-shell {
+    margin: 0 0 22px;
+    padding: 19px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(234, 245, 239, 0.94),
+            rgba(255, 255, 255, 0.99)
+        );
+
+    border:
+        1px solid
+        var(--pr-color-border, #DFE7E3);
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 10px 28px
+        rgba(23, 33, 28, 0.055);
+}
+
+.pce-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.pce-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+
+    color:
+        var(--pr-color-primary, #176B4D);
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.pce-title {
+    margin: 0;
+
+    color:
+        var(--pr-color-text, #17211C);
+
+    font-size:
+        clamp(
+            20px,
+            3vw,
+            28px
+        );
+
+    line-height: 1.15;
+}
+
+.pce-subtitle {
+    max-width: 690px;
+    margin: 7px 0 0;
+
+    color:
+        var(--pr-color-text-secondary, #66736D);
+
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.pce-badge {
+    flex-shrink: 0;
+
+    padding: 6px 9px;
+
+    color:
+        var(--pr-color-primary-dark, #0E4F38);
+
+    background:
+        var(--pr-color-surface, #FFFFFF);
+
+    border:
+        1px solid
+        var(--pr-color-border, #DFE7E3);
+
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.pce-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.pce-card {
+    min-width: 0;
+    padding: 13px;
+
+    background:
+        var(--pr-color-surface, #FFFFFF);
+
+    border:
+        1px solid
+        var(--pr-color-border, #DFE7E3);
+
+    border-radius: 13px;
+}
+
+.pce-card span {
+    display: block;
+
+    color:
+        var(--pr-color-primary, #176B4D);
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pce-card strong {
+    display: block;
+    margin-top: 6px;
+
+    color:
+        var(--pr-color-text, #17211C);
+
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.pce-card p {
+    margin: 5px 0 0;
+
+    color:
+        var(--pr-color-text-secondary, #66736D);
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.pce-impact-kpis {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+
+    gap: 9px;
+    margin-top: 15px;
+}
+
+.pce-kpi {
+    min-width: 0;
+    padding: 12px;
+
+    background:
+        var(--pr-color-surface, #FFFFFF);
+
+    border:
+        1px solid
+        var(--pr-color-border, #DFE7E3);
+
+    border-radius: 12px;
+}
+
+.pce-kpi span {
+    display: block;
+
+    color:
+        var(--pr-color-text-secondary, #66736D);
+
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.pce-kpi strong {
+    display: block;
+    margin-top: 6px;
+
+    overflow-wrap: anywhere;
+
+    color:
+        var(--pr-color-text, #17211C);
+
+    font-size: 19px;
+    line-height: 1.15;
+}
+
+.pce-impact-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    margin-top: 12px;
+    padding: 11px 12px;
+
+    background: #FFF7ED;
+
+    border-radius: 11px;
+}
+
+.pce-impact-note::before {
+    flex: 0 0 auto;
+
+    width: 8px;
+    height: 8px;
+    margin-top: 3px;
+
+    background:
+        var(--pr-color-warning, #A65D00);
+
+    border-radius: 50%;
+
+    content: "";
+}
+
+.pce-impact-note strong {
+    display: block;
+
+    color:
+        var(--pr-color-text, #17211C);
+
+    font-size: 10px;
+}
+
+.pce-impact-note p {
+    margin: 3px 0 0;
+
+    color:
+        var(--pr-color-text-secondary, #66736D);
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+
+    .pce-impact-kpis {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+@media (max-width: 760px) {
+
+    .pce-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pce-head {
+        flex-direction: column;
+    }
+
+}
+
+@media (max-width: 560px) {
+
+    .pce-shell {
+        padding: 14px;
+        border-radius: 15px;
+    }
+
+    .pce-impact-kpis {
+        grid-template-columns: 1fr;
+    }
+
+}

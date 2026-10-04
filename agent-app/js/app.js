@@ -4178,3 +4178,241 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
     demarrer().catch(e => { afficherEcran(connexion); afficherMessage(messageConnexion, e.message, 'erreur'); });
 
 })();
+
+
+
+/* ==========================================================
+   P5.1c - HARMONISATION AUTOMATIQUE DES ETATS
+   ========================================================== */
+
+(() => {
+
+    const motifOccupation =
+        /(?:chargement|suppression|validation|enregistrement|connexion|synchronisation|traitement|actualisation|ouverture|pr?paration|generation|g?n?ration|export|import|envoi)[\s?\.]*$/i;
+
+
+    const estBouton =
+        element =>
+            element &&
+            element.nodeType === 1 &&
+            element.matches(
+                "button"
+            );
+
+
+    const synchroniserBouton =
+        element => {
+
+            if (
+                !estBouton(
+                    element
+                )
+            ) {
+                return;
+            }
+
+
+            const texte =
+                String(
+                    element.textContent ||
+                    ""
+                )
+                    .replace(
+                        /\s+/g,
+                        " "
+                    )
+                    .trim();
+
+
+            const occupe =
+                element.disabled &&
+                motifOccupation.test(
+                    texte
+                );
+
+
+            if (occupe) {
+
+                element.classList.add(
+                    "pr-bouton-occupe"
+                );
+
+
+                if (
+                    !element.hasAttribute(
+                        "aria-busy"
+                    )
+                ) {
+
+                    element.setAttribute(
+                        "aria-busy",
+                        "true"
+                    );
+
+                    element.dataset.prBusyAuto =
+                        "1";
+                }
+
+                return;
+            }
+
+
+            element.classList.remove(
+                "pr-bouton-occupe"
+            );
+
+
+            if (
+                element.dataset.prBusyAuto ===
+                "1"
+            ) {
+
+                element.removeAttribute(
+                    "aria-busy"
+                );
+
+                delete element.dataset
+                    .prBusyAuto;
+            }
+        };
+
+
+    const synchroniserArbre =
+        racine => {
+
+            if (!racine) {
+                return;
+            }
+
+
+            if (
+                racine.nodeType === 1
+            ) {
+
+                synchroniserBouton(
+                    racine
+                );
+
+
+                racine
+                    .querySelectorAll?.(
+                        "button"
+                    )
+                    .forEach(
+                        synchroniserBouton
+                    );
+            }
+        };
+
+
+    const traiterMutation =
+        mutation => {
+
+            if (
+                mutation.type ===
+                "attributes"
+            ) {
+
+                synchroniserBouton(
+                    mutation.target
+                );
+
+                return;
+            }
+
+
+            if (
+                mutation.type ===
+                "characterData"
+            ) {
+
+                const bouton =
+                    mutation.target
+                        ?.parentElement
+                        ?.closest(
+                            "button"
+                        );
+
+                synchroniserBouton(
+                    bouton
+                );
+
+                return;
+            }
+
+
+            synchroniserArbre(
+                mutation.target
+            );
+
+
+            mutation.addedNodes
+                .forEach(
+                    synchroniserArbre
+                );
+        };
+
+
+    const demarrer =
+        () => {
+
+            synchroniserArbre(
+                document.documentElement
+            );
+
+
+            const observateur =
+                new MutationObserver(
+                    mutations => {
+
+                        mutations.forEach(
+                            traiterMutation
+                        );
+                    }
+                );
+
+
+            observateur.observe(
+                document.documentElement,
+                {
+                    subtree:
+                        true,
+
+                    childList:
+                        true,
+
+                    characterData:
+                        true,
+
+                    attributes:
+                        true,
+
+                    attributeFilter:
+                        [
+                            "disabled"
+                        ]
+                }
+            );
+        };
+
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            demarrer,
+            {
+                once:
+                    true
+            }
+        );
+
+    } else {
+
+        demarrer();
+    }
+
+})();

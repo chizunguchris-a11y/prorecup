@@ -871,3 +871,284 @@ input:-webkit-autofill:active {
         transition: none !important;
     }
 }
+
+
+
+/* ==========================================================
+   P5.1c - ETATS UTILISATEUR PREMIUM
+   ========================================================== */
+
+
+/* ---------- Boutons occup?s ---------- */
+
+.pr-bouton-occupe {
+    position:
+        relative;
+
+    cursor:
+        progress !important;
+
+    opacity:
+        0.82;
+}
+
+
+.pr-bouton-occupe::after {
+    content:
+        "";
+
+    display:
+        inline-block;
+
+    width:
+        14px;
+
+    height:
+        14px;
+
+    margin-left:
+        9px;
+
+    border:
+        2px solid
+        currentColor;
+
+    border-right-color:
+        transparent;
+
+    border-radius:
+        50%;
+
+    vertical-align:
+        -2px;
+
+    animation:
+        pr-etat-tourne
+        700ms
+        linear
+        infinite;
+}
+
+
+button[aria-busy="true"] {
+    cursor:
+        progress !important;
+}
+
+
+/* ---------- Indicateurs de chargement ---------- */
+
+.indicateur-chargement {
+    display:
+        inline-block;
+
+    width:
+        18px;
+
+    height:
+        18px;
+
+    flex:
+        0
+        0
+        18px;
+
+    border:
+        2px solid
+        var(
+            --pr-color-border,
+            #dfe7e3
+        );
+
+    border-top-color:
+        var(
+            --pr-color-primary,
+            #176b4d
+        );
+
+    border-radius:
+        50%;
+
+    vertical-align:
+        middle;
+
+    animation:
+        pr-etat-tourne
+        700ms
+        linear
+        infinite;
+}
+
+
+/* ---------- Etats vides ---------- */
+
+.etat-vide,
+.etat-vide-planning,
+.etat-tableau,
+.vide {
+    border-radius:
+        14px;
+
+    color:
+        var(
+            --pr-color-text-secondary,
+            #66736d
+        );
+}
+
+
+.etat-vide,
+.etat-vide-planning {
+    padding:
+        24px;
+
+    border:
+        1px dashed
+        var(
+            --pr-color-border,
+            #dfe7e3
+        );
+
+    background:
+        var(
+            --pr-color-primary-soft,
+            #eaf5ef
+        );
+
+    text-align:
+        center;
+
+    line-height:
+        1.55;
+}
+
+
+/* ---------- Erreurs visibles ---------- */
+
+.message-erreur,
+.erreur-formulaire,
+.etat-erreur,
+.message-connexion.erreur {
+    border:
+        1px solid
+        rgba(
+            180,
+            35,
+            24,
+            0.18
+        );
+
+    border-radius:
+        10px;
+
+    color:
+        var(
+            --pr-color-danger,
+            #b42318
+        );
+
+    background:
+        rgba(
+            180,
+            35,
+            24,
+            0.055
+        );
+}
+
+
+/* ---------- Succ?s / information ---------- */
+
+.message-succes,
+.message-connexion.succes {
+    border:
+        1px solid
+        rgba(
+            22,
+            121,
+            75,
+            0.18
+        );
+
+    border-radius:
+        10px;
+
+    color:
+        var(
+            --pr-color-success,
+            #16794b
+        );
+
+    background:
+        rgba(
+            22,
+            121,
+            75,
+            0.055
+        );
+}
+
+
+.message-connexion.info {
+    border:
+        1px solid
+        rgba(
+            29,
+            78,
+            216,
+            0.16
+        );
+
+    border-radius:
+        10px;
+
+    color:
+        var(
+            --pr-color-info,
+            #1d4ed8
+        );
+
+    background:
+        rgba(
+            29,
+            78,
+            216,
+            0.05
+        );
+}
+
+
+/* ---------- Animation commune ---------- */
+
+@keyframes pr-etat-tourne {
+
+    to {
+        transform:
+            rotate(
+                360deg
+            );
+    }
+}
+
+
+@media (max-width: 639px) {
+
+    .etat-vide,
+    .etat-vide-planning {
+        padding:
+            18px;
+
+        border-radius:
+            12px;
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .pr-bouton-occupe::after,
+    .indicateur-chargement {
+        animation:
+            none !important;
+    }
+}

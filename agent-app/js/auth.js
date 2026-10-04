@@ -193,6 +193,59 @@
         };
 
 
+    const avecDelaiAuth =
+        async function (
+            promesse,
+            delaiMs
+        ) {
+
+            let minuteur = null;
+
+            const expiration =
+                new Promise(
+                    function (_, rejet) {
+
+                        minuteur =
+                            setTimeout(
+                                function () {
+
+                                    const erreur =
+                                        new Error(
+                                            "Le serveur Pro R?cup met trop de temps ? r?pondre."
+                                        );
+
+                                    erreur.code =
+                                        "NETWORK_ERROR";
+
+                                    erreur.timeout =
+                                        true;
+
+                                    rejet(erreur);
+
+                                },
+                                delaiMs
+                            );
+
+                    }
+                );
+
+            try {
+
+                return await Promise.race([
+                    promesse,
+                    expiration
+                ]);
+
+            } finally {
+
+                if (minuteur) {
+                    clearTimeout(minuteur);
+                }
+
+            }
+
+        };
+
     const restaurer =
         async function () {
 
@@ -229,11 +282,30 @@
             }
 
 
+            if (!navigator.onLine) {
+
+                return {
+
+                    utilisateur,
+
+                    contexte:
+                        null,
+
+                    hors_ligne:
+                        true
+
+                };
+
+            }
+
             try {
 
                 const contexte =
-                    await api.get(
-                        "/terrain/me"
+                    await avecDelaiAuth(
+                        api.get(
+                            "/terrain/me"
+                        ),
+                        5000
                     );
 
 

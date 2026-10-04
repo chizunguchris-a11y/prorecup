@@ -1591,6 +1591,59 @@
         };
 
 
+    const avecDelaiTerrain =
+        async function (
+            promesse,
+            delaiMs
+        ) {
+
+            let minuteur = null;
+
+            const expiration =
+                new Promise(
+                    function (_, rejet) {
+
+                        minuteur =
+                            setTimeout(
+                                function () {
+
+                                    const erreur =
+                                        new Error(
+                                            "Le serveur Pro R?cup met trop de temps ? r?pondre."
+                                        );
+
+                                    erreur.code =
+                                        "NETWORK_ERROR";
+
+                                    erreur.timeout =
+                                        true;
+
+                                    rejet(erreur);
+
+                                },
+                                delaiMs
+                            );
+
+                    }
+                );
+
+            try {
+
+                return await Promise.race([
+                    promesse,
+                    expiration
+                ]);
+
+            } finally {
+
+                if (minuteur) {
+                    clearTimeout(minuteur);
+                }
+
+            }
+
+        };
+
     const chargerJournee = async ({ pendantAction = false, silencieux = false } = {}) => {
         if ((actionEnCours && !pendantAction) || synchronisation) return null;
         if (chargementJournee) return chargementJournee;
@@ -1598,7 +1651,13 @@
         chargementJournee = (async () => {
             try {
                 if (!navigator.onLine) throw Object.assign(new Error('Hors ligne'), { code: 'NETWORK_ERROR' });
-                const reponse = await api.get("/terrain/journee");
+                const reponse =
+                    await avecDelaiTerrain(
+                        api.get(
+                            "/terrain/journee"
+                        ),
+                        5000
+                    );
                 const journee = reponse?.data || reponse;
                 listeMissions.querySelectorAll(".saisie-terrain").forEach(formulaire =>
                     fermerCameras.get(formulaire)?.());
@@ -1664,9 +1723,50 @@
                 if (!vault) { vault = crypto.randomUUID(); localStorage.setItem(key, vault); }
                 terrainStore = await window.ProRecup.offline.open('terrain-v1-' + vault);
             }
-            await chargerJournee();
+            const journeeLocale =
+                await terrainStore.view();
+
+            afficherJournee(
+                journeeLocale
+            );
+
             await updateQueueUI();
-            await synchroniser();
+
+
+            if (
+                navigator.storage?.persist
+            ) {
+
+                navigator.storage
+                    .persist()
+                    .catch(
+                        function () {}
+                    );
+
+            }
+
+
+            if (session?.hors_ligne) {
+
+                afficherMessage(
+                    messageApplication,
+                    "Journ?e locale restaur?e. Les actions conserv?es seront synchronis?es d?s que le serveur sera disponible.",
+                    "succes"
+                );
+
+            }
+            else {
+
+                await chargerJournee({
+                    silencieux:
+                        true
+                });
+
+                await updateQueueUI();
+
+                await synchroniser();
+
+            }
 
         };
 

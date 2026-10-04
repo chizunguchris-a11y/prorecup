@@ -2010,6 +2010,210 @@
 
     }
 
+    function analyserSanteSources(
+        resultats
+    ) {
+
+        var noms = [
+            "R?sum?",
+            "Missions",
+            "Collectes",
+            "Agents",
+            "Tricycles",
+            "Stocks"
+        ];
+
+        var indisponibles = [];
+
+        resultats.forEach(
+            function (resultat, index) {
+
+                if (
+                    !resultat ||
+                    resultat.succes !== true
+                ) {
+
+                    indisponibles.push(
+                        noms[index] ||
+                        "Source " +
+                        (index + 1)
+                    );
+
+                }
+
+            }
+        );
+
+        return {
+
+            total:
+                noms.length,
+
+            disponibles:
+                noms.length -
+                indisponibles.length,
+
+            indisponibles:
+                indisponibles,
+
+            dashboardDisponible:
+                Boolean(
+                    resultats[0] &&
+                    resultats[0].succes === true
+                ),
+
+            critique:
+                !(
+                    resultats[0] &&
+                    resultats[0].succes === true
+                ) ||
+                indisponibles.length >= 3
+
+        };
+
+    }
+
+
+    function afficherSanteSources(
+        etat
+    ) {
+
+        var cible =
+            element(
+                "ccSanteSources"
+            );
+
+        if (!cible) {
+            return;
+        }
+
+
+        if (
+            etat.indisponibles.length === 0
+        ) {
+
+            cible.className =
+                "command-center-sources sources-ok";
+
+            cible.textContent =
+                etat.disponibles +
+                "/" +
+                etat.total +
+                " sources disponibles";
+
+            return;
+
+        }
+
+
+        if (etat.critique) {
+
+            cible.className =
+                "command-center-sources sources-critiques";
+
+            cible.textContent =
+                "Vue incompl?te ? " +
+                etat.disponibles +
+                "/" +
+                etat.total;
+
+        }
+        else {
+
+            cible.className =
+                "command-center-sources sources-partielles";
+
+            cible.textContent =
+                "Donn?es partielles ? " +
+                etat.disponibles +
+                "/" +
+                etat.total;
+
+        }
+
+    }
+
+
+    function appliquerAlerteSanteSources(
+        etat
+    ) {
+
+        if (
+            !etat ||
+            etat.indisponibles.length === 0
+        ) {
+
+            return;
+
+        }
+
+        var statutGlobal =
+            element(
+                "ccStatutGlobal"
+            );
+
+
+        if (etat.critique) {
+
+            if (statutGlobal) {
+
+                statutGlobal.className =
+                    "command-center-statut statut-critique";
+
+                statutGlobal.textContent =
+                    "Vue op?rationnelle incompl?te";
+
+            }
+
+            definirTexte(
+                "ccPrioriteTitre",
+                "Certaines donn?es ne sont pas disponibles"
+            );
+
+            definirTexte(
+                "ccPrioriteDetail",
+                "Sources indisponibles : " +
+                etat.indisponibles.join(", ") +
+                ". Ne pas interpr?ter les valeurs manquantes comme des z?ros."
+            );
+
+            var action =
+                element(
+                    "ccPrioriteAction"
+                );
+
+            if (action) {
+
+                action.href =
+                    "./dashboard.html";
+
+                action.textContent =
+                    "Actualiser";
+
+            }
+
+            return;
+
+        }
+
+
+        if (
+            statutGlobal &&
+            !statutGlobal.classList.contains(
+                "statut-critique"
+            )
+        ) {
+
+            statutGlobal.className =
+                "command-center-statut statut-vigilance";
+
+            statutGlobal.textContent =
+                "Donn?es partielles";
+
+        }
+
+    }
+
     async function chargerDashboard() {
 
         cacherErreur();
@@ -2050,6 +2254,16 @@
                     )
 
                 ]);
+
+
+            var santeSources =
+                analyserSanteSources(
+                    resultats
+                );
+
+            afficherSanteSources(
+                santeSources
+            );
 
             var dashboard =
                 resultats[0].succes
@@ -2211,6 +2425,11 @@
                 agents,
                 tricycles,
                 incidents
+            );
+
+
+            appliquerAlerteSanteSources(
+                santeSources
             );
 
             var ventes =

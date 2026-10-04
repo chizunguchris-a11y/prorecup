@@ -1124,3 +1124,42 @@ th {
     }
 
 }
+
+
+/* ==========================================================
+   P5.3d - SANTE DES SOURCES
+   ========================================================== */
+
+.command-center-sources {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.command-center-sources.sources-analyse {
+    color: #475569;
+    background: #F1F5F9;
+}
+
+.command-center-sources.sources-ok {
+    color:
+        var(--pr-color-success, #16794B);
+    background: #ECFDF3;
+}
+
+.command-center-sources.sources-partielles {
+    color:
+        var(--pr-color-warning, #A65D00);
+    background: #FFF4E5;
+}
+
+.command-center-sources.sources-critiques {
+    color:
+        var(--pr-color-danger, #B42318);
+    background: #FEECEB;
+}

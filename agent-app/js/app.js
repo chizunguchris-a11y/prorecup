@@ -466,9 +466,608 @@
             afficherMessage(messageApplication, e.message, 'erreur');
         }
     });
+
+
+    /* ======================================================
+       P5.1c - FEEDBACK TERRAIN
+       ====================================================== */
+
+    const afficherToastTerrain = (
+        message,
+        type = "info",
+        options = {}
+    ) => {
+
+        const types = {
+            succes: "succes",
+            success: "succes",
+            erreur: "erreur",
+            error: "erreur",
+            avertissement: "avertissement",
+            warning: "avertissement",
+            info: "info"
+        };
+
+        const variante =
+            types[
+                String(type || "")
+                    .toLowerCase()
+            ] || "info";
+
+        let region =
+            document.getElementById(
+                "prFeedbackRegion"
+            );
+
+        if (!region) {
+
+            region =
+                document.createElement(
+                    "div"
+                );
+
+            region.id =
+                "prFeedbackRegion";
+
+            region.className =
+                "pr-toast-region";
+
+            region.setAttribute(
+                "aria-live",
+                "polite"
+            );
+
+            document.body.appendChild(
+                region
+            );
+        }
+
+        const toast =
+            document.createElement(
+                "div"
+            );
+
+        toast.className =
+            "pr-toast pr-toast-" +
+            variante;
+
+        toast.setAttribute(
+            "role",
+            variante === "erreur"
+                ? "alert"
+                : "status"
+        );
+
+        const symbole =
+            document.createElement(
+                "span"
+            );
+
+        symbole.className =
+            "pr-toast-symbole";
+
+        symbole.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        symbole.textContent =
+            variante === "succes"
+                ? "\u2713"
+                : variante === "info"
+                    ? "i"
+                    : "!";
+
+        const contenu =
+            document.createElement(
+                "div"
+            );
+
+        contenu.className =
+            "pr-toast-contenu";
+
+        const texte =
+            document.createElement(
+                "span"
+            );
+
+        texte.className =
+            "pr-toast-message";
+
+        texte.textContent =
+            String(
+                message ||
+                ""
+            );
+
+        contenu.appendChild(
+            texte
+        );
+
+        const fermer =
+            document.createElement(
+                "button"
+            );
+
+        fermer.type =
+            "button";
+
+        fermer.className =
+            "pr-toast-fermer";
+
+        fermer.setAttribute(
+            "aria-label",
+            "Fermer la notification"
+        );
+
+        fermer.textContent =
+            "\u00d7";
+
+        toast.append(
+            symbole,
+            contenu,
+            fermer
+        );
+
+        region.appendChild(
+            toast
+        );
+
+        let retire =
+            false;
+
+        const retirer =
+            () => {
+
+                if (retire) {
+                    return;
+                }
+
+                retire =
+                    true;
+
+                toast.classList.remove(
+                    "pr-toast-visible"
+                );
+
+                toast.classList.add(
+                    "pr-toast-sortie"
+                );
+
+                window.setTimeout(
+                    () => {
+
+                        toast.remove();
+
+                        if (
+                            region &&
+                            !region.children.length
+                        ) {
+
+                            region.remove();
+                        }
+
+                    },
+                    220
+                );
+            };
+
+        fermer.addEventListener(
+            "click",
+            retirer
+        );
+
+        window.requestAnimationFrame(
+            () => {
+
+                toast.classList.add(
+                    "pr-toast-visible"
+                );
+            }
+        );
+
+        const duree =
+            Number(
+                options.duree ||
+                (
+                    variante === "erreur"
+                        ? 6500
+                        : 4500
+                )
+            );
+
+        if (
+            Number.isFinite(duree) &&
+            duree > 0
+        ) {
+
+            window.setTimeout(
+                retirer,
+                duree
+            );
+        }
+    };
+
+
+    const confirmerTerrain = (
+        options = {}
+    ) => {
+
+        return new Promise(
+            resolve => {
+
+                const precedent =
+                    document.activeElement;
+
+                const fond =
+                    document.createElement(
+                        "div"
+                    );
+
+                fond.className =
+                    "pr-dialog-fond";
+
+                const dialogue =
+                    document.createElement(
+                        "div"
+                    );
+
+                dialogue.className =
+                    "pr-dialog";
+
+                dialogue.setAttribute(
+                    "role",
+                    "dialog"
+                );
+
+                dialogue.setAttribute(
+                    "aria-modal",
+                    "true"
+                );
+
+                const titreId =
+                    "pr-terrain-dialog-titre-" +
+                    Date.now();
+
+                const messageId =
+                    "pr-terrain-dialog-message-" +
+                    Date.now();
+
+                dialogue.setAttribute(
+                    "aria-labelledby",
+                    titreId
+                );
+
+                dialogue.setAttribute(
+                    "aria-describedby",
+                    messageId
+                );
+
+                const titre =
+                    document.createElement(
+                        "h2"
+                    );
+
+                titre.id =
+                    titreId;
+
+                titre.textContent =
+                    options.titre ||
+                    "Confirmer l'action";
+
+                const message =
+                    document.createElement(
+                        "p"
+                    );
+
+                message.id =
+                    messageId;
+
+                message.className =
+                    "pr-dialog-message";
+
+                message.textContent =
+                    options.message ||
+                    "Voulez-vous continuer ?";
+
+                const actions =
+                    document.createElement(
+                        "div"
+                    );
+
+                actions.className =
+                    "pr-dialog-actions";
+
+                const annuler =
+                    document.createElement(
+                        "button"
+                    );
+
+                annuler.type =
+                    "button";
+
+                annuler.className =
+                    "pr-dialog-bouton pr-dialog-annuler";
+
+                annuler.textContent =
+                    options.texteAnnuler ||
+                    "Annuler";
+
+                const confirmer =
+                    document.createElement(
+                        "button"
+                    );
+
+                confirmer.type =
+                    "button";
+
+                confirmer.className =
+                    "pr-dialog-bouton " +
+                    (
+                        options.danger
+                            ? "pr-dialog-danger"
+                            : "pr-dialog-confirmer"
+                    );
+
+                confirmer.textContent =
+                    options.texteConfirmer ||
+                    "Confirmer";
+
+                actions.append(
+                    annuler,
+                    confirmer
+                );
+
+                dialogue.append(
+                    titre,
+                    message,
+                    actions
+                );
+
+                fond.appendChild(
+                    dialogue
+                );
+
+                document.body.appendChild(
+                    fond
+                );
+
+                document.body.classList.add(
+                    "pr-dialog-ouvert"
+                );
+
+                let termine =
+                    false;
+
+                const terminer =
+                    valeur => {
+
+                        if (termine) {
+                            return;
+                        }
+
+                        termine =
+                            true;
+
+                        document.removeEventListener(
+                            "keydown",
+                            gererClavier
+                        );
+
+                        document.body.classList.remove(
+                            "pr-dialog-ouvert"
+                        );
+
+                        fond.classList.add(
+                            "pr-dialog-fermeture"
+                        );
+
+                        window.setTimeout(
+                            () => {
+
+                                fond.remove();
+
+                                if (
+                                    precedent &&
+                                    typeof precedent.focus ===
+                                        "function"
+                                ) {
+
+                                    precedent.focus();
+                                }
+
+                                resolve(
+                                    valeur
+                                );
+
+                            },
+                            180
+                        );
+                    };
+
+                const gererClavier =
+                    evenement => {
+
+                        if (
+                            evenement.key ===
+                            "Escape"
+                        ) {
+
+                            evenement.preventDefault();
+
+                            terminer(
+                                false
+                            );
+
+                            return;
+                        }
+
+                        if (
+                            evenement.key !==
+                            "Tab"
+                        ) {
+
+                            return;
+                        }
+
+                        const focusables =
+                            [
+                                annuler,
+                                confirmer
+                            ];
+
+                        const premier =
+                            focusables[0];
+
+                        const dernier =
+                            focusables[1];
+
+                        if (
+                            evenement.shiftKey &&
+                            document.activeElement ===
+                                premier
+                        ) {
+
+                            evenement.preventDefault();
+
+                            dernier.focus();
+
+                        }
+                        else if (
+                            !evenement.shiftKey &&
+                            document.activeElement ===
+                                dernier
+                        ) {
+
+                            evenement.preventDefault();
+
+                            premier.focus();
+                        }
+                    };
+
+                annuler.addEventListener(
+                    "click",
+                    () => terminer(false)
+                );
+
+                confirmer.addEventListener(
+                    "click",
+                    () => terminer(true)
+                );
+
+                fond.addEventListener(
+                    "click",
+                    evenement => {
+
+                        if (
+                            evenement.target ===
+                            fond
+                        ) {
+
+                            terminer(false);
+                        }
+                    }
+                );
+
+                document.addEventListener(
+                    "keydown",
+                    gererClavier
+                );
+
+                window.requestAnimationFrame(
+                    () => {
+
+                        fond.classList.add(
+                            "pr-dialog-visible"
+                        );
+
+                        annuler.focus();
+                    }
+                );
+            }
+        );
+    };
+
+
+    const definirOccupationTerrain = (
+        element,
+        occupe,
+        texte = "Traitement..."
+    ) => {
+
+        if (!element) {
+            return;
+        }
+
+        if (occupe) {
+
+            if (
+                element.dataset
+                    .prTexteInitial ===
+                undefined
+            ) {
+
+                element.dataset
+                    .prTexteInitial =
+                        element.textContent;
+            }
+
+            element.disabled =
+                true;
+
+            element.setAttribute(
+                "aria-busy",
+                "true"
+            );
+
+            if (texte) {
+
+                element.textContent =
+                    texte;
+            }
+
+            return;
+        }
+
+        element.disabled =
+            false;
+
+        element.removeAttribute(
+            "aria-busy"
+        );
+
+        if (
+            element.dataset
+                .prTexteInitial !==
+            undefined
+        ) {
+
+            element.textContent =
+                element.dataset
+                    .prTexteInitial;
+
+            delete element.dataset
+                .prTexteInitial;
+        }
+    };
+
+
     rejectButton.addEventListener('click', async () => {
         if (synchronisation || actionEnCours || !navigator.onLine) return;
-        if (!confirm('Retirer l’action refusée et toutes les actions suivantes, y compris leurs photos ? Vous devrez les saisir à nouveau.')) return;
+        if (
+            !(
+                await confirmerTerrain({
+                    titre:
+                        "Retirer les actions refus\u00e9es ?",
+                    message:
+                        'Retirer l’action refusée et toutes les actions suivantes, y compris leurs photos ? Vous devrez les saisir à nouveau.',
+                    texteConfirmer:
+                        "Retirer et recommencer",
+                    danger:
+                        true
+                })
+            )
+        ) return;
         try {
             await terrainStore.discardRejected();
             await chargerJournee();

@@ -558,6 +558,627 @@ const PortailRecup = {
 
     },
 
+    afficherNotification(
+        message,
+        type = "succes",
+        options = {}
+    ) {
+
+        const variantes = {
+            succes: "succes",
+            success: "succes",
+            erreur: "erreur",
+            error: "erreur",
+            avertissement: "avertissement",
+            warning: "avertissement",
+            info: "info"
+        };
+
+        const variante =
+            variantes[
+                String(type || "")
+                    .toLowerCase()
+            ] || "info";
+
+        let region =
+            document.getElementById(
+                "prFeedbackRegion"
+            );
+
+        if (!region) {
+
+            region =
+                document.createElement(
+                    "div"
+                );
+
+            region.id =
+                "prFeedbackRegion";
+
+            region.className =
+                "pr-toast-region";
+
+            region.setAttribute(
+                "aria-live",
+                "polite"
+            );
+
+            region.setAttribute(
+                "aria-atomic",
+                "false"
+            );
+
+            document.body.appendChild(
+                region
+            );
+        }
+
+        const toast =
+            document.createElement(
+                "div"
+            );
+
+        toast.className =
+            "pr-toast pr-toast-" +
+            variante;
+
+        toast.setAttribute(
+            "role",
+            variante === "erreur"
+                ? "alert"
+                : "status"
+        );
+
+        const symbole =
+            document.createElement(
+                "span"
+            );
+
+        symbole.className =
+            "pr-toast-symbole";
+
+        symbole.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        symbole.textContent =
+            variante === "succes"
+                ? "\u2713"
+                : variante === "erreur"
+                    ? "!"
+                    : variante === "avertissement"
+                        ? "!"
+                        : "i";
+
+        const contenu =
+            document.createElement(
+                "div"
+            );
+
+        contenu.className =
+            "pr-toast-contenu";
+
+        const titre =
+            document.createElement(
+                "strong"
+            );
+
+        titre.className =
+            "pr-toast-titre";
+
+        titre.textContent =
+            options.titre ||
+            (
+                variante === "succes"
+                    ? "Operation reussie"
+                    : variante === "erreur"
+                        ? "Une erreur est survenue"
+                        : variante === "avertissement"
+                            ? "Attention"
+                            : "Information"
+            );
+
+        const texte =
+            document.createElement(
+                "span"
+            );
+
+        texte.className =
+            "pr-toast-message";
+
+        texte.textContent =
+            String(
+                message ||
+                ""
+            );
+
+        const fermer =
+            document.createElement(
+                "button"
+            );
+
+        fermer.type =
+            "button";
+
+        fermer.className =
+            "pr-toast-fermer";
+
+        fermer.setAttribute(
+            "aria-label",
+            "Fermer la notification"
+        );
+
+        fermer.textContent =
+            "\u00d7";
+
+        contenu.append(
+            titre,
+            texte
+        );
+
+        toast.append(
+            symbole,
+            contenu,
+            fermer
+        );
+
+        region.appendChild(
+            toast
+        );
+
+        let retire =
+            false;
+
+        const retirer =
+            () => {
+
+                if (retire) {
+                    return;
+                }
+
+                retire =
+                    true;
+
+                toast.classList.remove(
+                    "pr-toast-visible"
+                );
+
+                toast.classList.add(
+                    "pr-toast-sortie"
+                );
+
+                window.setTimeout(
+                    () => {
+                        toast.remove();
+
+                        if (
+                            region &&
+                            !region.children.length
+                        ) {
+                            region.remove();
+                        }
+                    },
+                    220
+                );
+            };
+
+        fermer.addEventListener(
+            "click",
+            retirer
+        );
+
+        window.requestAnimationFrame(
+            () => {
+                toast.classList.add(
+                    "pr-toast-visible"
+                );
+            }
+        );
+
+        const duree =
+            Number(
+                options.duree ||
+                (
+                    variante === "erreur"
+                        ? 6500
+                        : 4500
+                )
+            );
+
+        if (
+            Number.isFinite(duree) &&
+            duree > 0
+        ) {
+
+            window.setTimeout(
+                retirer,
+                duree
+            );
+        }
+
+        return retirer;
+    },
+
+
+    confirmer(
+        options = {}
+    ) {
+
+        return new Promise(
+            resolve => {
+
+                const precedent =
+                    document.activeElement;
+
+                const fond =
+                    document.createElement(
+                        "div"
+                    );
+
+                fond.className =
+                    "pr-dialog-fond";
+
+                const dialogue =
+                    document.createElement(
+                        "div"
+                    );
+
+                dialogue.className =
+                    "pr-dialog";
+
+                dialogue.setAttribute(
+                    "role",
+                    "dialog"
+                );
+
+                dialogue.setAttribute(
+                    "aria-modal",
+                    "true"
+                );
+
+                const idTitre =
+                    "pr-dialog-titre-" +
+                    Date.now();
+
+                const idMessage =
+                    "pr-dialog-message-" +
+                    Date.now();
+
+                dialogue.setAttribute(
+                    "aria-labelledby",
+                    idTitre
+                );
+
+                dialogue.setAttribute(
+                    "aria-describedby",
+                    idMessage
+                );
+
+                const entete =
+                    document.createElement(
+                        "div"
+                    );
+
+                entete.className =
+                    "pr-dialog-entete";
+
+                const titre =
+                    document.createElement(
+                        "h2"
+                    );
+
+                titre.id =
+                    idTitre;
+
+                titre.textContent =
+                    options.titre ||
+                    "Confirmer l'action";
+
+                const message =
+                    document.createElement(
+                        "p"
+                    );
+
+                message.id =
+                    idMessage;
+
+                message.className =
+                    "pr-dialog-message";
+
+                message.textContent =
+                    options.message ||
+                    "Voulez-vous continuer ?";
+
+                entete.append(
+                    titre,
+                    message
+                );
+
+                const actions =
+                    document.createElement(
+                        "div"
+                    );
+
+                actions.className =
+                    "pr-dialog-actions";
+
+                const annuler =
+                    document.createElement(
+                        "button"
+                    );
+
+                annuler.type =
+                    "button";
+
+                annuler.className =
+                    "pr-dialog-bouton pr-dialog-annuler";
+
+                annuler.textContent =
+                    options.texteAnnuler ||
+                    "Annuler";
+
+                const confirmer =
+                    document.createElement(
+                        "button"
+                    );
+
+                confirmer.type =
+                    "button";
+
+                confirmer.className =
+                    "pr-dialog-bouton " +
+                    (
+                        options.danger
+                            ? "pr-dialog-danger"
+                            : "pr-dialog-confirmer"
+                    );
+
+                confirmer.textContent =
+                    options.texteConfirmer ||
+                    "Confirmer";
+
+                actions.append(
+                    annuler,
+                    confirmer
+                );
+
+                dialogue.append(
+                    entete,
+                    actions
+                );
+
+                fond.appendChild(
+                    dialogue
+                );
+
+                document.body.appendChild(
+                    fond
+                );
+
+                document.body.classList.add(
+                    "pr-dialog-ouvert"
+                );
+
+                let termine =
+                    false;
+
+                const terminer =
+                    valeur => {
+
+                        if (termine) {
+                            return;
+                        }
+
+                        termine =
+                            true;
+
+                        document.removeEventListener(
+                            "keydown",
+                            gererClavier
+                        );
+
+                        fond.classList.add(
+                            "pr-dialog-fermeture"
+                        );
+
+                        document.body.classList.remove(
+                            "pr-dialog-ouvert"
+                        );
+
+                        window.setTimeout(
+                            () => {
+                                fond.remove();
+
+                                if (
+                                    precedent &&
+                                    typeof precedent.focus ===
+                                        "function"
+                                ) {
+                                    precedent.focus();
+                                }
+
+                                resolve(
+                                    valeur
+                                );
+                            },
+                            180
+                        );
+                    };
+
+                const gererClavier =
+                    evenement => {
+
+                        if (
+                            evenement.key ===
+                            "Escape"
+                        ) {
+
+                            evenement.preventDefault();
+
+                            terminer(
+                                false
+                            );
+
+                            return;
+                        }
+
+                        if (
+                            evenement.key !==
+                            "Tab"
+                        ) {
+                            return;
+                        }
+
+                        const focusables =
+                            Array.from(
+                                dialogue.querySelectorAll(
+                                    "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])"
+                                )
+                            );
+
+                        if (
+                            focusables.length ===
+                            0
+                        ) {
+                            return;
+                        }
+
+                        const premier =
+                            focusables[0];
+
+                        const dernier =
+                            focusables[
+                                focusables.length - 1
+                            ];
+
+                        if (
+                            evenement.shiftKey &&
+                            document.activeElement ===
+                                premier
+                        ) {
+
+                            evenement.preventDefault();
+
+                            dernier.focus();
+
+                        }
+                        else if (
+                            !evenement.shiftKey &&
+                            document.activeElement ===
+                                dernier
+                        ) {
+
+                            evenement.preventDefault();
+
+                            premier.focus();
+                        }
+                    };
+
+                annuler.addEventListener(
+                    "click",
+                    () => terminer(false)
+                );
+
+                confirmer.addEventListener(
+                    "click",
+                    () => terminer(true)
+                );
+
+                fond.addEventListener(
+                    "click",
+                    evenement => {
+
+                        if (
+                            evenement.target ===
+                            fond
+                        ) {
+                            terminer(false);
+                        }
+                    }
+                );
+
+                document.addEventListener(
+                    "keydown",
+                    gererClavier
+                );
+
+                window.requestAnimationFrame(
+                    () => {
+                        fond.classList.add(
+                            "pr-dialog-visible"
+                        );
+
+                        annuler.focus();
+                    }
+                );
+            }
+        );
+    },
+
+
+    definirOccupation(
+        element,
+        occupe,
+        texte = "Traitement..."
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+        if (occupe) {
+
+            if (
+                !element.dataset
+                    .prTexteInitial
+            ) {
+
+                element.dataset
+                    .prTexteInitial =
+                        element.textContent;
+            }
+
+            element.disabled =
+                true;
+
+            element.setAttribute(
+                "aria-busy",
+                "true"
+            );
+
+            if (texte) {
+
+                element.textContent =
+                    texte;
+            }
+
+            return;
+        }
+
+        element.disabled =
+            false;
+
+        element.removeAttribute(
+            "aria-busy"
+        );
+
+        if (
+            element.dataset
+                .prTexteInitial !==
+            undefined
+        ) {
+
+            element.textContent =
+                element.dataset
+                    .prTexteInitial;
+
+            delete element.dataset
+                .prTexteInitial;
+        }
+    },
+
+
 };
 
 

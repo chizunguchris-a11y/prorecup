@@ -6,8 +6,15 @@ import authController
 import authMiddleware
     from "../middlewares/authMiddleware.js";
 
+import {
+    creerLimiteurConnexion
+} from "../middlewares/httpSecurityMiddleware.js";
+
 const router =
     express.Router();
+
+const limiteurConnexion =
+    creerLimiteurConnexion();
 
 /**
  * @swagger
@@ -29,11 +36,11 @@ const router =
  *               email:
  *                 type: string
  *                 format: email
- *                 example: christian2@prorecup.com
+ *                 example: utilisateur@exemple.com
  *               motDePasse:
  *                 type: string
  *                 format: password
- *                 example: ProRecup2027!
+ *                 example: "********"
  *     responses:
  *       200:
  *         description: Connexion réussie.
@@ -44,6 +51,7 @@ const router =
  */
 router.post(
     "/login",
+    limiteurConnexion,
     authController.connexion
 );
 

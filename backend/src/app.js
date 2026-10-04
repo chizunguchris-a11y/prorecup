@@ -1,4 +1,9 @@
 ﻿import express from "express";
+
+import {
+    creerHeadersSecurite,
+    creerLimiteurGlobal
+} from "./middlewares/httpSecurityMiddleware.js";
 import auditContextMiddleware
     from "./middlewares/auditContextMiddleware.js";
 import utilisateurRoutes
@@ -81,9 +86,19 @@ dotenv.config();
 const app =
     express();
 
+const nombreProxies =
+    Math.max(
+        1,
+        Number.parseInt(
+            process.env.TRUST_PROXY_HOPS ||
+            "1",
+            10
+        ) || 1
+    );
+
 app.set(
     "trust proxy",
-    true
+    nombreProxies
 );
 
 const estProduction =
@@ -108,6 +123,19 @@ if (
     );
 
 }
+
+const headersSecurite =
+    creerHeadersSecurite({
+        production:
+            estProduction
+    });
+
+const limiteurGlobal =
+    creerLimiteurGlobal();
+
+app.use(
+    headersSecurite
+);
 
 app.use(
     cors({
@@ -177,6 +205,10 @@ app.use(
             true
     })
 );
+app.use(
+    limiteurGlobal
+);
+
 app.use(
     express.json({
         limit:

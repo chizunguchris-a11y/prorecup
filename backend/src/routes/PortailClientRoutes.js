@@ -10,6 +10,14 @@ import portailClientContextMiddleware
 import portailClientController
     from "../controllers/PortailClientController.js";
 
+import validationMiddleware
+    from "../middlewares/validationMiddleware.js";
+
+import {
+    collecteIdValidator,
+    preuveCollecteIdsValidator
+} from "../validators/portailClientValidator.js";
+
 
 const router =
     express.Router();
@@ -139,6 +147,8 @@ router.get(
     "/collectes/:id",
     authMiddleware,
     portailClientContextMiddleware,
+    collecteIdValidator,
+    validationMiddleware,
     portailClientController.detailCollecte
 );
 
@@ -168,6 +178,8 @@ router.get(
     "/collectes/:id/preuves/:preuveId/url",
     authMiddleware,
     portailClientContextMiddleware,
+    preuveCollecteIdsValidator,
+    validationMiddleware,
     portailClientController.urlPreuve
 );
 export default router;

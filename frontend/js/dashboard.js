@@ -1529,8 +1529,6 @@
             var ventes =
                 dashboard.ventes || {};
 
-            var carbone =
-                dashboard.carbone || {};
 
             definirTexte(
                 "kpiMissionsJour",
@@ -1614,13 +1612,7 @@
 
             definirTexte(
                 "kpiImpactCarbone",
-                formaterNombre(
-                    carbone.co2e_estime_total ||
-                    carbone.impact_total ||
-                    0,
-                    2
-                ) +
-                " kg CO₂e"
+                "En consolidation"
             );
 
             afficherStocks(stocks);

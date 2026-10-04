@@ -1,0 +1,562 @@
+/*
+ * PRO RECUP DESIGN SYSTEM
+ * Premium Components v1
+ *
+ * Cette couche est chargee APRES les CSS metier historiques.
+ * Elle harmonise progressivement les composants existants
+ * sans modifier les comportements JavaScript.
+ */
+
+
+/* ==========================================================
+   BOUTONS - SOCLE
+   ========================================================== */
+
+button {
+    font-family: var(--pr-font-sans);
+}
+
+button:disabled,
+[aria-disabled="true"] {
+    cursor: not-allowed !important;
+    opacity: 0.56;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--pr-color-primary);
+    outline-offset: 2px;
+    box-shadow: var(--pr-focus-ring);
+}
+
+
+/* ==========================================================
+   FORMULAIRES - SOCLE
+   ========================================================== */
+
+input,
+select,
+textarea {
+    color: var(--pr-color-text);
+    font-family: var(--pr-font-sans);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--pr-color-text-muted);
+    opacity: 1;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+    cursor: not-allowed;
+    color: var(--pr-color-text-disabled);
+    background: var(--pr-color-surface-muted);
+}
+
+
+/* ==========================================================
+   TABLEAUX - SOCLE
+   ========================================================== */
+
+table {
+    width: 100%;
+    border-spacing: 0;
+}
+
+th {
+    color: var(--pr-color-text-secondary);
+    font-size: var(--pr-font-size-xs);
+    font-weight: var(--pr-font-weight-semibold);
+    letter-spacing: 0.015em;
+}
+
+td {
+    color: var(--pr-color-text);
+}
+
+
+/* ==========================================================
+   TOUCH / MOBILE
+   ========================================================== */
+
+@media (pointer: coarse) {
+
+    button,
+    input,
+    select {
+        min-height: var(--pr-control-height-lg);
+    }
+
+}
+
+
+/* ==========================================================
+   HOVER UNIQUEMENT SUR APPAREILS QUI LE SUPPORTENT
+   ========================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+
+    button:not(:disabled),
+    a {
+        transition:
+            background-color var(--pr-duration-normal) var(--pr-ease),
+            border-color var(--pr-duration-normal) var(--pr-ease),
+            color var(--pr-duration-normal) var(--pr-ease),
+            box-shadow var(--pr-duration-normal) var(--pr-ease),
+            transform var(--pr-duration-fast) var(--pr-ease);
+    }
+
+}
+
+
+/* ==========================================================
+   REDUCTION DES MOUVEMENTS
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        transition: none !important;
+    }
+
+}
+
+
+
+/* ==========================================================
+   AGENT ? BOUTONS
+   ========================================================== */
+
+.bouton,
+.bouton-principal,
+.bouton-secondaire,
+.bouton-icone,
+.mission-action,
+.profil-bouton-deconnexion {
+    min-height: var(--pr-control-height-lg);
+    border-radius: var(--pr-radius-md);
+    font-family: var(--pr-font-sans);
+    font-size: var(--pr-font-size-md);
+    font-weight: var(--pr-font-weight-semibold);
+    cursor: pointer;
+}
+
+.bouton-principal,
+.mission-action {
+    color: var(--pr-color-text-inverse);
+    background: var(--pr-color-primary);
+    border: 1px solid var(--pr-color-primary);
+    box-shadow: var(--pr-shadow-sm);
+}
+
+.bouton-secondaire {
+    color: var(--pr-color-text);
+    background: var(--pr-color-surface);
+    border: 1px solid var(--pr-color-border);
+}
+
+.bouton-icone {
+    min-width: var(--pr-control-height-lg);
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.profil-bouton-deconnexion {
+    color: var(--pr-color-danger);
+    background: var(--pr-color-danger-soft);
+    border: 1px solid rgba(180, 35, 24, 0.18);
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+    .bouton-principal:hover,
+    .mission-action:hover {
+        background: var(--pr-color-primary-hover);
+        border-color: var(--pr-color-primary-hover);
+    }
+
+    .bouton-secondaire:hover {
+        color: var(--pr-color-primary-dark);
+        background: var(--pr-color-primary-pale);
+        border-color: var(--pr-color-border-strong);
+    }
+
+}
+
+
+/* ==========================================================
+   AGENT ? FORMULAIRES
+   ========================================================== */
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.incident-champ,
+.incident-champ-large {
+    min-height: var(--pr-control-height-lg);
+    border-radius: var(--pr-radius-md);
+    border: 1px solid var(--pr-color-border);
+    background: var(--pr-color-surface);
+    color: var(--pr-color-text);
+    font-size: 16px;
+}
+
+textarea,
+.incident-champ-large {
+    min-height: 112px;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus,
+.incident-champ:focus,
+.incident-champ-large:focus {
+    border-color: var(--pr-color-primary);
+    box-shadow: var(--pr-focus-ring);
+    outline: none;
+}
+
+.champ-label {
+    color: var(--pr-color-text);
+    font-size: var(--pr-font-size-sm);
+    font-weight: var(--pr-font-weight-semibold);
+}
+
+
+/* ==========================================================
+   AGENT ? CARTES
+   ========================================================== */
+
+.carte,
+.bloc,
+.mission-carte,
+.connexion-carte,
+.profil-carte {
+    border-color: var(--pr-color-border);
+    border-radius: var(--pr-radius-lg);
+    background: var(--pr-color-surface);
+    box-shadow: var(--pr-shadow-sm);
+}
+
+.mission-carte {
+    transition:
+        border-color var(--pr-duration-normal) var(--pr-ease),
+        box-shadow var(--pr-duration-normal) var(--pr-ease);
+}
+
+
+/* ==========================================================
+   AGENT ? KPI
+   ========================================================== */
+
+.statistique {
+    border-radius: var(--pr-radius-md);
+    border-color: var(--pr-color-border);
+    background: var(--pr-color-surface-soft);
+}
+
+.incident-resume {
+    border-radius: var(--pr-radius-md);
+}
+
+
+/* ==========================================================
+   AGENT ? BADGES / ETAT RESEAU
+   ========================================================== */
+
+.badge,
+.badge-en_cours,
+.badge-planifiee,
+.badge-terminee,
+.profil-badge,
+.etat-reseau {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: var(--pr-radius-pill);
+    font-size: var(--pr-font-size-2xs);
+    font-weight: var(--pr-font-weight-bold);
+    line-height: 1;
+}
+
+
+/* ==========================================================
+   AGENT ? LISTES
+   ========================================================== */
+
+.liste-missions {
+    gap: var(--pr-space-3);
+}
+
+.profil-ligne {
+    border-color: var(--pr-color-border);
+}
+
+
+/* ==========================================================
+   AGENT ? MOBILE TRES ETROIT
+   ========================================================== */
+
+@media (max-width: 420px) {
+
+    .bouton,
+    .bouton-principal,
+    .bouton-secondaire,
+    .mission-action,
+    .profil-bouton-deconnexion {
+        width: 100%;
+    }
+
+    .carte,
+    .bloc,
+    .mission-carte,
+    .profil-carte {
+        border-radius: var(--pr-radius-md);
+    }
+
+}
+
+
+
+/* ==========================================================
+   P5.1b - FINITIONS TERRAIN PREMIUM
+   ========================================================== */
+
+
+/* Navigation basse */
+
+.navigation-bas {
+    padding-bottom:
+        max(
+            8px,
+            env(safe-area-inset-bottom)
+        );
+
+    border-top-color:
+        var(--pr-color-border);
+
+    background:
+        rgba(255, 255, 255, 0.97);
+
+    box-shadow:
+        0 -8px 24px
+        rgba(23, 33, 28, 0.06);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+}
+
+
+.navigation-item {
+    min-height:
+        52px;
+
+    border-radius:
+        var(--pr-radius-md);
+
+    color:
+        var(--pr-color-text-secondary);
+
+    font-size:
+        var(--pr-font-size-2xs);
+
+    font-weight:
+        var(--pr-font-weight-semibold);
+}
+
+
+.navigation-icone {
+    display:
+        grid;
+
+    place-items:
+        center;
+
+    width:
+        32px;
+
+    height:
+        32px;
+
+    border-radius:
+        10px;
+}
+
+
+.navigation-icone svg {
+    width:
+        21px;
+
+    height:
+        21px;
+
+    stroke-width:
+        1.8;
+}
+
+
+.navigation-item.actif {
+    color:
+        var(--pr-color-primary);
+}
+
+
+.navigation-item.actif .navigation-icone {
+    color:
+        var(--pr-color-primary);
+
+    background:
+        var(--pr-color-primary-soft);
+}
+
+
+/* Etat vide */
+
+.vide {
+    min-height:
+        0;
+
+    padding:
+        22px
+        16px;
+
+    border-radius:
+        var(--pr-radius-lg);
+
+    color:
+        var(--pr-color-text-secondary);
+
+    background:
+        var(--pr-color-surface-soft);
+}
+
+
+.vide strong {
+    color:
+        var(--pr-color-text);
+
+    font-weight:
+        var(--pr-font-weight-semibold);
+}
+
+
+.vide p {
+    margin-top:
+        6px;
+
+    margin-bottom:
+        0;
+
+    line-height:
+        var(--pr-line-height-normal);
+}
+
+
+/* D?connexion dans l'ent?te */
+
+#bouton-deconnexion {
+    width:
+        44px;
+
+    min-width:
+        44px;
+
+    height:
+        44px;
+
+    min-height:
+        44px;
+
+    padding:
+        0;
+
+    border:
+        1px solid
+        rgba(180, 35, 24, 0.16);
+
+    border-radius:
+        var(--pr-radius-md);
+
+    color:
+        var(--pr-color-danger);
+
+    background:
+        var(--pr-color-surface);
+
+    box-shadow:
+        var(--pr-shadow-xs);
+}
+
+
+@media (hover: hover) and (pointer: fine) {
+
+    #bouton-deconnexion:hover {
+        background:
+            var(--pr-color-danger-soft);
+
+        border-color:
+            rgba(180, 35, 24, 0.26);
+    }
+
+}
+
+
+/* Profil : action danger distincte sans ?tre agressive */
+
+.profil-bouton-deconnexion {
+    color:
+        var(--pr-color-danger);
+
+    background:
+        var(--pr-color-danger-soft);
+
+    border:
+        1px solid
+        rgba(180, 35, 24, 0.16);
+
+    box-shadow:
+        none;
+}
+
+
+/* Petit ?cran */
+
+@media (max-width: 420px) {
+
+    .vide {
+        padding:
+            18px
+            14px;
+    }
+
+    .navigation-item {
+        min-height:
+            50px;
+    }
+
+    .navigation-icone {
+        width:
+            30px;
+
+        height:
+            30px;
+    }
+
+}

@@ -1,0 +1,625 @@
+/*
+ * PRO RECUP DESIGN SYSTEM
+ * Premium Components v1
+ *
+ * Cette couche est chargee APRES les CSS metier historiques.
+ * Elle harmonise progressivement les composants existants
+ * sans modifier les comportements JavaScript.
+ */
+
+
+/* ==========================================================
+   BOUTONS - SOCLE
+   ========================================================== */
+
+button {
+    font-family: var(--pr-font-sans);
+}
+
+button:disabled,
+[aria-disabled="true"] {
+    cursor: not-allowed !important;
+    opacity: 0.56;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--pr-color-primary);
+    outline-offset: 2px;
+    box-shadow: var(--pr-focus-ring);
+}
+
+
+/* ==========================================================
+   FORMULAIRES - SOCLE
+   ========================================================== */
+
+input,
+select,
+textarea {
+    color: var(--pr-color-text);
+    font-family: var(--pr-font-sans);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--pr-color-text-muted);
+    opacity: 1;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+    cursor: not-allowed;
+    color: var(--pr-color-text-disabled);
+    background: var(--pr-color-surface-muted);
+}
+
+
+/* ==========================================================
+   TABLEAUX - SOCLE
+   ========================================================== */
+
+table {
+    width: 100%;
+    border-spacing: 0;
+}
+
+th {
+    color: var(--pr-color-text-secondary);
+    font-size: var(--pr-font-size-xs);
+    font-weight: var(--pr-font-weight-semibold);
+    letter-spacing: 0.015em;
+}
+
+td {
+    color: var(--pr-color-text);
+}
+
+
+/* ==========================================================
+   TOUCH / MOBILE
+   ========================================================== */
+
+@media (pointer: coarse) {
+
+    button,
+    input,
+    select {
+        min-height: var(--pr-control-height-lg);
+    }
+
+}
+
+
+/* ==========================================================
+   HOVER UNIQUEMENT SUR APPAREILS QUI LE SUPPORTENT
+   ========================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+
+    button:not(:disabled),
+    a {
+        transition:
+            background-color var(--pr-duration-normal) var(--pr-ease),
+            border-color var(--pr-duration-normal) var(--pr-ease),
+            color var(--pr-duration-normal) var(--pr-ease),
+            box-shadow var(--pr-duration-normal) var(--pr-ease),
+            transform var(--pr-duration-fast) var(--pr-ease);
+    }
+
+}
+
+
+/* ==========================================================
+   REDUCTION DES MOUVEMENTS
+   ========================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        transition: none !important;
+    }
+
+}
+
+
+
+/* ==========================================================
+   BACK-OFFICE ? BOUTONS
+   ========================================================== */
+
+.bouton,
+.bouton-principal,
+.bouton-primaire,
+.bouton-secondaire,
+.bouton-annuler,
+.bouton-generer,
+.bouton-aujourdhui,
+.bouton-navigation-periode,
+.bouton-pagination,
+.bouton-vue,
+.bouton-action,
+.bouton-modifier,
+.bouton-preuve,
+.bouton-depot,
+.bouton-valider,
+.bouton-statut,
+.bouton-details,
+.bouton-supprimer,
+.bouton-supprimer-notification {
+    min-height: var(--pr-control-height-md);
+    border-radius: var(--pr-radius-md);
+    padding: 0 var(--pr-control-padding-x);
+    font-family: var(--pr-font-sans);
+    font-size: var(--pr-font-size-sm);
+    font-weight: var(--pr-font-weight-semibold);
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+
+/* Primaire */
+
+.bouton-principal,
+.bouton-primaire,
+.bouton-generer,
+.bouton-valider {
+    color: var(--pr-color-text-inverse);
+    background: var(--pr-color-primary);
+    border: 1px solid var(--pr-color-primary);
+    box-shadow: var(--pr-shadow-xs);
+}
+
+
+/* Secondaire */
+
+.bouton-secondaire,
+.bouton-annuler,
+.bouton-aujourdhui,
+.bouton-navigation-periode,
+.bouton-pagination,
+.bouton-vue,
+.bouton-details,
+.bouton-preuve {
+    color: var(--pr-color-text);
+    background: var(--pr-color-surface);
+    border: 1px solid var(--pr-color-border);
+    box-shadow: var(--pr-shadow-xs);
+}
+
+
+/* Danger */
+
+.bouton-supprimer,
+.bouton-supprimer-notification {
+    color: var(--pr-color-danger);
+    background: var(--pr-color-danger-soft);
+    border: 1px solid rgba(180, 35, 24, 0.18);
+}
+
+
+/* Petites actions */
+
+.bouton-action,
+.bouton-fermer,
+.bouton-statut {
+    border-radius: var(--pr-radius-sm);
+}
+
+
+@media (hover: hover) and (pointer: fine) {
+
+    .bouton-principal:hover,
+    .bouton-primaire:hover,
+    .bouton-generer:hover,
+    .bouton-valider:hover {
+        background: var(--pr-color-primary-hover);
+        border-color: var(--pr-color-primary-hover);
+        box-shadow: var(--pr-shadow-sm);
+        transform: translateY(-1px);
+    }
+
+    .bouton-secondaire:hover,
+    .bouton-annuler:hover,
+    .bouton-aujourdhui:hover,
+    .bouton-navigation-periode:hover,
+    .bouton-pagination:hover,
+    .bouton-vue:hover,
+    .bouton-details:hover,
+    .bouton-preuve:hover {
+        color: var(--pr-color-primary-dark);
+        border-color: var(--pr-color-border-strong);
+        background: var(--pr-color-primary-pale);
+    }
+
+    .bouton-supprimer:hover,
+    .bouton-supprimer-notification:hover {
+        border-color: rgba(180, 35, 24, 0.3);
+        background: #feeceb;
+    }
+
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? FORMULAIRES
+   ========================================================== */
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea,
+.champ,
+.champ-large,
+.champ-recherche,
+.champ-ordre {
+    border-radius: var(--pr-radius-md);
+    border: 1px solid var(--pr-color-border);
+    background: var(--pr-color-surface);
+    color: var(--pr-color-text);
+    transition:
+        border-color var(--pr-duration-normal) var(--pr-ease),
+        box-shadow var(--pr-duration-normal) var(--pr-ease),
+        background-color var(--pr-duration-normal) var(--pr-ease);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+.champ,
+.champ-large,
+.champ-recherche,
+.champ-ordre {
+    min-height: var(--pr-control-height-md);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):hover,
+select:hover,
+textarea:hover {
+    border-color: var(--pr-color-border-strong);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+    border-color: var(--pr-color-primary);
+    box-shadow: var(--pr-focus-ring);
+    outline: none;
+}
+
+.groupe-champ label,
+.groupe-formulaire label {
+    color: var(--pr-color-text);
+    font-size: var(--pr-font-size-sm);
+    font-weight: var(--pr-font-weight-semibold);
+}
+
+.aide-champ {
+    color: var(--pr-color-text-secondary);
+    font-size: var(--pr-font-size-xs);
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? CARTES / PANNEAUX
+   ========================================================== */
+
+.panneau,
+.panneau-audits,
+.panneau-carte,
+.panneau-liste,
+.panneau-notifications,
+.panneau-planning,
+.panneau-profil,
+.panneau-rapport,
+.panneau-recherche,
+.panneau-repartition,
+.panneau-tableau,
+.panneau-unites,
+.carte-resume,
+.carte-indicateur,
+.carte-evenement,
+.carte-position,
+.carte-mission-jour {
+    border-color: var(--pr-color-border);
+    border-radius: var(--pr-radius-lg);
+    background: var(--pr-color-surface);
+    box-shadow: var(--pr-shadow-sm);
+}
+
+.entete-panneau {
+    border-bottom-color: var(--pr-color-border);
+}
+
+.titre-panneau {
+    color: var(--pr-color-text);
+    font-weight: var(--pr-font-weight-semibold);
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? KPI
+   ========================================================== */
+
+.carte-indicateur,
+.carte-resume {
+    transition:
+        border-color var(--pr-duration-normal) var(--pr-ease),
+        box-shadow var(--pr-duration-normal) var(--pr-ease),
+        transform var(--pr-duration-normal) var(--pr-ease);
+}
+
+.libelle-indicateur {
+    color: var(--pr-color-text-secondary);
+    font-size: var(--pr-font-size-xs);
+    font-weight: var(--pr-font-weight-semibold);
+    letter-spacing: 0.025em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+    .carte-indicateur:hover,
+    .carte-resume:hover {
+        border-color: var(--pr-color-border-strong);
+        box-shadow: var(--pr-shadow-md);
+        transform: translateY(-2px);
+    }
+
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? BADGES
+   ========================================================== */
+
+.badge,
+.badge-statut,
+.badge-balance,
+.badge-collecte,
+.badge-echec,
+.badge-methode,
+.badge-niveau,
+.badge-periode,
+.badge-planifiee,
+.badge-en_cours,
+.badge-terminee,
+.badge-succes,
+.badge-resultat,
+.badge-resultats,
+.badge-positions,
+.badge-actif,
+.badge-inactif {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: var(--pr-radius-pill);
+    font-size: var(--pr-font-size-2xs);
+    font-weight: var(--pr-font-weight-bold);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? TABLEAUX
+   ========================================================== */
+
+.tableau-conteneur {
+    overflow-x: auto;
+    border: 1px solid var(--pr-color-border);
+    border-radius: var(--pr-radius-lg);
+    background: var(--pr-color-surface);
+    box-shadow: var(--pr-shadow-xs);
+}
+
+.tableau-conteneur table {
+    margin: 0;
+}
+
+.tableau-conteneur th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: var(--pr-color-surface-soft);
+    border-bottom: 1px solid var(--pr-color-border);
+}
+
+.tableau-conteneur td {
+    border-bottom-color: var(--pr-color-border);
+}
+
+.tableau-conteneur tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+    .tableau-conteneur tbody tr:hover {
+        background: var(--pr-color-primary-pale);
+    }
+
+}
+
+
+/* ==========================================================
+   BACK-OFFICE ? MOBILE
+   ========================================================== */
+
+@media (max-width: 639px) {
+
+    .bouton,
+    .bouton-principal,
+    .bouton-primaire,
+    .bouton-secondaire,
+    .bouton-annuler,
+    .bouton-generer,
+    .bouton-valider {
+        min-height: var(--pr-control-height-lg);
+    }
+
+    .tableau-conteneur {
+        border-radius: var(--pr-radius-md);
+    }
+
+}
+
+
+
+/* ==========================================================
+   P5.1b - MARQUE BACK-OFFICE PREMIUM
+   ========================================================== */
+
+.barre-laterale .marque {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding:
+        8px
+        4px
+        20px;
+
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.barre-laterale .logo-marque {
+    position: relative;
+
+    display: grid;
+    place-items: center;
+
+    flex:
+        0
+        0
+        44px;
+
+    width: 44px;
+    height: 44px;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.28);
+
+    border-radius:
+        13px;
+
+    color:
+        transparent;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 6px 18px
+        rgba(0, 0, 0, 0.12);
+
+    font-size:
+        0;
+}
+
+.barre-laterale .logo-marque::before {
+    content: "PR";
+
+    display: block;
+
+    color:
+        var(--pr-color-primary-dark);
+
+    font-family:
+        var(--pr-font-sans);
+
+    font-size:
+        15px;
+
+    font-weight:
+        800;
+
+    line-height:
+        1;
+
+    letter-spacing:
+        -0.04em;
+}
+
+.barre-laterale .logo-marque > * {
+    display:
+        none !important;
+}
+
+.barre-laterale .marque strong {
+    display:
+        block;
+
+    color:
+        #ffffff;
+
+    font-size:
+        1rem;
+
+    font-weight:
+        var(--pr-font-weight-bold);
+
+    line-height:
+        1.2;
+
+    letter-spacing:
+        -0.015em;
+}
+
+.barre-laterale .marque span {
+    display:
+        block;
+
+    margin-top:
+        3px;
+
+    color:
+        rgba(255, 255, 255, 0.68);
+
+    font-size:
+        var(--pr-font-size-2xs);
+
+    font-weight:
+        var(--pr-font-weight-medium);
+
+    line-height:
+        1.25;
+}
+
+
+@media (max-width: 639px) {
+
+    .barre-laterale .logo-marque {
+        flex-basis:
+            40px;
+
+        width:
+            40px;
+
+        height:
+            40px;
+
+        border-radius:
+            12px;
+    }
+
+    .barre-laterale .logo-marque::before {
+        font-size:
+            14px;
+    }
+
+}

@@ -531,10 +531,17 @@
         notification
     ) {
 
-        const confirmation =
-            window.confirm(
-                "Supprimer cette notification de votre liste ?"
-            );
+                const confirmation =
+            await ProRecup.confirmer({
+                titre:
+                    "Supprimer la notification ?",
+                message:
+                    "Supprimer cette notification de votre liste ?",
+                texteConfirmer:
+                    "Supprimer",
+                danger:
+                    true
+            });
 
         if (!confirmation) {
             return;

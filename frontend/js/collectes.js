@@ -302,10 +302,17 @@ const validerCollecte = async (
     bouton
 ) => {
 
-    const confirmation =
-        window.confirm(
-            `Valider la collecte du client "${collecte.client_nom}" ?`
-        );
+        const confirmation =
+        await ProRecup.confirmer({
+            titre:
+                "Valider la collecte ?",
+            message:
+                `Valider la collecte du client "${collecte.client_nom}" ?`,
+            texteConfirmer:
+                "Valider",
+            danger:
+                false
+        });
 
     if (!confirmation) {
         return;

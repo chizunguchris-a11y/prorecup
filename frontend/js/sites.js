@@ -266,10 +266,17 @@ const supprimerSite = async (
     bouton
 ) => {
 
-    const confirmation =
-        window.confirm(
-            `Voulez-vous vraiment supprimer le site « ${site.nom} » ?`
-        );
+        const confirmation =
+        await ProRecup.confirmer({
+            titre:
+                "Supprimer le site ?",
+            message:
+                `Voulez-vous vraiment supprimer le site « ${site.nom} » ?`,
+            texteConfirmer:
+                "Supprimer",
+            danger:
+                true
+        });
 
     if (!confirmation) {
         return;

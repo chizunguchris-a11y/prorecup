@@ -1243,12 +1243,32 @@
 
             };
 
-            if (
-                !window.confirm(
-                    messages[statut] ||
-                    "Confirmer cette action ?"
-                )
-            ) {
+                        const confirmationStatut =
+                await ProRecup.confirmer({
+                    titre:
+                        statut === "en_cours"
+                            ? "Démarrer la mission ?"
+                            : statut === "terminee"
+                                ? "Terminer la mission ?"
+                                : statut === "annulee"
+                                    ? "Annuler la mission ?"
+                                    : "Confirmer l'action",
+                    message:
+                        messages[statut] ||
+                        "Confirmer cette action ?",
+                    texteConfirmer:
+                        statut === "en_cours"
+                            ? "Démarrer"
+                            : statut === "terminee"
+                                ? "Terminer"
+                                : statut === "annulee"
+                                    ? "Annuler la mission"
+                                    : "Confirmer",
+                    danger:
+                        statut === "annulee"
+                });
+
+            if (!confirmationStatut) {
                 return;
             }
 
@@ -1778,11 +1798,19 @@
             collecteId
         ) => {
 
-            if (
-                !window.confirm(
-                    "Retirer cette collecte de la mission ?"
-                )
-            ) {
+                        const confirmationRetrait =
+                await ProRecup.confirmer({
+                    titre:
+                        "Retirer la collecte ?",
+                    message:
+                        "Retirer cette collecte de la mission ?",
+                    texteConfirmer:
+                        "Retirer",
+                    danger:
+                        true
+                });
+
+            if (!confirmationRetrait) {
                 return;
             }
 

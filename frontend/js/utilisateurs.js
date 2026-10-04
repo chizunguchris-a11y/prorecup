@@ -704,12 +704,23 @@
         const nouvelEtat =
             !actifActuel;
 
-        const confirmation =
-            window.confirm(
-                nouvelEtat
-                    ? `Activer le compte de ${utilisateur.nom || "cet utilisateur"} ?`
-                    : `Désactiver le compte de ${utilisateur.nom || "cet utilisateur"} ?`
-            );
+                const confirmation =
+            await ProRecup.confirmer({
+                titre:
+                    nouvelEtat
+                        ? "Activer le compte ?"
+                        : "Désactiver le compte ?",
+                message:
+                    nouvelEtat
+                        ? `Activer le compte de ${utilisateur.nom || "cet utilisateur"} ?`
+                        : `Désactiver le compte de ${utilisateur.nom || "cet utilisateur"} ?`,
+                texteConfirmer:
+                    nouvelEtat
+                        ? "Activer"
+                        : "Désactiver",
+                danger:
+                    !nouvelEtat
+            });
 
         if (!confirmation) {
             return;

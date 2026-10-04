@@ -270,10 +270,17 @@ const supprimerClient = async (
     bouton
 ) => {
 
-    const confirmation =
-        window.confirm(
-            `Voulez-vous vraiment supprimer le client « ${client.nom} » ?`
-        );
+        const confirmation =
+        await ProRecup.confirmer({
+            titre:
+                "Supprimer le client ?",
+            message:
+                `Voulez-vous vraiment supprimer le client « ${client.nom} » ?`,
+            texteConfirmer:
+                "Supprimer",
+            danger:
+                true
+        });
 
     if (!confirmation) {
         return;

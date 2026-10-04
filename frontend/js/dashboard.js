@@ -556,144 +556,334 @@
 
     }
 
+    function prioriteNiveauAlerte(niveau) {
+
+        if (niveau === "critique") {
+            return 0;
+        }
+
+        if (niveau === "vigilance") {
+            return 1;
+        }
+
+        return 2;
+
+    }
+
+
     function afficherAlertes(
+        missions,
         collectes,
         agents,
-        tricycles
+        tricycles,
+        incidents
     ) {
 
         var alertes = [];
+
+        incidents.forEach(
+            function (incident) {
+
+                var niveau =
+                    incident.niveau ||
+                    "information";
+
+                alertes.push({
+                    niveau: niveau,
+                    priorite:
+                        prioriteNiveauAlerte(niveau),
+                    titre:
+                        incident.titre ||
+                        "Incident terrain",
+                    detail:
+                        incident.detail ||
+                        "Incident terrain signale.",
+                    lien:
+                        incident.lien ||
+                        "./carte.html",
+                    action:
+                        "Voir sur la carte"
+                });
+
+            }
+        );
+
+
+        var collectesEchec =
+            collectes.filter(
+                function (collecte) {
+
+                    return (
+                        normaliserStatutCommandCenter(
+                            collecte.statut
+                        ) === "echec"
+                    );
+
+                }
+            ).length;
+
 
         var collectesAttente =
             collectes.filter(
                 function (collecte) {
 
+                    var statut =
+                        normaliserStatutCommandCenter(
+                            collecte.statut
+                        );
+
                     return (
-                        collecte.statut ===
-                            "en_attente" ||
-                        collecte.statut ===
-                            "planifiee"
+                        statut === "en_attente" ||
+                        statut === "planifiee"
                     );
 
                 }
             ).length;
+
 
         var agentsSuspendus =
             agents.filter(
                 function (agent) {
 
                     return (
-                        agent.statut ===
-                        "suspendu"
+                        normaliserStatutCommandCenter(
+                            agent.statut
+                        ) === "suspendu"
                     );
 
                 }
             ).length;
+
 
         var tricyclesMaintenance =
             tricycles.filter(
                 function (tricycle) {
 
                     return (
-                        tricycle.statut ===
-                        "maintenance"
+                        normaliserStatutCommandCenter(
+                            tricycle.statut
+                        ) === "maintenance"
                     );
 
                 }
             ).length;
 
-        if (collectesAttente) {
+
+        var aujourdHui =
+            normaliserDate(
+                new Date()
+            );
+
+
+        var missionsNonCloturees =
+            missions.filter(
+                function (mission) {
+
+                    var statut =
+                        normaliserStatutCommandCenter(
+                            mission.statut
+                        );
+
+                    var datePrevue =
+                        normaliserDate(
+                            mission.date_prevue
+                        );
+
+                    return (
+                        datePrevue &&
+                        datePrevue < aujourdHui &&
+                        (
+                            statut === "planifiee" ||
+                            statut === "en_cours"
+                        )
+                    );
+
+                }
+            ).length;
+
+
+        if (collectesEchec) {
 
             alertes.push({
-                titre:
-                    "Collectes à planifier",
-
+                niveau: "critique",
+                priorite: 0,
+                titre: "Collectes en echec",
                 detail:
-                    collectesAttente +
-                    " collecte(s) en attente."
+                    collectesEchec +
+                    " collecte(s) necessitent une verification.",
+                lien: "./collectes.html",
+                action: "Voir les collectes"
             });
 
         }
+
+
+        if (missionsNonCloturees) {
+
+            alertes.push({
+                niveau: "vigilance",
+                priorite: 1,
+                titre: "Missions passees non cloturees",
+                detail:
+                    missionsNonCloturees +
+                    " mission(s) anciennes sont encore ouvertes.",
+                lien: "./missions.html",
+                action: "Verifier les missions"
+            });
+
+        }
+
+
+        if (collectesAttente) {
+
+            alertes.push({
+                niveau: "vigilance",
+                priorite: 1,
+                titre: "Collectes a planifier",
+                detail:
+                    collectesAttente +
+                    " collecte(s) attendent une action.",
+                lien: "./collectes.html",
+                action: "Planifier"
+            });
+
+        }
+
 
         if (agentsSuspendus) {
 
             alertes.push({
-                titre:
-                    "Agents suspendus",
-
+                niveau: "vigilance",
+                priorite: 1,
+                titre: "Agents suspendus",
                 detail:
                     agentsSuspendus +
-                    " agent(s) suspendu(s)."
+                    " agent(s) sont indisponibles.",
+                lien: "./agents.html",
+                action: "Voir les agents"
             });
 
         }
+
 
         if (tricyclesMaintenance) {
 
             alertes.push({
-                titre:
-                    "Tricycles en maintenance",
-
+                niveau: "vigilance",
+                priorite: 1,
+                titre: "Tricycles en maintenance",
                 detail:
                     tricyclesMaintenance +
-                    " tricycle(s) indisponible(s)."
+                    " tricycle(s) reduisent la capacite logistique.",
+                lien: "./tricycles.html",
+                action: "Voir les tricycles"
             });
 
         }
+
+
+        alertes.sort(
+            function (a, b) {
+
+                return a.priorite -
+                    b.priorite;
+
+            }
+        );
+
 
         nombreAlertes.textContent =
             String(alertes.length);
 
         listeAlertes.innerHTML = "";
 
+
         if (!alertes.length) {
 
             listeAlertes.innerHTML =
                 '<article class="alerte-operationnelle alerte-succes">' +
-                "<strong>Aucun problème détecté</strong>" +
-                "<span>La situation opérationnelle est normale.</span>" +
+                "<strong>Aucun probleme detecte</strong>" +
+                "<span>La situation operationnelle est normale.</span>" +
                 "</article>";
 
             return;
 
         }
 
-        alertes.forEach(function (alerte) {
 
-            var carte =
-                document.createElement(
-                    "article"
-                );
+        alertes
+            .slice(0, 8)
+            .forEach(
+                function (alerte) {
 
-            var titre =
-                document.createElement(
-                    "strong"
-                );
+                    var carte =
+                        document.createElement(
+                            "article"
+                        );
 
-            var detail =
-                document.createElement(
-                    "span"
-                );
+                    var contenu =
+                        document.createElement(
+                            "div"
+                        );
 
-            carte.className =
-                "alerte-operationnelle";
+                    var titre =
+                        document.createElement(
+                            "strong"
+                        );
 
-            titre.textContent =
-                alerte.titre;
+                    var detail =
+                        document.createElement(
+                            "span"
+                        );
 
-            detail.textContent =
-                alerte.detail;
+                    carte.className =
+                        "alerte-operationnelle " +
+                        "alerte-" +
+                        alerte.niveau;
 
-            carte.appendChild(titre);
-            carte.appendChild(detail);
+                    contenu.className =
+                        "alerte-operationnelle-contenu";
 
-            listeAlertes.appendChild(
-                carte
+                    titre.textContent =
+                        alerte.titre;
+
+                    detail.textContent =
+                        alerte.detail;
+
+                    contenu.appendChild(titre);
+                    contenu.appendChild(detail);
+                    carte.appendChild(contenu);
+
+
+                    if (alerte.lien) {
+
+                        var action =
+                            document.createElement(
+                                "a"
+                            );
+
+                        action.className =
+                            "alerte-operationnelle-action";
+
+                        action.href =
+                            alerte.lien;
+
+                        action.textContent =
+                            alerte.action ||
+                            "Ouvrir";
+
+                        carte.appendChild(action);
+
+                    }
+
+
+                    listeAlertes.appendChild(carte);
+
+                }
             );
 
-        });
-
     }
+
 
     function preparerCanvas(canvas) {
 
@@ -1405,7 +1595,8 @@
         missionsJour,
         collectes,
         agents,
-        tricycles
+        tricycles,
+        incidents
     ) {
 
         var missionsEnCours =
@@ -1595,6 +1786,19 @@
         );
 
 
+        var incidentsCritiques =
+            incidents.filter(
+                function (incident) {
+
+                    return (
+                        incident.niveau === "critique" ||
+                        incident.bloquant === true
+                    );
+
+                }
+            ).length;
+
+
         var statutGlobal =
             element(
                 "ccStatutGlobal"
@@ -1626,7 +1830,29 @@
                 : "Situation sous contr?le";
 
 
-        if (collectesEchec > 0) {
+        if (incidentsCritiques > 0) {
+
+            classeStatut =
+                "statut-critique";
+
+            texteStatut =
+                "Incident terrain critique";
+
+            titrePriorite =
+                "Traiter incident terrain prioritaire";
+
+            detailPriorite =
+                incidentsCritiques +
+                " incident(s) critique(s) ou bloquant(s) signale(s) recemment.";
+
+            lienPriorite =
+                "./carte.html";
+
+            libelleAction =
+                "Ouvrir la carte";
+
+        }
+        else if (collectesEchec > 0) {
 
             classeStatut =
                 "statut-critique";
@@ -1832,6 +2058,15 @@
                     )
                     : {};
 
+
+            var incidents =
+                Array.isArray(
+                    dashboard.alertes_operationnelles
+                )
+                    ? dashboard.alertes_operationnelles
+                    : [];
+
+
             var missions =
                 resultats[1].succes
                     ? extraireListe(
@@ -1974,7 +2209,8 @@
                 missionsJour,
                 collectes,
                 agents,
-                tricycles
+                tricycles,
+                incidents
             );
 
             var ventes =
@@ -2071,9 +2307,11 @@
             afficherMissions(missions);
 
             afficherAlertes(
+                missions,
                 collectes,
                 agents,
-                tricycles
+                tricycles,
+                incidents
             );
 
             afficherGraphiques(

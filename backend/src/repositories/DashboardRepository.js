@@ -122,6 +122,54 @@ class DashboardRepository {
 
     }
 
+
+    async obtenirIncidentsRecents(
+        organisationId,
+        client = pool
+    ) {
+
+        const resultat =
+            await client.query(
+                `
+                SELECT
+                    me.id,
+                    me.mission_id,
+                    me.collecte_id,
+                    me.observations,
+                    me.latitude,
+                    me.longitude,
+                    me.survenu_le,
+                    me.recu_le,
+                    me.contexte
+
+                FROM mission_evenements me
+
+                JOIN missions m
+                    ON m.id = me.mission_id
+
+                WHERE m.organisation_id = $1
+                  AND me.type_evenement = 'incident_signale'
+                  AND COALESCE(
+                        me.survenu_le,
+                        me.recu_le
+                      ) >=
+                      CURRENT_TIMESTAMP - INTERVAL '48 hours'
+
+                ORDER BY
+                    COALESCE(
+                        me.survenu_le,
+                        me.recu_le
+                    ) DESC
+
+                LIMIT 20;
+                `,
+                [organisationId]
+            );
+
+        return resultat.rows;
+
+    }
+
 }
 
 export default new DashboardRepository();

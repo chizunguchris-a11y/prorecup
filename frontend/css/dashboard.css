@@ -1043,3 +1043,84 @@ th {
     }
 
 }
+
+
+/* ==========================================================
+   P5.3c - ALERTES OPERATIONNELLES
+   ========================================================== */
+
+.alerte-operationnelle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.alerte-operationnelle-contenu {
+    min-width: 0;
+}
+
+.alerte-operationnelle-contenu strong,
+.alerte-operationnelle-contenu span {
+    display: block;
+}
+
+.alerte-operationnelle-contenu strong {
+    margin-bottom: 4px;
+}
+
+.alerte-operationnelle-action {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    color: var(--pr-color-primary-dark, #0E4F38);
+    background: var(--pr-color-surface, #FFFFFF);
+    border: 1px solid var(--pr-color-border, #DFE7E3);
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.alerte-operationnelle.alerte-critique {
+    background: #FEF3F2;
+    border-color: #FECDCA;
+}
+
+.alerte-operationnelle.alerte-critique strong {
+    color: var(--pr-color-danger, #B42318);
+}
+
+.alerte-operationnelle.alerte-vigilance {
+    background: #FFF7ED;
+    border-color: #FED7AA;
+}
+
+.alerte-operationnelle.alerte-vigilance strong {
+    color: var(--pr-color-warning, #A65D00);
+}
+
+.alerte-operationnelle.alerte-information {
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+}
+
+.alerte-operationnelle.alerte-information strong {
+    color: var(--pr-color-info, #1D4ED8);
+}
+
+@media (max-width: 620px) {
+
+    .alerte-operationnelle {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .alerte-operationnelle-action {
+        width: 100%;
+    }
+
+}

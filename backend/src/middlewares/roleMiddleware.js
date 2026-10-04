@@ -141,7 +141,7 @@ const roleMiddleware = (
 
             console.error(
                 "Erreur de vérification du rôle :",
-                erreur
+                erreur.message
             );
 
             return res.status(500).json({

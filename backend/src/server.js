@@ -43,7 +43,7 @@ serveur.on(
 
         console.error(
             "Erreur du serveur :",
-            erreur
+            erreur.message
         );
 
         process.exit(1);

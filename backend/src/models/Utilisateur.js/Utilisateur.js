@@ -7,9 +7,9 @@ class Utilisateur {
     }
 
     afficherInformations() {
-        console.log("Nom : " + this.nom);
-        console.log("Prénom : " + this.prenom);
-        console.log("Téléphone : " + this.telephone);
+        console.log(
+            "Informations utilisateur masquees dans les journaux."
+        );
     }
 
 }

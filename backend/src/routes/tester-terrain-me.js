@@ -190,11 +190,13 @@ const afficherResultat = (
 
 
     console.log(
-        JSON.stringify(
-            resultat.corps,
-            null,
-            2
-        )
+        "Corps recu - champs :",
+        resultat.corps &&
+        typeof resultat.corps === "object"
+            ? Object.keys(
+                resultat.corps
+            )
+            : []
     );
 
 };

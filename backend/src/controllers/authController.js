@@ -168,7 +168,7 @@ const authController = {
 
             console.error(
                 "Erreur d'inscription :",
-                erreur
+                erreur.message
             );
 
             return res.status(500).json({
@@ -382,7 +382,7 @@ const authController = {
 
             console.error(
                 "Erreur de connexion :",
-                erreur
+                erreur.message
             );
 
             return res.status(500).json({
@@ -606,7 +606,7 @@ const authController = {
 
             console.error(
                 "Erreur de modification du profil :",
-                erreur
+                erreur.message
             );
 
             return res.status(500).json({
@@ -794,7 +794,7 @@ const authController = {
 
             console.error(
                 "Erreur de changement du mot de passe :",
-                erreur
+                erreur.message
             );
 
             return res.status(500).json({

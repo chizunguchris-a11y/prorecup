@@ -4,12 +4,55 @@
 
     if (!window.ProRecup) {
 
-        alert(
+        const afficherErreurNoyau = () => {
+
+            if (
+                document.querySelector(
+                    ".pr-erreur-systeme"
+                )
+            ) {
+                return;
+            }
+
+            const erreur =
+                document.createElement(
+                    "div"
+                );
+
+            erreur.className =
+                "pr-erreur-systeme";
+
+            erreur.setAttribute(
+                "role",
+                "alert"
+            );
+
+            erreur.textContent =
+                "Une ressource essentielle de Pro R?cup n?a pas pu ?tre charg?e. Actualisez la page. Si le probl?me persiste, contactez l?administrateur.";
+
+            document.body.prepend(
+                erreur
+            );
+        };
+
+        if (document.body) {
+
+            afficherErreurNoyau();
+
+        } else {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                afficherErreurNoyau,
+                { once: true }
+            );
+        }
+
+        console.error(
             "common.js est introuvable."
         );
 
         return;
-
     }
 
     ProRecup.protegerPage();

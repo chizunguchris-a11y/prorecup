@@ -704,9 +704,14 @@ const ouvrirPreuve = async (
         }
 
 
-        window.alert(
+        PortailRecup.afficherNotification(
             erreur.message ||
-            "Impossible d'ouvrir la preuve."
+            "Impossible d?ouvrir la preuve.",
+            "erreur",
+            {
+                titre:
+                    "Preuve indisponible"
+            }
         );
 
     }

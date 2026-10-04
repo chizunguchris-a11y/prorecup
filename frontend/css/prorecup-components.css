@@ -1034,3 +1034,77 @@ textarea:focus {
         transition: none !important;
     }
 }
+
+
+
+/* ==========================================================
+   P5.1c - ERREUR SYSTEME
+   ========================================================== */
+
+.pr-erreur-systeme {
+    position: fixed;
+
+    top: 18px;
+    left: 50%;
+
+    z-index: 1800;
+
+    width:
+        min(
+            620px,
+            calc(100vw - 32px)
+        );
+
+    padding:
+        14px 16px;
+
+    border:
+        1px solid
+        rgba(180, 35, 24, 0.22);
+
+    border-left:
+        4px solid
+        var(--pr-color-danger, #b42318);
+
+    border-radius:
+        14px;
+
+    color:
+        var(--pr-color-text, #17211c);
+
+    background:
+        var(--pr-color-surface, #ffffff);
+
+    box-shadow:
+        0 16px 44px
+        rgba(23, 33, 28, 0.18);
+
+    font-size:
+        0.9rem;
+
+    font-weight:
+        600;
+
+    line-height:
+        1.5;
+
+    transform:
+        translateX(-50%);
+}
+
+
+@media (max-width: 639px) {
+
+    .pr-erreur-systeme {
+        top: 12px;
+
+        width:
+            calc(100vw - 24px);
+
+        padding:
+            13px 14px;
+
+        border-radius:
+            12px;
+    }
+}

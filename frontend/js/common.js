@@ -363,12 +363,9 @@ const ProRecup = {
 
             this.supprimerSession();
 
-            window.alert(
-                message
+            window.location.replace(
+                "./index.html?session=expiree"
             );
-
-            window.location.href =
-                "./index.html";
 
             throw new Error(
                 message
@@ -396,12 +393,9 @@ const ProRecup = {
 
             this.supprimerSession();
 
-            window.alert(
-                message
+            window.location.replace(
+                "./index.html?session=desactivee"
             );
-
-            window.location.href =
-                "./index.html";
 
             throw new Error(
                 message

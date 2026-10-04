@@ -334,3 +334,49 @@ if (tokenExistant) {
         "./dashboard.html";
 
 }
+
+/* ==========================================================
+   P5.1c - MESSAGE DE SESSION
+   ========================================================== */
+
+(() => {
+
+    const parametres =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const session =
+        parametres.get(
+            "session"
+        );
+
+    if (
+        session === "expiree"
+    ) {
+
+        afficherMessage(
+            messageErreur,
+            "Votre session a expir?. Reconnectez-vous pour continuer."
+        );
+
+    } else if (
+        session === "desactivee"
+    ) {
+
+        afficherMessage(
+            messageErreur,
+            "Votre compte est d?sactiv?. Contactez l?administrateur si vous pensez qu?il s?agit d?une erreur."
+        );
+    }
+
+    if (session) {
+
+        window.history.replaceState(
+            {},
+            "",
+            window.location.pathname
+        );
+    }
+
+})();

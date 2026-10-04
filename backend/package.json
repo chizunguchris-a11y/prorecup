@@ -27,5 +27,9 @@
   "devDependencies": {
     "mocha": "^9.2.2",
     "supertest": "^6.3.4"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.21",
+    "js-yaml": "4.3.2"
   }
 }

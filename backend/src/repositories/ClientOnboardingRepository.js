@@ -26,7 +26,7 @@ class ClientOnboardingRepository {
         const resultat = await connexion.query(`
             SELECT id, organisation_nom, nom_contact, email_contact, telephone_contact,
                    pays, ville, identifiant_legal, message, statut, notes_internes,
-                   traite_par, cree_le, modifie_le
+                   traite_par, cree_le, modifie_le, client_id, premier_utilisateur_id
             FROM client_onboarding_requests
             ${condition}
             ORDER BY cree_le DESC

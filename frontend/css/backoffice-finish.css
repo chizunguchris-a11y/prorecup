@@ -1,0 +1,558 @@
+﻿/* ==========================================================
+   PRO RECUP - BACK-OFFICE PRODUCT FINISH
+   Shared finishing layer loaded after page styles.
+   ========================================================== */
+
+:root {
+    --pr-finish-gutter:
+        clamp(16px, 2vw, 28px);
+
+    --pr-finish-control-height:
+        42px;
+
+    --pr-finish-radius:
+        12px;
+
+    --pr-finish-radius-small:
+        9px;
+
+    --pr-finish-shadow:
+        0 8px 24px rgba(23, 33, 28, 0.055);
+
+    --pr-finish-shadow-hover:
+        0 12px 30px rgba(23, 33, 28, 0.075);
+
+    --pr-finish-focus:
+        0 0 0 3px rgba(23, 107, 77, 0.14);
+}
+
+
+/* ----------------------------------------------------------
+   PAGE
+   ---------------------------------------------------------- */
+
+body {
+    text-rendering:
+        optimizeLegibility;
+
+    -webkit-font-smoothing:
+        antialiased;
+
+    background:
+        var(
+            --pr-color-bg,
+            #F6F8F7
+        );
+}
+
+
+main.contenu,
+main.contenu-principal {
+    min-width: 0;
+
+    padding-left:
+        var(
+            --pr-finish-gutter
+        );
+
+    padding-right:
+        var(
+            --pr-finish-gutter
+        );
+}
+
+
+main > h1,
+main > header h1,
+main .entete-page h1,
+main .page-header h1 {
+    margin-top: 0;
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    font-size:
+        clamp(
+            24px,
+            2.5vw,
+            34px
+        );
+
+    line-height: 1.12;
+
+    letter-spacing:
+        -0.025em;
+}
+
+
+main > h1 + p,
+main > header h1 + p,
+main .entete-page h1 + p,
+main .page-header h1 + p {
+    max-width: 760px;
+
+    color:
+        var(
+            --pr-color-text-secondary,
+            #66736D
+        );
+
+    line-height: 1.55;
+}
+
+
+/* ----------------------------------------------------------
+   PANELS
+   ---------------------------------------------------------- */
+
+main :is(
+    .panneau,
+    .carte,
+    .card,
+    .widget,
+    .bloc
+) {
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    box-shadow:
+        var(
+            --pr-finish-shadow
+        );
+}
+
+
+main :is(
+    .panneau,
+    .carte,
+    .card,
+    .widget,
+    .bloc
+):hover {
+    box-shadow:
+        var(
+            --pr-finish-shadow-hover
+        );
+}
+
+
+/* ----------------------------------------------------------
+   FORM CONTROLS
+   ---------------------------------------------------------- */
+
+main input:not(
+    [type="checkbox"]
+):not(
+    [type="radio"]
+),
+main select,
+main textarea {
+    min-height:
+        var(
+            --pr-finish-control-height
+        );
+
+    font: inherit;
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    background:
+        var(
+            --pr-color-surface,
+            #FFFFFF
+        );
+
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        var(
+            --pr-finish-radius-small
+        );
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        background-color 150ms ease;
+}
+
+
+main textarea {
+    min-height: 96px;
+
+    line-height: 1.5;
+
+    resize: vertical;
+}
+
+
+main input:not(
+    [type="checkbox"]
+):not(
+    [type="radio"]
+):hover,
+main select:hover,
+main textarea:hover {
+    border-color:
+        #C8D5CF;
+}
+
+
+main input:not(
+    [type="checkbox"]
+):not(
+    [type="radio"]
+):focus,
+main select:focus,
+main textarea:focus {
+    outline: none;
+
+    border-color:
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    box-shadow:
+        var(
+            --pr-finish-focus
+        );
+}
+
+
+main input::placeholder,
+main textarea::placeholder {
+    color: #8A9690;
+
+    opacity: 1;
+}
+
+
+/* ----------------------------------------------------------
+   BUTTONS
+   ---------------------------------------------------------- */
+
+main button,
+main .btn,
+main .bouton {
+    font-family: inherit;
+
+    border-radius:
+        var(
+            --pr-finish-radius-small
+        );
+
+    transition:
+        transform 120ms ease,
+        box-shadow 150ms ease,
+        background-color 150ms ease,
+        border-color 150ms ease,
+        opacity 150ms ease;
+}
+
+
+main button:not(:disabled):active,
+main .btn:not(:disabled):active,
+main .bouton:not(:disabled):active {
+    transform:
+        translateY(1px);
+}
+
+
+main button:disabled,
+main .btn:disabled,
+main .bouton:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.58;
+}
+
+
+/* ----------------------------------------------------------
+   ACCESSIBILITY / FOCUS
+   ---------------------------------------------------------- */
+
+main a:focus-visible,
+main button:focus-visible,
+main input:focus-visible,
+main select:focus-visible,
+main textarea:focus-visible {
+    outline:
+        2px solid
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    outline-offset: 2px;
+}
+
+
+/* ----------------------------------------------------------
+   TABLES
+   ---------------------------------------------------------- */
+
+main table {
+    width: 100%;
+
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+main table th {
+    color:
+        var(
+            --pr-color-text-secondary,
+            #66736D
+        );
+
+    font-size: 0.82rem;
+
+    font-weight: 700;
+
+    letter-spacing:
+        0.015em;
+
+    vertical-align: middle;
+}
+
+
+main table td {
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    vertical-align: middle;
+}
+
+
+main table tbody tr {
+    transition:
+        background-color 120ms ease;
+}
+
+
+main table tbody tr:hover {
+    background:
+        rgba(
+            23,
+            107,
+            77,
+            0.035
+        );
+}
+
+
+/* ----------------------------------------------------------
+   LINKS
+   ---------------------------------------------------------- */
+
+main a {
+    text-underline-offset: 3px;
+}
+
+
+main a:not(
+    [class]
+):hover {
+    text-decoration-thickness: 2px;
+}
+
+
+/* ----------------------------------------------------------
+   DIALOGS / MODALS
+   ---------------------------------------------------------- */
+
+main dialog,
+[role="dialog"] {
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        16px;
+
+    box-shadow:
+        0 22px 60px
+        rgba(
+            14,
+            79,
+            56,
+            0.16
+        );
+}
+
+
+dialog::backdrop {
+    background:
+        rgba(
+            14,
+            31,
+            24,
+            0.42
+        );
+
+    backdrop-filter:
+        blur(2px);
+}
+
+
+/* ----------------------------------------------------------
+   SCROLL / DENSE AREAS
+   ---------------------------------------------------------- */
+
+main :is(
+    .table-responsive,
+    .tableau-responsive,
+    .table-wrapper,
+    .table-container
+) {
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        #BBC9C2
+        transparent;
+}
+
+
+main :is(
+    .table-responsive,
+    .tableau-responsive,
+    .table-wrapper,
+    .table-container
+)::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+
+main :is(
+    .table-responsive,
+    .tableau-responsive,
+    .table-wrapper,
+    .table-container
+)::-webkit-scrollbar-thumb {
+    background: #BBC9C2;
+
+    border-radius: 999px;
+}
+
+
+/* ----------------------------------------------------------
+   RESPONSIVE
+   ---------------------------------------------------------- */
+
+@media (max-width: 1023px) {
+
+    main.contenu,
+    main.contenu-principal {
+        padding-left:
+            clamp(
+                14px,
+                2.5vw,
+                22px
+            );
+
+        padding-right:
+            clamp(
+                14px,
+                2.5vw,
+                22px
+            );
+    }
+}
+
+
+@media (max-width: 639px) {
+
+    :root {
+        --pr-finish-control-height:
+            44px;
+    }
+
+
+    main.contenu,
+    main.contenu-principal {
+        padding-left: 14px;
+
+        padding-right: 14px;
+    }
+
+
+    main > h1,
+    main > header h1,
+    main .entete-page h1,
+    main .page-header h1 {
+        font-size: 25px;
+    }
+
+
+    main table {
+        font-size: 0.92rem;
+    }
+}
+
+
+/* ----------------------------------------------------------
+   REDUCED MOTION
+   ---------------------------------------------------------- */
+
+@media (
+    prefers-reduced-motion:
+    reduce
+) {
+
+    main *,
+    main *::before,
+    main *::after {
+        scroll-behavior: auto;
+
+        transition-duration:
+            0.01ms;
+    }
+}
+
+
+/* ----------------------------------------------------------
+   PRINT
+   ---------------------------------------------------------- */
+
+@media print {
+
+    body {
+        background: #FFFFFF;
+    }
+
+
+    main :is(
+        .panneau,
+        .carte,
+        .card,
+        .widget,
+        .bloc
+    ) {
+        box-shadow: none;
+    }
+}

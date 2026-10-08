@@ -1318,7 +1318,7 @@
             "click",
             () => {
 
-                ouvrirModale();
+                window.location.href = "./invitations.html";
 
             }
         );

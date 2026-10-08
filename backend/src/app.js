@@ -40,6 +40,9 @@ import identityRecoveryRoutes
 
 import clientOnboardingRoutes
     from "./routes/ClientOnboardingRoutes.js";
+import identityInvitationRoutes from "./routes/IdentityInvitationRoutes.js";
+import identityAccountRoutes from "./routes/IdentityAccountRoutes.js";
+import sessionRoutes from "./routes/SessionRoutes.js";
 
 import clientRoutes
     from "./routes/clientRoutes.js";
@@ -255,6 +258,10 @@ app.use(
     "/api/identity",
     identityRecoveryRoutes
 );
+app.use("/api/identity/invitations", identityInvitationRoutes);
+app.use("/api/identity/account", identityAccountRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.get("/",(req,res)=>res.json({success:true,service:"Pro Récup",status:"operational"}));
 
 app.use(
     "/api/onboarding",

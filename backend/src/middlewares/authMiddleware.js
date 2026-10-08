@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { obtenirJwtSecret } from "../config/security.js";
 import pool from "../config/db.js";
 
@@ -139,6 +140,49 @@ const authMiddleware = async (
 
         }
 
+        const sessionId =
+            String(
+                contenuToken.sessionId ||
+                ""
+            ).trim();
+
+        if (sessionId) {
+
+            const sessionHash =
+                crypto
+                    .createHash("sha256")
+                    .update(sessionId)
+                    .digest("hex");
+
+            const session =
+                await pool.query(
+                    `
+                    SELECT id
+                    FROM refresh_tokens
+                    WHERE utilisateur_id = $1
+                      AND token_hash = $2
+                      AND revoque = false
+                      AND expire_le > CURRENT_TIMESTAMP
+                    LIMIT 1;
+                    `,
+                    [
+                        utilisateurId,
+                        sessionHash
+                    ]
+                );
+
+            if (!session.rows[0]) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        "Cette session a été fermée. Reconnectez-vous."
+                });
+
+            }
+
+        }
+
         req.utilisateur = {
 
             id:
@@ -167,7 +211,10 @@ const authMiddleware = async (
                 null,
 
             authEpoch:
-                epochToken
+                epochToken,
+
+            sessionId:
+                sessionId || null
 
         };
 

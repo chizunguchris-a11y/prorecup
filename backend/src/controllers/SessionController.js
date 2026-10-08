@@ -3,6 +3,9 @@
 import refreshTokenRepository
     from "../repositories/RefreshTokenRepository.js";
 
+import pool
+    from "../config/db.js";
+
 import asyncHandler
     from "../middlewares/asyncHandler.js";
 
@@ -52,10 +55,46 @@ const sessionController = {
                         utilisateurId
                     );
 
+            const sessionId =
+                String(
+                    req.utilisateur?.sessionId ||
+                    ""
+                ).trim();
+
+            let sessionCouranteId =
+                null;
+
+            if (sessionId) {
+
+                const sessionCourante =
+                    await refreshTokenRepository
+                        .trouverValideParHash(
+                            hacherToken(sessionId)
+                        );
+
+                if (
+                    sessionCourante?.utilisateur_id ===
+                    utilisateurId
+                ) {
+
+                    sessionCouranteId =
+                        sessionCourante.id;
+
+                }
+
+            }
+
             return ApiResponse.success(
                 res,
                 "Sessions actives récupérées avec succès.",
-                sessions
+                sessions.map(
+                    session => ({
+                        ...session,
+                        actuelle:
+                            session.id ===
+                            sessionCouranteId
+                    })
+                )
             );
 
         }
@@ -72,25 +111,25 @@ const sessionController = {
                     req
                 );
 
-            const refreshToken =
+            const sessionId =
                 String(
-                    req.body.refreshToken ||
+                    req.utilisateur?.sessionId ||
                     ""
                 ).trim();
 
-            if (!refreshToken) {
+            if (!sessionId) {
 
                 return res.status(400).json({
                     success: false,
                     error:
-                        "Le refresh token courant est obligatoire."
+                        "Cette session ne permet pas la révocation individuelle. Reconnectez-vous."
                 });
 
             }
 
             const tokenHash =
                 hacherToken(
-                    refreshToken
+                    sessionId
                 );
 
             const sessionCourante =
@@ -144,11 +183,44 @@ const sessionController = {
                     req
                 );
 
-            const nombreFerme =
-                await refreshTokenRepository
-                    .revoquerTousPourUtilisateur(
-                        utilisateurId
-                    );
+            const connexion =
+                await pool.connect();
+
+            let nombreFerme;
+
+            try {
+
+                await connexion.query("BEGIN");
+
+                nombreFerme =
+                    await refreshTokenRepository
+                        .revoquerTousPourUtilisateur(
+                            utilisateurId,
+                            connexion
+                        );
+
+                await connexion.query(
+                    `
+                    UPDATE utilisateurs
+                    SET auth_epoch = auth_epoch + 1,
+                        modifie_le = CURRENT_TIMESTAMP
+                    WHERE id = $1;
+                    `,
+                    [utilisateurId]
+                );
+
+                await connexion.query("COMMIT");
+
+            } catch (erreur) {
+
+                await connexion.query("ROLLBACK");
+                throw erreur;
+
+            } finally {
+
+                connexion.release();
+
+            }
 
             return ApiResponse.success(
                 res,

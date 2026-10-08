@@ -144,7 +144,7 @@ router.post(
     roleMiddleware([
         "admin"
     ]),
-    clientCompteController.creer
+    (req,res)=>res.status(409).json({success:false,error:"Invitez le premier utilisateur client depuis le module Invitations."})
 );
 
 router.post(

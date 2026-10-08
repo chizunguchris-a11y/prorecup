@@ -425,6 +425,32 @@ const charger = async () => {
         contexte?.clients
     );
 
+    const [securite, sessions] = await Promise.all([
+        PortailRecup.requete("/api/identity/account/security"),
+        PortailRecup.requete("/api/sessions")
+    ]);
+
+    const informations = PortailRecup.extraireDonnees(securite) || {};
+    const sessionsActives = PortailRecup.extraireDonnees(sessions) || [];
+    element("statutEmail").textContent = informations.email_verifie_le ? "Vérifiée" : "Non vérifiée";
+    element("statutTelephone").textContent = informations.telephone_verifie_le ? "Vérifié" : "Non vérifié — vérification bientôt disponible";
+    element("boutonVerifierEmail").hidden = Boolean(informations.email_verifie_le);
+    element("statutSecuriteCompte").textContent = `${sessionsActives.length} session${sessionsActives.length > 1 ? "s" : ""} active${sessionsActives.length > 1 ? "s" : ""}.`;
+    const liste = element("listeSessions");
+    liste.replaceChildren();
+    if (!sessionsActives.length) {
+        liste.textContent = "Aucune activité de session disponible.";
+    } else {
+        const ul = document.createElement("ul");
+        sessionsActives.forEach(session => {
+            const li = document.createElement("li");
+            const date = session.cree_le ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(session.cree_le)) : "Date indisponible";
+            li.textContent = `${session.actuelle ? "Session actuelle — " : ""}${session.navigateur || "Appareil non identifié"} · ${date}${session.adresse_ip ? ` · ${session.adresse_ip}` : ""}`;
+            ul.append(li);
+        });
+        liste.append(ul);
+    }
+
 };
 
 
@@ -462,6 +488,43 @@ const deconnecter = () => {
 
     }
 );
+
+element("boutonVerifierEmail")?.addEventListener("click", async evenement => {
+    const bouton = evenement.currentTarget;
+    bouton.disabled = true;
+    try {
+        const resultat = await PortailRecup.requete("/api/identity/account/email/request", { method: "POST", body: "{}" });
+        element("statutSecuriteCompte").textContent = resultat.message || "Lien envoyé.";
+    } catch (erreur) {
+        element("statutSecuriteCompte").textContent = erreur.message || "Envoi impossible.";
+    } finally {
+        bouton.disabled = false;
+    }
+});
+
+element("boutonFermerAutres")?.addEventListener("click", async evenement => {
+    const bouton = evenement.currentTarget;
+    bouton.disabled = true;
+    try {
+        await PortailRecup.requete("/api/sessions/fermer-autres", { method: "POST", body: "{}" });
+        window.location.reload();
+    } catch (erreur) {
+        element("statutSecuriteCompte").textContent = erreur.message || "Révocation impossible.";
+        bouton.disabled = false;
+    }
+});
+
+element("boutonFermerToutes")?.addEventListener("click", async evenement => {
+    const bouton = evenement.currentTarget;
+    bouton.disabled = true;
+    try {
+        await PortailRecup.requete("/api/sessions/fermer-toutes", { method: "POST", body: "{}" });
+        PortailRecup.deconnecter();
+    } catch (erreur) {
+        element("statutSecuriteCompte").textContent = erreur.message || "Révocation impossible.";
+        bouton.disabled = false;
+    }
+});
 
 
 charger().catch(

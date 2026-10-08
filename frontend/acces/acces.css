@@ -1,6 +1,6 @@
 :root { color-scheme: light; --green:#176B4D; --green-dark:#0E4F38; --ink:#17211c; --muted:#65736c; --line:#d9e2dd; --soft:#f2f7f4; --white:#fff; font-family:Inter,"Segoe UI",Arial,sans-serif; }
 * { box-sizing:border-box; }
-body { margin:0; min-height:100vh; color:var(--ink); background:linear-gradient(135deg,rgba(23,107,77,.08),transparent 45%),#f7faf8; }
+body { margin:0; min-height:100vh; color:var(--ink); background:#F6F8F7; }
 button,input,select,textarea { font:inherit; }
 .access-shell { width:min(860px,calc(100% - 32px)); margin:0 auto; padding:40px 0 32px; }
 .access-shell--compact { max-width:620px; }

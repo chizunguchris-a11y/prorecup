@@ -37,7 +37,7 @@ router.post(
     roleMiddleware([
         "admin"
     ]),
-    utilisateurController.creer
+    (req,res)=>res.status(409).json({success:false,error:"Créez une invitation depuis le module Invitations."})
 );
 
 /**

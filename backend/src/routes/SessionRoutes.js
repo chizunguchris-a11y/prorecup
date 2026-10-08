@@ -34,17 +34,7 @@ router.get(
  *       - Sessions
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
+ *     description: La session courante est identifiée par le JWT ; aucun jeton secondaire n'est transmis par le navigateur.
  */
 router.post(
     "/fermer-autres",

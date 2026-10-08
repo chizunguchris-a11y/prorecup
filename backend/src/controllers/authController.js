@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { obtenirJwtSecret } from "../config/security.js";
 
 import utilisateurRepository
@@ -278,6 +279,33 @@ const authController = {
             const organisationId =
                 utilisateur.organisation_id;
 
+            const sessionId =
+                crypto.randomBytes(32).toString("hex");
+
+            const expirationSession =
+                new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            await refreshTokenRepository.creer({
+                utilisateur_id:
+                    utilisateur.id,
+
+                token_hash:
+                    crypto
+                        .createHash("sha256")
+                        .update(sessionId)
+                        .digest("hex"),
+
+                expire_le:
+                    expirationSession,
+
+                adresse_ip:
+                    req.ip || null,
+
+                navigateur:
+                    String(req.get("user-agent") || "")
+                        .slice(0, 500) || null
+            });
+
             const token =
                 jwt.sign(
                     {
@@ -301,7 +329,9 @@ const authController = {
                             Number(
                                 utilisateur.auth_epoch ||
                                 1
-                            )
+                            ),
+
+                        sessionId
                     },
                     obtenirJwtSecret(),
                     {

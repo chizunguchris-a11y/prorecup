@@ -3753,6 +3753,7 @@
         );
 
     let profilTerrainMemoire = null;
+    let profilSecuriteMemoire = null;
 
 
     const formaterDateProfil = valeur => {
@@ -3906,6 +3907,25 @@
                 horsLigne
                     ? "Les informations disponibles sur cet appareil sont affichées."
                     : "Votre identité Terrain a été vérifiée auprès du serveur.";
+
+            const securite =
+                profilSecuriteMemoire?.informations ||
+                null;
+
+            const sessions =
+                Array.isArray(profilSecuriteMemoire?.sessions)
+                    ? profilSecuriteMemoire.sessions
+                    : [];
+
+            const statutEmail =
+                securite
+                    ? (securite.email_verifie_le ? "Vérifiée" : "Non vérifiée")
+                    : "Disponible en ligne";
+
+            const statutTelephone =
+                securite
+                    ? (securite.telephone_verifie_le ? "Vérifié" : "Non vérifié — bientôt disponible")
+                    : "Disponible en ligne";
 
             conteneur.innerHTML = `
                 <div class="profil-carte">
@@ -4085,6 +4105,30 @@
 
                     </div>
 
+                    <div class="profil-section">
+
+                        <h3>Sécurité du compte</h3>
+
+                        <div class="profil-grille">
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">Adresse e-mail</span>
+                                <strong class="profil-valeur">${nettoyer(statutEmail)}</strong>
+                            </div>
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">Téléphone</span>
+                                <strong class="profil-valeur">${nettoyer(statutTelephone)}</strong>
+                            </div>
+                            <div class="profil-ligne">
+                                <span class="profil-etiquette">Sessions actives</span>
+                                <strong class="profil-valeur">${securite ? sessions.length : "—"}</strong>
+                            </div>
+                        </div>
+
+                        ${securite && !securite.email_verifie_le ? `<button type="button" id="profil-verifier-email" class="bouton">Vérifier mon adresse e-mail</button>` : ""}
+                        ${securite ? `<button type="button" id="profil-fermer-autres" class="bouton">Fermer les autres sessions</button><button type="button" id="profil-fermer-toutes" class="bouton profil-bouton-deconnexion">Fermer toutes les sessions</button>` : ""}
+
+                    </div>
+
                     <div class="profil-actions">
 
                         <button
@@ -4150,6 +4194,23 @@
                 const contexte =
                     reponse?.data ||
                     reponse;
+
+                const [securiteReponse, sessionsReponse] =
+                    await Promise.all([
+                        api.get("/identity/account/security"),
+                        api.get("/sessions")
+                    ]);
+
+                profilSecuriteMemoire = {
+                    informations:
+                        securiteReponse?.data ||
+                        securiteReponse,
+
+                    sessions:
+                        sessionsReponse?.data ||
+                        sessionsReponse ||
+                        []
+                };
 
                 profilTerrainMemoire =
                     contexte;
@@ -4267,6 +4328,49 @@
                             "bouton-deconnexion"
                         )
                         ?.click();
+
+                    return;
+                }
+
+                const verifierEmail = evenement.target.closest("#profil-verifier-email");
+                if (verifierEmail) {
+                    verifierEmail.disabled = true;
+                    try {
+                        const resultat = await api.post("/identity/account/email/request", {});
+                        afficherMessage(messageApplication, resultat.message || "Lien de vérification envoyé.", "succes");
+                    } catch (erreur) {
+                        afficherMessage(messageApplication, erreur.message || "Envoi impossible.", "erreur");
+                    } finally {
+                        verifierEmail.disabled = false;
+                    }
+                    return;
+                }
+
+                const fermerAutres = evenement.target.closest("#profil-fermer-autres");
+                if (fermerAutres) {
+                    fermerAutres.disabled = true;
+                    try {
+                        await api.post("/sessions/fermer-autres", {});
+                        await afficherProfil(true);
+                        afficherMessage(messageApplication, "Les autres sessions ont été fermées.", "succes");
+                    } catch (erreur) {
+                        afficherMessage(messageApplication, erreur.message || "Révocation impossible.", "erreur");
+                        fermerAutres.disabled = false;
+                    }
+                    return;
+                }
+
+                const fermerToutes = evenement.target.closest("#profil-fermer-toutes");
+                if (fermerToutes) {
+                    fermerToutes.disabled = true;
+                    try {
+                        await api.post("/sessions/fermer-toutes", {});
+                        auth.deconnexion();
+                        afficherEcran(connexion);
+                    } catch (erreur) {
+                        afficherMessage(messageApplication, erreur.message || "Révocation impossible.", "erreur");
+                        fermerToutes.disabled = false;
+                    }
                 }
             }
         );

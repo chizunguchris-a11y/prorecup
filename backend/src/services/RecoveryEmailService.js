@@ -15,6 +15,25 @@ const baseFrontend = () => {
 
 class RecoveryEmailService {
 
+    lien(page, token) {
+        const url = new URL(baseFrontend() + "/acces/" + page);
+        if (process.env.NODE_ENV === "production" && url.protocol !== "https:") throw new Error("HTTPS requis pour les liens transactionnels.");
+        url.hash = "token=" + encodeURIComponent(token);
+        return url.toString();
+    }
+
+    async envoyerTransaction({email,nom,lien,subject,texte,bouton}) {
+        const key = String(process.env.RESEND_API_KEY || "").trim();
+        if (!key) return {sent:false,code:"EMAIL_PROVIDER_NOT_CONFIGURED"};
+        const escape = value => String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+        const text = `Bonjour ${nom || ""},\n\n${texte}\n\n${lien}\n\nPro Récup`;
+        const html = `<div style="font-family:Segoe UI,Arial,sans-serif;color:#17211C;max-width:560px;margin:auto"><h2>Pro Récup</h2><p>Bonjour ${escape(nom || "")},</p><p>${escape(texte)}</p><p><a style="background:#176B4D;color:white;padding:12px 18px;display:inline-block;text-decoration:none" href="${escape(lien)}">${escape(bouton)}</a></p><p>Si vous n'attendiez pas ce message, contactez notre équipe.</p></div>`;
+        try {
+            const response = await fetch("https://api.resend.com/emails", {method:"POST",signal:AbortSignal.timeout(10000),headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.PRORECUP_EMAIL_FROM || "Pro Récup <no-reply@prorecup.com>",reply_to:process.env.PRORECUP_SUPPORT_EMAIL || "support@prorecup.com",to:[email],subject,text,html})});
+            return {sent:response.ok,code:response.ok?"EMAIL_SENT":"EMAIL_PROVIDER_ERROR"};
+        } catch { return {sent:false,code:"EMAIL_PROVIDER_UNAVAILABLE"}; }
+    }
+
     async envoyerLienMotDePasse(
         {
             email,

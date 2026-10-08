@@ -406,6 +406,8 @@ const utilisateurRepository = {
             UPDATE utilisateurs
             SET
                 nom = $1,
+                email_verifie_le = CASE WHEN LOWER(email)=LOWER($2) THEN email_verifie_le ELSE NULL END,
+                telephone_verifie_le = CASE WHEN telephone IS NOT DISTINCT FROM $3 THEN telephone_verifie_le ELSE NULL END,
                 email = $2,
                 telephone = $3,
                 photo_url = $4,
@@ -502,6 +504,8 @@ const utilisateurRepository = {
             UPDATE utilisateurs
             SET
                 nom = $1,
+                email_verifie_le = CASE WHEN LOWER(email)=LOWER($2) THEN email_verifie_le ELSE NULL END,
+                telephone_verifie_le = CASE WHEN telephone IS NOT DISTINCT FROM $3 THEN telephone_verifie_le ELSE NULL END,
                 email = $2,
                 telephone = $3,
                 photo_url = $4,

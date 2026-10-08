@@ -35,6 +35,9 @@ import notificationRoutes
 import authRoutes
     from "./routes/authRoutes.js";
 
+import identityRecoveryRoutes
+    from "./routes/IdentityRecoveryRoutes.js";
+
 import clientRoutes
     from "./routes/clientRoutes.js";
 
@@ -243,6 +246,11 @@ app.use(
 app.use(
     "/api/auth",
     authRoutes
+);
+
+app.use(
+    "/api/identity",
+    identityRecoveryRoutes
 );
 
 app.use(

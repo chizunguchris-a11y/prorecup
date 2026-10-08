@@ -30,8 +30,8 @@ class IdentityInvitationService {
                 if (!client.rows.length) throw new ApiError(404, "Client introuvable dans votre organisation.");
             }
             const password = await bcrypt.hash(randomBytes(48).toString("hex"), 12);
-            const result = await connection.query(`INSERT INTO utilisateurs (nom,email,mot_de_passe,organisation_id,role_id,actif,invitation_en_attente)
-                VALUES ($1,$2,$3,$4,$5,false,true) RETURNING id,nom,email,organisation_id`, [data.nom, data.email, password, actor.organisationId, roles.rows[0].id]);
+            const result = await connection.query(`INSERT INTO utilisateurs (nom,email,mot_de_passe,organisation_id,role_id,actif,invitation_en_attente,invitation_statut)
+                VALUES ($1,$2,$3,$4,$5,false,true,'en_attente') RETURNING id,nom,email,organisation_id`, [data.nom, data.email, password, actor.organisationId, roles.rows[0].id]);
             user = result.rows[0];
             if (data.role === "client") await connection.query("INSERT INTO client_utilisateurs (organisation_id,client_id,utilisateur_id,actif) VALUES ($1,$2,$3,true)", [actor.organisationId, data.clientId, user.id]);
             await this.issue(user, raw, connection);
@@ -62,10 +62,14 @@ class IdentityInvitationService {
             const result = await connection.query(`SELECT u.*, r.nom AS role FROM utilisateurs u JOIN roles r ON r.id=u.role_id WHERE u.id=$1 AND u.organisation_id=$2 FOR UPDATE OF u`, [id,actor.organisationId]);
             user=result.rows[0];
             if(!user || !invitationRoles(actor).includes(user.role)) throw new ApiError(403,"Invitation hors de votre périmètre.");
-            if(!user.invitation_en_attente) throw new ApiError(409,"Compte déjà activé, suspendu ou invitation annulée.");
+            if(user.actif) throw new ApiError(409,"Ce compte est déjà activé.");
+            if(cancel&&!user.invitation_en_attente) throw new ApiError(409,"Cette invitation est déjà annulée.");
             await tokens.invaliderTokens(id,"invitation",connection);
-            if(cancel) await connection.query("UPDATE utilisateurs SET invitation_en_attente=false,auth_epoch=auth_epoch+1 WHERE id=$1",[id]);
-            else await this.issue(user,raw,connection);
+            if(cancel) await connection.query("UPDATE utilisateurs SET invitation_en_attente=false,invitation_statut='annulee',auth_epoch=auth_epoch+1 WHERE id=$1",[id]);
+            else {
+                await connection.query("UPDATE utilisateurs SET invitation_en_attente=true,invitation_statut='en_attente',auth_epoch=auth_epoch+1 WHERE id=$1",[id]);
+                await this.issue(user,raw,connection);
+            }
             await audit.creer({organisation_id:actor.organisationId,utilisateur_id:actor.id,action:cancel?"INVITATION_ANNULEE":"INVITATION_RENOUVELEE",ressource:"utilisateur",ressource_id:id},connection);
             await connection.query("COMMIT");
         } catch(error){await connection.query("ROLLBACK");throw error;}
@@ -84,7 +88,7 @@ class IdentityInvitationService {
                 WHERE u.id=$1 FOR UPDATE OF u`,[token.utilisateur_id]);
             if(!user.rows[0]?.invitation_en_attente) throw new ApiError(400,"Cette invitation ne peut plus être utilisée.");
             const hash=await bcrypt.hash(password,12);
-            await connection.query("UPDATE utilisateurs SET mot_de_passe=$1,actif=true,invitation_en_attente=false,email_verifie_le=CURRENT_TIMESTAMP,auth_epoch=auth_epoch+1,modifie_le=CURRENT_TIMESTAMP WHERE id=$2",[hash,token.utilisateur_id]);
+            await connection.query("UPDATE utilisateurs SET mot_de_passe=$1,actif=true,invitation_en_attente=false,invitation_statut='utilisee',email_verifie_le=CURRENT_TIMESTAMP,auth_epoch=auth_epoch+1,modifie_le=CURRENT_TIMESTAMP WHERE id=$2",[hash,token.utilisateur_id]);
             await tokens.invaliderTokens(token.utilisateur_id,"invitation",connection);
             await audit.creer({organisation_id:user.rows[0].organisation_id,utilisateur_id:token.utilisateur_id,action:"INVITATION_ACTIVEE",ressource:"utilisateur",ressource_id:token.utilisateur_id},connection);
             await connection.query("COMMIT");

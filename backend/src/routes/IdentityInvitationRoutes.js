@@ -15,10 +15,15 @@ router.use(noStore);
 router.get("/",auth,role(["admin","manager"]),asyncHandler(async(req,res)=>{
     const {default:pool}=await import("../config/db.js");
     const r=await pool.query(`SELECT u.id,u.nom,u.email,
-        CASE WHEN t.expire_le>CURRENT_TIMESTAMP THEN 'en_attente' ELSE 'expiree' END AS statut
+        CASE
+            WHEN u.invitation_statut='annulee' THEN 'annulee'
+            WHEN u.invitation_statut='utilisee' THEN 'utilisee'
+            WHEN t.expire_le>CURRENT_TIMESTAMP THEN 'en_attente'
+            ELSE 'expiree'
+        END AS statut
         FROM utilisateurs u JOIN roles r ON r.id=u.role_id
         LEFT JOIN LATERAL (SELECT expire_le FROM identity_recovery_tokens WHERE utilisateur_id=u.id AND purpose='invitation' AND utilise_le IS NULL ORDER BY cree_le DESC LIMIT 1) t ON true
-        WHERE u.organisation_id=$1 AND u.invitation_en_attente=true
+        WHERE u.organisation_id=$1 AND u.invitation_statut IS NOT NULL
           AND ($2='admin' OR r.nom='agent_valorisation_carbone') ORDER BY u.nom LIMIT 200`,[req.utilisateur.organisationId,req.utilisateur.role]);
     res.json({success:true,data:r.rows});
 }));

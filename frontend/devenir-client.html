@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#176B4D">
+    <meta name="description" content="Demandez un espace client professionnel Pro Récup.">
+    <title>Devenir client — Pro Récup</title>
+    <link rel="stylesheet" href="./acces/acces.css">
+</head>
+<body>
+    <main class="access-shell">
+        <a class="back-link" href="./index.html">← Retour aux accès</a>
+        <section class="access-card" aria-labelledby="titre-demande">
+            <header class="brand-header"><span class="brand-mark" aria-hidden="true">PR</span><div><strong>Pro Récup</strong><span>Traçabilité professionnelle</span></div></header>
+            <div class="intro">
+                <p class="eyebrow">NOUVEL ESPACE CLIENT</p>
+                <h1 id="titre-demande">Demandez votre espace Pro Récup</h1>
+                <p>Cette demande ne crée pas automatiquement de compte et ne rattache jamais votre adresse à une organisation existante. Notre équipe vérifie d'abord votre organisation et votre qualité de contact.</p>
+            </div>
+            <form id="form-onboarding" novalidate>
+                <div class="two-columns">
+                    <div><label for="organisationNom">Organisation</label><input id="organisationNom" name="organisationNom" maxlength="180" autocomplete="organization" required></div>
+                    <div><label for="nomContact">Votre nom</label><input id="nomContact" name="nomContact" maxlength="150" autocomplete="name" required></div>
+                </div>
+                <div class="two-columns">
+                    <div><label for="emailContact">E-mail professionnel</label><input id="emailContact" name="emailContact" type="email" maxlength="254" autocomplete="email" required></div>
+                    <div><label for="telephoneContact">Téléphone</label><input id="telephoneContact" name="telephoneContact" type="tel" maxlength="40" autocomplete="tel"></div>
+                </div>
+                <div class="two-columns">
+                    <div><label for="pays">Pays</label><input id="pays" name="pays" maxlength="100" autocomplete="country-name" required></div>
+                    <div><label for="ville">Ville</label><input id="ville" name="ville" maxlength="100" autocomplete="address-level2"></div>
+                </div>
+                <label for="identifiantLegal">Identifiant légal ou registre de commerce <span>(facultatif à ce stade)</span></label>
+                <input id="identifiantLegal" name="identifiantLegal" maxlength="100">
+                <label for="message">Votre besoin <span>(facultatif)</span></label>
+                <textarea id="message-demande" name="message" maxlength="2000" rows="4" placeholder="Sites concernés, type de collecte, calendrier souhaité…"></textarea>
+                <label style="display:flex;align-items:flex-start;gap:10px;font-weight:500;line-height:1.45">
+                    <input name="consentement" type="checkbox" value="true" required style="width:18px;min-height:18px;margin-top:2px">
+                    J'autorise Pro Récup à utiliser ces informations uniquement pour étudier et traiter cette demande.
+                </label>
+                <p class="privacy-note">Les collaborateurs back-office et les agents terrain sont créés uniquement sur invitation. Cette page ne permet jamais de devenir administrateur.</p>
+                <button class="primary-button" type="submit">Envoyer la demande</button>
+            </form>
+            <div id="message" class="status" role="status" aria-live="polite" hidden></div>
+        </section>
+    </main>
+    <script src="./js/config.js"></script>
+    <script src="./js/devenir-client.js"></script>
+</body>
+</html>

@@ -38,6 +38,9 @@ import authRoutes
 import identityRecoveryRoutes
     from "./routes/IdentityRecoveryRoutes.js";
 
+import clientOnboardingRoutes
+    from "./routes/ClientOnboardingRoutes.js";
+
 import clientRoutes
     from "./routes/clientRoutes.js";
 
@@ -251,6 +254,11 @@ app.use(
 app.use(
     "/api/identity",
     identityRecoveryRoutes
+);
+
+app.use(
+    "/api/onboarding",
+    clientOnboardingRoutes
 );
 
 app.use(

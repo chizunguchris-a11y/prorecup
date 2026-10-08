@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Demandes d'espace client — Pro Récup</title>
+    <link rel="stylesheet" href="./css/prorecup-tokens.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/prorecup-components.css">
+    <link rel="stylesheet" href="./css/backoffice-finish.css?v=1">
+    <style>
+        .onboarding-list{display:grid;gap:14px}.onboarding-card{padding:20px;border:1px solid #dbe5df;border-radius:12px;background:#fff}.onboarding-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.onboarding-meta{display:flex;gap:12px;flex-wrap:wrap;color:#65736c;font-size:.86rem}.onboarding-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.onboarding-actions select,.onboarding-actions input{min-height:42px;padding:8px 10px;border:1px solid #bac9c0;border-radius:8px}.onboarding-card p{white-space:pre-wrap}.message-page{padding:14px;border-radius:9px;background:#eef6f1}.message-page.erreur{background:#fff0ee;color:#8b2f25}@media(max-width:700px){.onboarding-head{display:block}.onboarding-actions>*{width:100%}}
+    </style>
+</head>
+<body>
+    <div class="application">
+        <aside class="barre-laterale">
+            <div class="marque"><div class="logo">PR</div><div><strong>Pro Récup</strong><span>Gestion environnementale</span></div></div>
+            <nav class="navigation"><span class="chargement-navigation">Chargement du menu...</span></nav>
+            <div class="bas-barre-laterale"><div class="utilisateur-lateral"><div id="initialeUtilisateur" class="avatar">U</div><div><strong id="nomUtilisateurLateral">Utilisateur</strong><span id="emailUtilisateurLateral">Chargement...</span></div></div><button type="button" id="boutonDeconnexion" class="bouton-deconnexion">Se déconnecter</button></div>
+        </aside>
+        <main class="contenu">
+            <header class="entete">
+                <div><p class="sur-titre">ONBOARDING CLIENT</p><h1>Demandes d'espace</h1><p class="sous-titre">Vérifiez chaque organisation avant toute création de compte.</p></div>
+                <a href="./clients.html" class="bouton-secondaire" style="text-decoration:none">Retour aux clients</a>
+            </header>
+            <section class="panneau">
+                <div class="entete-panneau"><div><p class="sur-titre">FILE DE VÉRIFICATION</p><h2>Demandes reçues</h2></div><select id="filtre-statut" aria-label="Filtrer par statut"><option value="">Tous les statuts</option><option value="en_attente_verification">En attente de vérification</option><option value="en_attente_validation">En attente de validation</option><option value="actif">Actif</option><option value="suspendu">Suspendu</option><option value="refuse">Refusé</option></select></div>
+                <div id="message-page" class="message-page" role="status">Chargement des demandes…</div>
+                <div id="liste-demandes" class="onboarding-list" aria-live="polite"></div>
+            </section>
+        </main>
+    </div>
+    <script src="./js/config.js"></script><script src="./js/common.js"></script><script src="./js/sidebar.js"></script><script src="./js/demandes-clients.js"></script>
+</body>
+</html>

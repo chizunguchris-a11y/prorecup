@@ -1,0 +1,546 @@
+/* ==========================================================
+   PRO RECUP - AGENT TERRAIN PRODUCT FINISH
+   Mobile-first, operational, readable and resilient.
+   ========================================================== */
+
+:root {
+    --at-touch:
+        48px;
+
+    --at-gutter:
+        clamp(
+            14px,
+            4vw,
+            20px
+        );
+
+    --at-radius:
+        14px;
+
+    --at-radius-small:
+        10px;
+
+    --at-shadow:
+        0 6px 20px
+        rgba(
+            23,
+            33,
+            28,
+            0.07
+        );
+
+    --at-shadow-active:
+        0 3px 12px
+        rgba(
+            23,
+            33,
+            28,
+            0.08
+        );
+
+    --at-focus:
+        0 0 0 3px
+        rgba(
+            23,
+            107,
+            77,
+            0.16
+        );
+}
+
+
+/* -------------------------------------------------------
+   DEVICE / PAGE
+   ------------------------------------------------------- */
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+
+body {
+    min-height:
+        100dvh;
+
+    text-rendering:
+        optimizeLegibility;
+
+    -webkit-font-smoothing:
+        antialiased;
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    background:
+        var(
+            --pr-color-bg,
+            #F6F8F7
+        );
+
+    overscroll-behavior-y:
+        contain;
+}
+
+
+main {
+    min-width: 0;
+}
+
+
+/* -------------------------------------------------------
+   TYPOGRAPHY
+   ------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+    text-wrap:
+        balance;
+}
+
+
+h1 {
+    letter-spacing:
+        -0.025em;
+
+    line-height:
+        1.12;
+}
+
+
+p {
+    text-wrap:
+        pretty;
+
+    line-height:
+        1.5;
+}
+
+
+/* -------------------------------------------------------
+   TOUCH CONTROLS
+   ------------------------------------------------------- */
+
+button,
+.btn,
+.bouton,
+a[role="button"] {
+    min-height:
+        var(
+            --at-touch
+        );
+
+    font-family:
+        inherit;
+
+    border-radius:
+        var(
+            --at-radius-small
+        );
+
+    touch-action:
+        manipulation;
+
+    -webkit-tap-highlight-color:
+        transparent;
+
+    transition:
+        transform 100ms ease,
+        box-shadow 130ms ease,
+        background-color 130ms ease,
+        border-color 130ms ease,
+        opacity 130ms ease;
+}
+
+
+button:not(:disabled):active,
+.btn:not(:disabled):active,
+.bouton:not(:disabled):active,
+a[role="button"]:active {
+    transform:
+        translateY(1px);
+
+    box-shadow:
+        var(
+            --at-shadow-active
+        );
+}
+
+
+button:disabled,
+.btn:disabled,
+.bouton:disabled {
+    cursor:
+        not-allowed;
+
+    opacity:
+        0.58;
+}
+
+
+/* -------------------------------------------------------
+   FORMS
+   ------------------------------------------------------- */
+
+input:not(
+    [type="checkbox"]
+):not(
+    [type="radio"]
+),
+select,
+textarea {
+    min-height:
+        var(
+            --at-touch
+        );
+
+    max-width:
+        100%;
+
+    font:
+        inherit;
+
+    font-size:
+        16px;
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    background:
+        var(
+            --pr-color-surface,
+            #FFFFFF
+        );
+
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        var(
+            --at-radius-small
+        );
+
+    transition:
+        border-color 130ms ease,
+        box-shadow 130ms ease;
+}
+
+
+textarea {
+    min-height:
+        108px;
+
+    line-height:
+        1.5;
+
+    resize:
+        vertical;
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline:
+        none;
+
+    border-color:
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    box-shadow:
+        var(
+            --at-focus
+        );
+}
+
+
+input::placeholder,
+textarea::placeholder {
+    color:
+        #89958F;
+
+    opacity:
+        1;
+}
+
+
+/* -------------------------------------------------------
+   FIELD CARDS / MISSIONS / ACTIONS
+   ------------------------------------------------------- */
+
+:is(
+    .card,
+    .carte,
+    .panel,
+    .panneau,
+    .mission,
+    .action-card,
+    .bloc
+) {
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        var(
+            --at-radius
+        );
+
+    box-shadow:
+        var(
+            --at-shadow
+        );
+}
+
+
+/* -------------------------------------------------------
+   STATUS / OFFLINE / SYNC
+   ------------------------------------------------------- */
+
+:is(
+    .offline,
+    .hors-ligne,
+    .sync,
+    .synchronisation,
+    .status,
+    .statut,
+    .etat
+) {
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+:is(
+    .offline,
+    .hors-ligne
+) {
+    border-radius:
+        var(
+            --at-radius-small
+        );
+}
+
+
+/* -------------------------------------------------------
+   PHOTOS / PROOFS
+   ------------------------------------------------------- */
+
+img,
+video,
+canvas {
+    max-width:
+        100%;
+}
+
+
+:is(
+    .photo,
+    .photo-preview,
+    .preview-photo,
+    .preuve-photo
+) img {
+    display:
+        block;
+
+    width:
+        100%;
+
+    height:
+        auto;
+
+    object-fit:
+        cover;
+
+    border-radius:
+        var(
+            --at-radius-small
+        );
+}
+
+
+/* -------------------------------------------------------
+   PROGRESS / NUMBERS
+   ------------------------------------------------------- */
+
+:is(
+    .poids,
+    .weight,
+    .stat-value,
+    .stat-valeur,
+    .compteur,
+    .progression
+) {
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+/* -------------------------------------------------------
+   FOCUS / ACCESSIBILITY
+   ------------------------------------------------------- */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline:
+        2px solid
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    outline-offset:
+        3px;
+}
+
+
+/* -------------------------------------------------------
+   BOTTOM / SAFE AREAS
+   ------------------------------------------------------- */
+
+body {
+    padding-bottom:
+        env(
+            safe-area-inset-bottom,
+            0px
+        );
+}
+
+
+nav,
+.bottom-nav,
+.navigation-bas,
+.nav-bottom {
+    padding-bottom:
+        max(
+            env(
+                safe-area-inset-bottom,
+                0px
+            ),
+            4px
+        );
+}
+
+
+/* -------------------------------------------------------
+   TABLET
+   ------------------------------------------------------- */
+
+@media (min-width: 640px) {
+
+    :root {
+        --at-gutter:
+            20px;
+    }
+
+
+    main {
+        margin-inline:
+            auto;
+    }
+}
+
+
+/* -------------------------------------------------------
+   SMALL PHONES
+   ------------------------------------------------------- */
+
+@media (max-width: 380px) {
+
+    :root {
+        --at-gutter:
+            12px;
+
+        --at-touch:
+            46px;
+    }
+
+
+    h1 {
+        font-size:
+            1.55rem;
+    }
+}
+
+
+/* -------------------------------------------------------
+   LANDSCAPE
+   ------------------------------------------------------- */
+
+@media (
+    max-height: 520px
+) and (
+    orientation: landscape
+) {
+
+    :root {
+        --at-touch:
+            44px;
+    }
+}
+
+
+/* -------------------------------------------------------
+   REDUCED MOTION
+   ------------------------------------------------------- */
+
+@media (
+    prefers-reduced-motion:
+    reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior:
+            auto !important;
+
+        transition-duration:
+            0.01ms !important;
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+    }
+}
+
+
+/* -------------------------------------------------------
+   HIGH CONTRAST
+   ------------------------------------------------------- */
+
+@media (
+    prefers-contrast:
+    more
+) {
+
+    button,
+    input,
+    select,
+    textarea,
+    .card,
+    .carte,
+    .mission {
+        border-width:
+            2px;
+    }
+}

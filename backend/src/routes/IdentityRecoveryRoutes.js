@@ -30,6 +30,30 @@ const limiteur =
     creerLimiteurConnexion();
 
 
+router.get(
+    "/",
+    (
+        req,
+        res
+    ) => {
+
+        res.set(
+            "Cache-Control",
+            "no-store"
+        );
+
+        return res.status(200).json({
+            success: true,
+            service:
+                "Pro Récup Identity",
+            status:
+                "operational"
+        });
+
+    }
+);
+
+
 router.post(
     "/recovery/password/request",
     limiteur,

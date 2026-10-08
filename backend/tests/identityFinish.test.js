@@ -40,6 +40,7 @@ describe("Product Finish — invitations, activation et permissions",function(){
         replace(mail,"envoyerTransaction",async data=>{state.delivery=data;return {sent:false,code:"EMAIL_PROVIDER_NOT_CONFIGURED"};});
     });
     afterEach(()=>restore.reverse().forEach(fn=>fn()));
+    it("expose un statut public neutre pour le domaine identité",async()=>{const r=await request(app).get("/api/identity");assert.equal(r.status,200);assert.equal(r.body.status,"operational");assert.equal(r.headers["cache-control"],"no-store");});
     it("le Manager ne peut inviter ni Admin ni Client",()=>{assert.deepEqual(invitationRoles({...actor,role:"manager"}),["agent_valorisation_carbone"]);});
     it("une invitation valide stocke uniquement un hash et un mot de passe aléatoire",async()=>{
         const result=await invitations.create(actor,{nom:"Invité",email:"invite@example.com",role:"manager"});

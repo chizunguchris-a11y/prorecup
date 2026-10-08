@@ -11,20 +11,29 @@ Cette checklist décrit des contrôles techniques. Elle ne remplace pas une rece
 - PASS — Manager vers Administrateur interdit.
 - PASS — fermeture globale des sessions avec incrément de `auth_epoch`.
 - PASS — contrats PWA/queue/pesée/QR/traçabilité couverts par la suite existante.
+- PASS — migrations 17, 18, 19 et 20 présentes dans le dépôt et observées dans Supabase.
+- PASS — démarrage local en mode production, connexion Supabase et `GET /` à 200.
+- PASS — backend Render : `GET /` à 200 après cold start.
+- PASS — frontend et application Agent servis par Render.
 
 ## Contrôles nécessitant une base dédiée
 
 - PENDING — authentification réelle, clients, agents, missions, sites, stocks, tricycles et fixtures associées.
 - PENDING — migration/rollback et concurrence PostgreSQL de la traçabilité.
 
-## Contrôles UI à exécuter après déploiement
+## Contrôles UI confirmés sans compte de recette
 
-- Porte d'entrée : Back-office, Portail Client, Agent, devenir client, aide d'accès.
-- Activation : lien valide, invalide, expiré, consommé.
-- Vérification e-mail : lien valide, invalide, expiré, consommé.
-- Sécurité : état e-mail/téléphone, sessions, fermeture autres/toutes, changement de mot de passe.
-- Responsive : desktop et environ 390 px, sans overflow horizontal.
-- Navigateur : aucune erreur console, aucun 404, aucun bouton sans action.
-- PWA Agent : shell, manifest, service worker, IndexedDB, queue et reprise après interruption.
+- PASS — porte d'entrée : Back-office, Portail Client, Agent, devenir client, aide d'accès.
+- PASS — états publics d'activation et de vérification e-mail invalides.
+- PASS — responsive desktop et 390 px sur les pages publiques, sans overflow horizontal.
+- PASS — aucun 404 ni erreur console sur les routes publiques contrôlées.
+- PASS — shell Agent et manifest PWA accessibles sur Render.
+- LIMITÉ — le navigateur de recette ne fournit pas l'API Service Worker ; l'enregistrement actif n'est pas observable dans cet environnement.
+
+## Contrôles nécessitant un environnement externe
+
+- PENDING — cycle e-mail réel : clé Resend, domaine SPF/DKIM validé et adresse de recette.
+- PENDING — écrans authentifiés et recette A→Z : base dédiée et comptes fixtures.
+- PENDING — Service Worker/IndexedDB/offline en navigateur compatible PWA.
 
 Ne marquer ces contrôles UI `PASS` qu'après vérification effective sur le déploiement correspondant au HEAD.

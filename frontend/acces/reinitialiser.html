@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#176B4D">
+    <title>Nouveau mot de passe — Pro Récup</title>
+    <link rel="stylesheet" href="./acces.css">
+</head>
+<body>
+    <main class="access-shell access-shell--compact">
+        <a class="back-link" href="./index.html">← Assistance de connexion</a>
+        <section class="access-card" aria-labelledby="titre-reset">
+            <header class="brand-header"><span class="brand-mark" aria-hidden="true">PR</span><div><strong>Pro Récup</strong><span>Accès sécurisé</span></div></header>
+            <div class="intro">
+                <p class="eyebrow">NOUVEAU MOT DE PASSE</p>
+                <h1 id="titre-reset">Créez un nouvel accès</h1>
+                <p>Le lien est personnel, utilisable une seule fois et expire 30 minutes après son envoi.</p>
+            </div>
+            <form id="form-reset" novalidate>
+                <label for="nouveauMotDePasse">Nouveau mot de passe</label>
+                <input id="nouveauMotDePasse" name="nouveauMotDePasse" type="password" minlength="8" maxlength="256" autocomplete="new-password" required>
+                <p class="field-hint">8 caractères minimum. Une phrase de passe longue est recommandée.</p>
+                <label for="confirmationMotDePasse">Confirmer le mot de passe</label>
+                <input id="confirmationMotDePasse" name="confirmationMotDePasse" type="password" minlength="8" maxlength="256" autocomplete="new-password" required>
+                <button class="primary-button" type="submit">Enregistrer mon nouveau mot de passe</button>
+            </form>
+            <div id="message" class="status" role="status" aria-live="polite" hidden></div>
+        </section>
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="./acces.js"></script>
+</body>
+</html>

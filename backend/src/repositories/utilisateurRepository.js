@@ -18,6 +18,7 @@ const utilisateurRepository = {
                 u.organisation_id,
                 u.role_id,
                 u.actif,
+                u.auth_epoch,
                 u.dernier_acces,
                 u.cree_le,
                 u.modifie_le,
@@ -578,6 +579,7 @@ const utilisateurRepository = {
             UPDATE utilisateurs
             SET
                 mot_de_passe = $1,
+                auth_epoch = auth_epoch + 1,
                 modifie_le = CURRENT_TIMESTAMP
             WHERE id = $2
             RETURNING id;

@@ -83,7 +83,10 @@ const identityRecoveryController = {
                 await identityRecoveryService
                     .reinitialiserMotDePasse(
                         req.body.token,
-                        req.body.nouveauMotDePasse
+                        req.body.nouveauMotDePasse,
+                        contexte(
+                            req
+                        )
                     );
 
 

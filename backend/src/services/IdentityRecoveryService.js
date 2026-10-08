@@ -16,6 +16,12 @@ import identityRecoveryRepository
 import recoveryEmailService
     from "./RecoveryEmailService.js";
 
+import refreshTokenRepository
+    from "../repositories/RefreshTokenRepository.js";
+
+import auditRepository
+    from "../repositories/AuditRepository.js";
+
 
 const DUREE_RESET_MS =
     30 *
@@ -268,7 +274,8 @@ class IdentityRecoveryService {
 
     async reinitialiserMotDePasse(
         token,
-        nouveauMotDePasse
+        nouveauMotDePasse,
+        contexte = {}
     ) {
 
         const connexion =
@@ -384,6 +391,60 @@ class IdentityRecoveryService {
                 );
 
 
+            const sessionsRevoquees =
+                await refreshTokenRepository
+                    .revoquerTousPourUtilisateur(
+                        utilisateur.id,
+                        connexion
+                    );
+
+
+            await auditRepository.creer(
+                {
+                    organisation_id:
+                        utilisateur.organisation_id,
+
+                    utilisateur_id:
+                        utilisateur.id,
+
+                    action:
+                        "MOT_DE_PASSE_REINITIALISE",
+
+                    ressource:
+                        "utilisateur",
+
+                    ressource_id:
+                        utilisateur.id,
+
+                    methode_http:
+                        "POST",
+
+                    route:
+                        "/api/identity/recovery/password/reset",
+
+                    adresse_ip:
+                        contexte.adresseIp ||
+                        null,
+
+                    navigateur:
+                        contexte.userAgent ||
+                        null,
+
+                    contexte: {
+                        sessions_revoquees:
+                            sessionsRevoquees,
+
+                        jetons_recuperation_invalides:
+                            true
+                    },
+
+                    succes:
+                        true
+                },
+                connexion
+            );
+
+
             await connexion.query(
                 "COMMIT"
             );
@@ -392,7 +453,9 @@ class IdentityRecoveryService {
             return {
                 success: true,
                 utilisateurId:
-                    utilisateur.id
+                    utilisateur.id,
+
+                sessionsRevoquees
             };
 
         }

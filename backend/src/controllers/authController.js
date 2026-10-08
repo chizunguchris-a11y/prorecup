@@ -8,6 +8,9 @@ import utilisateurRepository
 import auditService
     from "../services/AuditService.js";
 
+import refreshTokenRepository
+    from "../repositories/RefreshTokenRepository.js";
+
 const normaliserEmail = (
     email
 ) => {
@@ -292,7 +295,13 @@ const authController = {
                         role,
 
                         roleId:
-                            utilisateur.role_id
+                            utilisateur.role_id,
+
+                        authEpoch:
+                            Number(
+                                utilisateur.auth_epoch ||
+                                1
+                            )
                     },
                     obtenirJwtSecret(),
                     {
@@ -750,6 +759,12 @@ const authController = {
                     motDePasseHache
                 );
 
+            const sessionsRevoquees =
+                await refreshTokenRepository
+                    .revoquerTousPourUtilisateur(
+                        utilisateurId
+                    );
+
             await enregistrerAuditSilencieusement(
                 req,
                 {
@@ -776,7 +791,10 @@ const authController = {
 
                     contexte: {
                         modification_securisee:
-                            true
+                            true,
+
+                        sessions_revoquees:
+                            sessionsRevoquees
                     },
 
                     succes:
@@ -787,7 +805,7 @@ const authController = {
             return res.status(200).json({
                 success: true,
                 message:
-                    "Mot de passe modifié avec succès."
+                    "Mot de passe modifié avec succès. Reconnectez-vous sur vos autres appareils."
             });
 
         } catch (erreur) {

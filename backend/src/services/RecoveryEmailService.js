@@ -33,7 +33,14 @@ class RecoveryEmailService {
         const from =
             String(
                 process.env.PRORECUP_EMAIL_FROM ||
-                ""
+                "Pro Recup <no-reply@prorecup.com>"
+            ).trim();
+
+
+        const replyTo =
+            String(
+                process.env.PRORECUP_SUPPORT_EMAIL ||
+                "support@prorecup.com"
             ).trim();
 
 
@@ -134,6 +141,8 @@ class RecoveryEmailService {
                                 ],
                                 subject:
                                     "Recuperation de votre acces Pro Recup",
+                                reply_to:
+                                    replyTo,
                                 text:
                                     texte,
                                 html

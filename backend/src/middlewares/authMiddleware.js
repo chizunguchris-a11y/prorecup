@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { obtenirJwtSecret } from "../config/security.js";
+import pool from "../config/db.js";
 
-const authMiddleware = (
+const authMiddleware = async (
     req,
     res,
     next
@@ -96,6 +97,48 @@ const authMiddleware = (
 
         }
 
+        const etatAuthentification =
+            await pool.query(
+                `
+                SELECT actif, auth_epoch
+                FROM utilisateurs
+                WHERE id = $1
+                  AND organisation_id = $2
+                LIMIT 1;
+                `,
+                [
+                    utilisateurId,
+                    organisationId
+                ]
+            );
+
+        const utilisateurActuel =
+            etatAuthentification.rows[0];
+
+        const epochToken =
+            Number(
+                contenuToken.authEpoch ||
+                contenuToken.auth_epoch ||
+                1
+            );
+
+        if (
+            !utilisateurActuel ||
+            utilisateurActuel.actif === false ||
+            Number(
+                utilisateurActuel.auth_epoch ||
+                1
+            ) !== epochToken
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error:
+                    "Votre session n'est plus valide. Reconnectez-vous."
+            });
+
+        }
+
         req.utilisateur = {
 
             id:
@@ -121,7 +164,10 @@ const authMiddleware = (
             roleId:
                 contenuToken.roleId ||
                 contenuToken.role_id ||
-                null
+                null,
+
+            authEpoch:
+                epochToken
 
         };
 

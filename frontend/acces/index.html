@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#176B4D">
+    <meta name="description" content="Récupérez votre accès Pro Récup en toute sécurité.">
+    <title>Besoin d'aide pour vous connecter ? — Pro Récup</title>
+    <link rel="stylesheet" href="./acces.css">
+</head>
+<body>
+    <main class="access-shell">
+        <a id="retour-produit" class="back-link" href="../index.html">← Retour à la connexion</a>
+        <section class="access-card" aria-labelledby="titre-page">
+            <header class="brand-header">
+                <span class="brand-mark" aria-hidden="true">PR</span>
+                <div><strong>Pro Récup</strong><span>Accès sécurisé</span></div>
+            </header>
+            <div class="intro">
+                <p class="eyebrow">ASSISTANCE DE CONNEXION</p>
+                <h1 id="titre-page">Besoin d'aide pour vous connecter&nbsp;?</h1>
+                <p>Choisissez votre situation. Pour protéger les comptes, nos réponses ne confirment jamais publiquement l'existence d'un utilisateur.</p>
+            </div>
+            <div class="mode-grid" role="tablist" aria-label="Type d'aide">
+                <button class="mode-card is-active" id="tab-password" type="button" role="tab" aria-selected="true" aria-controls="panel-password">
+                    <span class="mode-icon" aria-hidden="true">01</span><strong>Mot de passe oublié</strong><small>Recevoir un lien temporaire par e-mail</small>
+                </button>
+                <button class="mode-card" id="tab-help" type="button" role="tab" aria-selected="false" aria-controls="panel-help">
+                    <span class="mode-icon" aria-hidden="true">02</span><strong>Autre problème d'accès</strong><small>Demander une vérification assistée</small>
+                </button>
+            </div>
+            <section id="panel-password" class="panel" role="tabpanel" aria-labelledby="tab-password">
+                <form id="form-password" novalidate>
+                    <label for="email-reset">Adresse e-mail utilisée pour Pro Récup</label>
+                    <input id="email-reset" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="vous@entreprise.com">
+                    <button class="primary-button" type="submit">Recevoir le lien de récupération</button>
+                </form>
+            </section>
+            <section id="panel-help" class="panel" role="tabpanel" aria-labelledby="tab-help" hidden>
+                <form id="form-help" novalidate>
+                    <label for="type">Quelle est votre situation&nbsp;?</label>
+                    <select id="type" name="type" required>
+                        <option value="">Sélectionner une situation</option>
+                        <option value="identifiant_oublie">E-mail ou identifiant oublié</option>
+                        <option value="email_inaccessible">Je n'ai plus accès à mon e-mail</option>
+                        <option value="telephone_inaccessible">Je n'ai plus accès à mon téléphone</option>
+                        <option value="acces_total_perdu">J'ai perdu tous mes moyens d'accès</option>
+                        <option value="compte_bloque">Mon compte est bloqué</option>
+                        <option value="compte_compromis">Je pense que mon compte est compromis</option>
+                    </select>
+                    <div class="two-columns">
+                        <div><label for="nom">Votre nom</label><input id="nom" name="nom" type="text" maxlength="150" autocomplete="name"></div>
+                        <div><label for="organisation">Organisation</label><input id="organisation" name="organisation" type="text" maxlength="180" autocomplete="organization"></div>
+                    </div>
+                    <label for="identifiantConnu">E-mail ou téléphone connu, même ancien <span>(facultatif)</span></label>
+                    <input id="identifiantConnu" name="identifiantConnu" type="text" maxlength="254" autocomplete="username">
+                    <div class="two-columns">
+                        <div><label for="emailContact">E-mail où vous contacter</label><input id="emailContact" name="emailContact" type="email" maxlength="254" autocomplete="email"></div>
+                        <div><label for="telephoneContact">Téléphone où vous contacter</label><input id="telephoneContact" name="telephoneContact" type="tel" maxlength="40" autocomplete="tel"></div>
+                    </div>
+                    <label for="message">Informations utiles <span>(sans mot de passe ni code)</span></label>
+                    <textarea id="message" name="message" maxlength="2000" rows="4"></textarea>
+                    <p class="privacy-note">Indiquez au moins un moyen de contact. L'équipe vérifiera votre identité avant toute modification.</p>
+                    <button class="primary-button" type="submit">Envoyer ma demande sécurisée</button>
+                </form>
+            </section>
+            <div id="message" class="status" role="status" aria-live="polite" hidden></div>
+        </section>
+        <p class="support-line">Aucun membre de Pro Récup ne vous demandera votre mot de passe.</p>
+    </main>
+    <script src="../js/config.js"></script>
+    <script src="./acces.js"></script>
+</body>
+</html>

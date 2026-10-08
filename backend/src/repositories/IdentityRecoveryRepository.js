@@ -318,6 +318,8 @@ const identityRecoveryRepository = {
                 SET
                     mot_de_passe = $1,
 
+                    auth_epoch = auth_epoch + 1,
+
                     email_verifie_le =
                         COALESCE(
                             email_verifie_le,

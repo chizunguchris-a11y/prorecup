@@ -1,0 +1,453 @@
+/* ==========================================================
+   PRO RECUP - PORTAIL CLIENT PRODUCT FINISH
+   Calm, trustworthy and client-facing finishing layer.
+   ========================================================== */
+
+:root {
+    --pc-max-width: 1180px;
+    --pc-gutter: clamp(16px, 3vw, 32px);
+    --pc-radius: 14px;
+    --pc-radius-small: 9px;
+    --pc-control-height: 44px;
+    --pc-shadow: 0 8px 28px rgba(23, 33, 28, 0.055);
+    --pc-shadow-hover: 0 12px 34px rgba(23, 33, 28, 0.075);
+    --pc-focus: 0 0 0 3px rgba(23, 107, 77, 0.14);
+}
+
+
+/* PAGE --------------------------------------------------- */
+
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+
+    background:
+        var(
+            --pr-color-bg,
+            #F6F8F7
+        );
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+}
+
+
+main {
+    min-width: 0;
+}
+
+
+main > :is(
+    section,
+    header,
+    .container,
+    .conteneur,
+    .contenu
+) {
+    max-width: var(--pc-max-width);
+}
+
+
+h1,
+h2,
+h3 {
+    text-wrap: balance;
+}
+
+
+h1 {
+    letter-spacing: -0.025em;
+}
+
+
+p {
+    text-wrap: pretty;
+}
+
+
+/* CLIENT CONTENT ---------------------------------------- */
+
+main :is(
+    .card,
+    .carte,
+    .panel,
+    .panneau,
+    .bloc
+) {
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        var(
+            --pc-radius
+        );
+
+    box-shadow:
+        var(
+            --pc-shadow
+        );
+}
+
+
+main :is(
+    .card,
+    .carte,
+    .panel,
+    .panneau,
+    .bloc
+):hover {
+    box-shadow:
+        var(
+            --pc-shadow-hover
+        );
+}
+
+
+/* NUMBERS ----------------------------------------------- */
+
+main :is(
+    strong,
+    td,
+    .stat-value,
+    .stat-valeur,
+    .kpi-value,
+    .kpi-valeur
+) {
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+/* FORMS ------------------------------------------------- */
+
+main input:not(
+    [type="checkbox"]
+):not(
+    [type="radio"]
+),
+main select,
+main textarea {
+    min-height:
+        var(
+            --pc-control-height
+        );
+
+    font: inherit;
+
+    color:
+        var(
+            --pr-color-text,
+            #17211C
+        );
+
+    background:
+        var(
+            --pr-color-surface,
+            #FFFFFF
+        );
+
+    border-color:
+        var(
+            --pr-color-border,
+            #DFE7E3
+        );
+
+    border-radius:
+        var(
+            --pc-radius-small
+        );
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+
+main textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+
+main input:focus,
+main select:focus,
+main textarea:focus {
+    outline: none;
+
+    border-color:
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    box-shadow:
+        var(
+            --pc-focus
+        );
+}
+
+
+main input::placeholder,
+main textarea::placeholder {
+    color: #89958F;
+    opacity: 1;
+}
+
+
+/* BUTTONS ----------------------------------------------- */
+
+main button,
+main .btn,
+main .bouton {
+    font-family: inherit;
+
+    border-radius:
+        var(
+            --pc-radius-small
+        );
+
+    transition:
+        transform 120ms ease,
+        background-color 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        opacity 150ms ease;
+}
+
+
+main button:not(:disabled):active,
+main .btn:not(:disabled):active,
+main .bouton:not(:disabled):active {
+    transform:
+        translateY(1px);
+}
+
+
+main button:disabled,
+main .btn:disabled,
+main .bouton:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+}
+
+
+/* ACCESSIBILITY ----------------------------------------- */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline:
+        2px solid
+        var(
+            --pr-color-primary,
+            #176B4D
+        );
+
+    outline-offset: 3px;
+}
+
+
+/* TABLES ------------------------------------------------ */
+
+main table {
+    width: 100%;
+
+    border-collapse:
+        separate;
+
+    border-spacing: 0;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+main table th {
+    color:
+        var(
+            --pr-color-text-secondary,
+            #66736D
+        );
+
+    font-size: 0.82rem;
+
+    font-weight: 700;
+
+    letter-spacing: 0.01em;
+}
+
+
+main table td,
+main table th {
+    vertical-align: middle;
+}
+
+
+main table tbody tr {
+    transition:
+        background-color 120ms ease;
+}
+
+
+main table tbody tr:hover {
+    background:
+        rgba(
+            23,
+            107,
+            77,
+            0.03
+        );
+}
+
+
+/* PROOFS / MEDIA ---------------------------------------- */
+
+main img {
+    max-width: 100%;
+}
+
+
+main :is(
+    .preuve img,
+    .proof img,
+    .photo-preuve img
+) {
+    display: block;
+
+    object-fit: cover;
+
+    border-radius:
+        10px;
+}
+
+
+/* LINKS ------------------------------------------------- */
+
+main a {
+    text-underline-offset: 3px;
+}
+
+
+/* STATUS / EMPTY / FEEDBACK ----------------------------- */
+
+main :is(
+    .empty-state,
+    .etat-vide,
+    .message-vide
+) {
+    padding:
+        clamp(
+            24px,
+            5vw,
+            48px
+        );
+
+    text-align: center;
+
+    color:
+        var(
+            --pr-color-text-secondary,
+            #66736D
+        );
+}
+
+
+/* RESPONSIVE -------------------------------------------- */
+
+@media (max-width: 1023px) {
+
+    :root {
+        --pc-gutter:
+            clamp(
+                14px,
+                2.5vw,
+                24px
+            );
+    }
+}
+
+
+@media (max-width: 639px) {
+
+    :root {
+        --pc-gutter: 14px;
+        --pc-control-height: 46px;
+    }
+
+
+    h1 {
+        font-size:
+            clamp(
+                25px,
+                8vw,
+                31px
+            );
+    }
+
+
+    main table {
+        font-size: 0.92rem;
+    }
+
+
+    main :is(
+        button,
+        .btn,
+        .bouton
+    ) {
+        min-height: 44px;
+    }
+}
+
+
+/* MOTION ------------------------------------------------ */
+
+@media (
+    prefers-reduced-motion:
+    reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        transition-duration:
+            0.01ms !important;
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+    }
+}
+
+
+/* PRINT ------------------------------------------------- */
+
+@media print {
+
+    body {
+        background: #FFFFFF;
+    }
+
+
+    main :is(
+        .card,
+        .carte,
+        .panel,
+        .panneau,
+        .bloc
+    ) {
+        box-shadow: none;
+    }
+}

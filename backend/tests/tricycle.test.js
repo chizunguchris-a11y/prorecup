@@ -4,7 +4,7 @@ import { strict as assert } from "assert";
 import app from "../src/app.js";
 import pool from "../src/config/db.js";
 
-describe("Tricycles", function () {
+(process.env.RUN_LIVE_INTEGRATION === "1" ? describe : describe.skip)("Tricycles [base dédiée et fixtures requises]", function () {
 
     this.timeout(30000);
 
@@ -20,10 +20,10 @@ describe("Tricycles", function () {
                 .post("/api/auth/login")
                 .send({
                     email:
-                        "christian2@prorecup.com",
+                        process.env.INTEGRATION_TEST_EMAIL,
 
                     motDePasse:
-                        "ProRecup2026!"
+                        process.env.INTEGRATION_TEST_PASSWORD
                 })
                 .expect(200);
 

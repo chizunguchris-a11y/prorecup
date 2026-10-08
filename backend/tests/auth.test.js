@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 
 import app from "../src/app.js";
 
-describe("Authentification", function () {
+(process.env.RUN_LIVE_INTEGRATION === "1" ? describe : describe.skip)("Authentification [base dédiée et fixtures requises]", function () {
 
     // On augmente le délai car Supabase peut répondre lentement
     this.timeout(15000);
@@ -13,8 +13,8 @@ describe("Authentification", function () {
         const reponse = await request(app)
             .post("/api/auth/login")
             .send({
-                email: "christian2@prorecup.com",
-                motDePasse: "ProRecup2026!"
+                email: process.env.INTEGRATION_TEST_EMAIL,
+                motDePasse: process.env.INTEGRATION_TEST_PASSWORD
             })
             .expect(200);
 
@@ -23,7 +23,7 @@ describe("Authentification", function () {
 
         assert.equal(
             reponse.body.utilisateur.email,
-            "christian2@prorecup.com"
+            process.env.INTEGRATION_TEST_EMAIL
         );
 
     });
@@ -33,7 +33,7 @@ describe("Authentification", function () {
         const reponse = await request(app)
             .post("/api/auth/login")
             .send({
-                email: "christian2@prorecup.com",
+                email: process.env.INTEGRATION_TEST_EMAIL,
                 motDePasse: "mauvais-mot-de-passe"
             })
             .expect(400);

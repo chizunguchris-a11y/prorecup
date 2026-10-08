@@ -2,10 +2,14 @@ import request from "supertest";
 import { strict as assert } from "assert";
 import app from "../src/app.js";
 import jwt from "jsonwebtoken";
+import pool from "../src/config/db.js";
 
 describe("Routes Pesée V1", function () {
     const id = "11111111-1111-4111-8111-111111111111";
-    const tokenAgent = jwt.sign({ id, organisationId: id, role: "agent" },
+    let originalQuery;
+    beforeEach(()=>{originalQuery=pool.query;pool.query=async(sql)=>{assert.match(sql,/auth_epoch/);return {rows:[{actif:true,auth_epoch:1}]};};});
+    afterEach(()=>{pool.query=originalQuery;});
+    const tokenAgent = jwt.sign({ id, organisationId: id, role: "agent_valorisation_carbone" },
         process.env.JWT_SECRET || "votre_cle_secrete_temporaire");
 
     it("protège l'enregistrement d'une pesée terrain par JWT", async function () {

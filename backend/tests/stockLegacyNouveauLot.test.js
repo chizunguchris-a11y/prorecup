@@ -149,6 +149,7 @@ describe("Nouveau lot ajouté à un stock legacy puis vendu hors réseau", funct
 
         const resultat = await venteService.creer({
             organisation_id: "organisation-1",
+            devise: "CDF",
             stock_id: "stock-legacy",
             quantite: 15,
             prix_unitaire: 500,

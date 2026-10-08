@@ -1,11 +1,15 @@
 import request from "supertest";
 import { strict as assert } from "node:assert";
 import jwt from "jsonwebtoken";
+import pool from "../src/config/db.js";
 import app from "../src/app.js";
 
 describe("Routes QR et traçabilité matière V1", function () {
     const id = "11111111-1111-4111-8111-111111111111";
-    const tokenAgent = jwt.sign({ id, organisationId: id, role: "agent" },
+    let originalQuery;
+    beforeEach(()=>{originalQuery=pool.query;pool.query=async(sql)=>{assert.match(sql,/auth_epoch/);return {rows:[{actif:true,auth_epoch:1}]};};});
+    afterEach(()=>{pool.query=originalQuery;});
+    const tokenAgent = jwt.sign({ id, organisationId: id, role: "agent_valorisation_carbone" },
         process.env.JWT_SECRET || "votre_cle_secrete_temporaire");
 
     it("protège listes, historique, étiquette et mutations par JWT", async function () {

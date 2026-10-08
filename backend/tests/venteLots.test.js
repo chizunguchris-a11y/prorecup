@@ -186,6 +186,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
 
     const creer = (quantite = 7) => venteService.creer({
         organisation_id: "organisation-1",
+        devise: "CDF",
         stock_id: "stock-acier",
         quantite,
         prix_unitaire: 500,

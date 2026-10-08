@@ -4,15 +4,15 @@ import { strict as assert } from "assert";
 import app from "../src/app.js";
 import pool from "../src/config/db.js";
 
-describe("Événements terrain d'une mission", function () {
+(process.env.RUN_LIVE_INTEGRATION === "1" ? describe : describe.skip)("Événements terrain d'une mission [base dédiée et fixtures requises]", function () {
 
     this.timeout(50000);
 
     const emailTest =
-        "christian2@prorecup.com";
+        process.env.INTEGRATION_TEST_EMAIL;
 
     const motDePasseTest =
-        "ProRecup2026!";
+        process.env.INTEGRATION_TEST_PASSWORD;
 
     let token;
     let utilisateurId;

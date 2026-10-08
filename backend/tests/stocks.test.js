@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 
 import app from "../src/app.js";
 
-describe("Stocks", function () {
+(process.env.RUN_LIVE_INTEGRATION === "1" ? describe : describe.skip)("Stocks [base dédiée et fixtures requises]", function () {
 
     this.timeout(20000);
 
@@ -14,8 +14,8 @@ describe("Stocks", function () {
         const reponseConnexion = await request(app)
             .post("/api/auth/login")
             .send({
-                email: "christian2@prorecup.com",
-                motDePasse: "ProRecup2026!"
+                email: process.env.INTEGRATION_TEST_EMAIL,
+                motDePasse: process.env.INTEGRATION_TEST_PASSWORD
             })
             .expect(200);
 

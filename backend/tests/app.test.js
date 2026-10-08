@@ -12,8 +12,8 @@ describe("API Pro Récup", function () {
             .expect(200);
 
         assert.equal(
-            reponse.text,
-            "🚀 Serveur Pro Récup opérationnel et connecté !"
+            reponse.body.service,
+            "Pro Récup"
         );
 
     });

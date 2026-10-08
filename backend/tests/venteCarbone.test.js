@@ -116,6 +116,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
     const creerVente = () =>
         venteService.creer({
             organisation_id: "organisation-1",
+            devise: "CDF",
             stock_id: "stock-acier",
             quantite: 7,
             prix_unitaire: 500,

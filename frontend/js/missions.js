@@ -1,4 +1,4 @@
-﻿console.log("missions.js chargé");
+﻿
 
 (function () {
 
@@ -822,9 +822,7 @@
                         "collectes",
                         () => {
 
-                            console.log(
-                                "Ouverture de la fenêtre Collectes"
-                            );
+
 
                             ouvrirCollectesMission(
                                 mission
@@ -1322,9 +1320,7 @@
 
             try {
 
-                console.log(
-                    "Chargement des collectes..."
-                );
+
 
                 const resultat =
                     await ProRecup.requete(
@@ -1336,15 +1332,9 @@
                         resultat
                     );
 
-                console.log(
-                    "Réponse complète /api/collectes :",
-                    resultat
-                );
 
-                console.log(
-                    "Collectes extraites :",
-                    collectes
-                );
+
+
 
                 const normaliserStatut = (
                     valeur
@@ -1457,10 +1447,7 @@
                     collectesEnAttente.length ===
                     0;
 
-                console.log(
-                    "Collectes en attente disponibles :",
-                    collectesEnAttente
-                );
+
 
             } catch (erreur) {
 

@@ -14,7 +14,9 @@
         API_BASE_URL:
             estLocal
                 ? "http://127.0.0.1:5000/api"
-                : "https://prorecup-backend.onrender.com/api",
+                : location.hostname === "prorecup-alpha.onrender.com"
+                    ? "https://prorecup-alpha-backend.onrender.com/api"
+                    : "https://prorecup-backend.onrender.com/api",
 
         ROLE_TERRAIN:
             "agent_valorisation_carbone",

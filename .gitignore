@@ -35,5 +35,6 @@ Desktop.ini
 # Fichiers générés
 dist/
 build/
+alpha-dist/
 backend/terrain-e2e-resultat-*.json
 backend/terrain-manuel-runs/

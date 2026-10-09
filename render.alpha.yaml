@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: prorecup-alpha-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: node scripts/start-alpha.js
+    autoDeploy: false
+    healthCheckPath: /api/identity
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PRORECUP_ALPHA_MODE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: TEST_DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PRORECUP_INTERNAL_ORGANISATION_ID
+        sync: false
+      - key: PRORECUP_FRONTEND_URL
+        value: https://prorecup-alpha.onrender.com
+      - key: FRONTEND_URL
+        value: https://prorecup-alpha.onrender.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: PRORECUP_EMAIL_FROM
+        sync: false
+      - key: PRORECUP_SUPPORT_EMAIL
+        sync: false
+
+  - type: web
+    name: prorecup-alpha
+    runtime: static
+    plan: free
+    buildCommand: node scripts/build-alpha-static.js
+    staticPublishPath: ./alpha-dist
+    autoDeploy: false

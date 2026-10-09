@@ -1,39 +1,38 @@
-# Recette technique interne — Product Finish
+# Product Finish — preuves au 9 octobre 2026
 
-Cette checklist décrit des contrôles techniques. Elle ne remplace pas une recette humaine ni un test sur données réelles.
+Cette checklist distingue les validations réellement exécutées des étapes externes encore nécessaires.
 
-## Contrôles automatisés confirmés
+| Catégorie | État | Preuve / limite |
+| --- | --- | --- |
+| AUTH | PASS | Connexions réelles Admin, Manager, Agent et Client sur la base TEST. |
+| RBAC | PASS | Manager→Admin, Agent→Admin, Client→Admin et Public→Admin refusés. |
+| RECOVERY | PASS | Forgot/reset, expiration, usage unique et révocation des anciens JWT validés. |
+| INVITATION | PASS | Invitation, renouvellement, annulation et états expiré/utilisé couverts. |
+| ACTIVATION | PASS | Activation réelle et refus du second usage sur TEST. |
+| ONBOARDING | PASS | Demande publique, doublon neutre et validation Admin exécutés. |
+| CLIENT PROVISIONING | PASS | Provisionnement, retry/double clic et premier utilisateur exécutés. |
+| EMAIL VERIFICATION | PASS | Valide, invalide, expiré, utilisé, renvoi et compte suspendu sur TEST. |
+| SESSIONS | PASS | Session courante, sessions multiples, fermeture, changement/reset et `auth_epoch`. |
+| BACK-OFFICE | PASS | APIs et RBAC Admin/Manager réels ; familles métier live sans échec. |
+| PORTAIL CLIENT | PASS | Authentification via `utilisateurs` + `client_utilisateurs`, compte et sécurité. |
+| AGENT TERRAIN | PASS | Auth, tournée, queue, preuves, reprise et synchronisation validées. |
+| PWA | PASS | Edge headless réel : manifest, Service Worker, shell offline, IndexedDB, reload et retour réseau. |
+| DATABASE TEST | PASS | Base distincte de production, migrations 1–20, rollback et concurrence PostgreSQL. |
+| RESPONSIVE | PARTIAL | Pages publiques déjà validées ; consolidation authentifiée 390 px à finaliser sur l'URL Alpha. |
+| NAVIGATION | PARTIAL | Contrats et pages locales valides ; dernier smoke public dépend du déploiement Alpha. |
+| ERROR STATES | PASS | Doublons, tokens invalides/expirés/utilisés, suspension et refus RBAC couverts. |
+| DEPLOYMENT | BLOCKED | Le Blueprint Alpha est prêt, mais les deux services Render Alpha ne sont pas encore créés. |
+| HUMAN ALPHA READINESS | BLOCKED | URLs publiques Alpha et coordonnées des six testeurs non configurées ; ne pas utiliser la production. |
 
-- PASS — API racine et middleware d'authentification.
-- PASS — récupération : réponse publique neutre, usage unique, expiration, révocation et `auth_epoch`.
-- PASS — invitations : RBAC Admin/Manager, hash du jeton, activation unique, annulation/renouvellement.
-- PASS — onboarding public neutre et absence de création automatique d'un rôle interne.
-- PASS — Manager vers Administrateur interdit.
-- PASS — fermeture globale des sessions avec incrément de `auth_epoch`.
-- PASS — contrats PWA/queue/pesée/QR/traçabilité couverts par la suite existante.
-- PASS — migrations 17, 18, 19 et 20 présentes dans le dépôt et observées dans Supabase.
-- PASS — démarrage local en mode production, connexion Supabase et `GET /` à 200.
-- PASS — backend Render : `GET /` à 200 après cold start.
-- PASS — frontend et application Agent servis par Render.
+## Transport e-mail
 
-## Contrôles nécessitant une base dédiée
+- PARTIAL — les liens HTTPS, sujets, expéditeur logique, expiration et usage unique sont validés par capture TEST.
+- BLOCKED — l'appel Resend de recette retourne une erreur de validation avec la clé actuellement enregistrée ; aucune réception humaine n'est déclarée.
 
-- PENDING — authentification réelle, clients, agents, missions, sites, stocks, tricycles et fixtures associées.
-- PENDING — migration/rollback et concurrence PostgreSQL de la traçabilité.
+## Compteurs
 
-## Contrôles UI confirmés sans compte de recette
+- Socle consolidé avant cette reprise : **182 passing, 0 pending, 0 failing**.
+- Scénarios Product Finish ajoutés : **3 passing**.
+- Agent hors suite Mocha : **15 groupes frontend + 5 tests retry + 2 tests navigateur/PWA**, tous réussis.
 
-- PASS — porte d'entrée : Back-office, Portail Client, Agent, devenir client, aide d'accès.
-- PASS — états publics d'activation et de vérification e-mail invalides.
-- PASS — responsive desktop et 390 px sur les pages publiques, sans overflow horizontal.
-- PASS — aucun 404 ni erreur console sur les routes publiques contrôlées.
-- PASS — shell Agent et manifest PWA accessibles sur Render.
-- LIMITÉ — le navigateur de recette ne fournit pas l'API Service Worker ; l'enregistrement actif n'est pas observable dans cet environnement.
-
-## Contrôles nécessitant un environnement externe
-
-- PENDING — cycle e-mail réel : clé Resend, domaine SPF/DKIM validé et adresse de recette.
-- PENDING — écrans authentifiés et recette A→Z : base dédiée et comptes fixtures.
-- PENDING — Service Worker/IndexedDB/offline en navigateur compatible PWA.
-
-Ne marquer ces contrôles UI `PASS` qu'après vérification effective sur le déploiement correspondant au HEAD.
+Ne marquer `DEPLOYMENT`, `RESPONSIVE`, `NAVIGATION` ou `HUMAN ALPHA READINESS` comme `PASS` qu'après création des services décrits dans `render.alpha.yaml` et smoke test de leurs URLs.

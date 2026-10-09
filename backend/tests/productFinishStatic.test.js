@@ -30,11 +30,13 @@ describe("Product Finish — navigation et marque", () => {
         assert.ok(html.includes("../brand/brand.js"));
     });
 
-    it("documente le fallback de marque sans présenter un faux logo officiel", async () => {
+    it("documente la marque validée sans inventer le fichier vectoriel maître", async () => {
         const composant = await lire("frontend/brand/brand.js");
         const guide = await lire("docs/brand/BRAND-SYSTEM.md");
         assert.ok(composant.includes('name:"Pro Récup"'));
         assert.ok(composant.includes("horizontal:null"));
-        assert.ok(guide.includes("Aucun logo officiel approuvé"));
+        assert.ok(guide.includes("La marque publique officielle est « Pro Récup »"));
+        assert.ok(guide.includes("Le fichier vectoriel maître n'est pas encore présent"));
+        assert.ok(guide.includes("Ne pas redessiner ni approximer le symbole validé"));
     });
 });

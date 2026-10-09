@@ -1,4 +1,4 @@
-# Product Finish — preuves au 9 octobre 2026
+# Product Finish — preuves au 10 octobre 2026
 
 Cette checklist distingue les validations réellement exécutées des étapes externes encore nécessaires.
 
@@ -32,7 +32,14 @@ Cette checklist distingue les validations réellement exécutées des étapes ex
 ## Compteurs
 
 - Socle consolidé avant cette reprise : **182 passing, 0 pending, 0 failing**.
-- Scénarios Product Finish ajoutés : **3 passing**.
+- Consolidation finale : **188 passing, 0 pending, 0 failing** (**186** dans la suite générale, puis **2** contrôles PostgreSQL séquentiels).
 - Agent hors suite Mocha : **15 groupes frontend + 5 tests retry + 2 tests navigateur/PWA**, tous réussis.
+- UI authentifiée hors suite Mocha : **1 scénario Edge**, quatre rôles en desktop et 390 px, réussi.
+
+## Revue des garde-fous
+
+- `prepare-test-database.js` exige `TEST_DATABASE_URL` et refuse explicitement une valeur identique à `DATABASE_URL` ; il a restauré les migrations 1–20 et les six fixtures après les contrôles PostgreSQL.
+- Le limiteur de connexion ignore les réponses réussies, bloque le onzième échec et renvoie un code d'erreur stable ; ces trois comportements de sécurité, dont HSTS réservé à la production, disposent désormais de tests ciblés.
+- L'assertion de branding a été alignée sur la décision officielle sans retirer le garde-fou : le test exige toujours l'absence de faux asset vectoriel et la consigne de ne pas approximer le symbole.
 
 Ne marquer `DEPLOYMENT` ou `HUMAN ALPHA READINESS` comme `PASS` qu'après création des services décrits dans `render.alpha.yaml` et smoke test de leurs URLs.

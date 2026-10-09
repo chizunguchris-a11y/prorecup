@@ -350,10 +350,13 @@ async function creerFixtures(client) {
         manager: "10000000-0000-4000-8000-000000000002",
         agent: "10000000-0000-4000-8000-000000000003",
         clientUser: "10000000-0000-4000-8000-000000000004",
+        agentB: "10000000-0000-4000-8000-000000000005",
+        clientSecondary: "10000000-0000-4000-8000-000000000006",
         client: "20000000-0000-4000-8000-000000000001",
         site: "30000000-0000-4000-8000-000000000001",
         waste: "40000000-0000-4000-8000-000000000001",
         agentProfile: "50000000-0000-4000-8000-000000000001",
+        agentProfileB: "50000000-0000-4000-8000-000000000002",
         tricycle: "60000000-0000-4000-8000-000000000001",
         collecte: "70000000-0000-4000-8000-000000000001"
     };
@@ -407,7 +410,9 @@ async function creerFixtures(client) {
             [ids.admin, "Administrateur Recette", process.env.INTEGRATION_TEST_EMAIL, roleIds.admin],
             [ids.manager, "Manager Recette", "qa.manager@prorecup.test", roleIds.manager],
             [ids.agent, "Agent Carbone Recette", "qa.agent@prorecup.test", roleIds.agent_valorisation_carbone],
-            [ids.clientUser, "Client Portail Recette", "qa.client@prorecup.test", roleIds.client]
+            [ids.clientUser, "Client Portail Recette", "qa.client@prorecup.test", roleIds.client],
+            [ids.agentB, "Agent Carbone Recette B", "qa.agent-b@prorecup.test", roleIds.agent_valorisation_carbone],
+            [ids.clientSecondary, "Client Portail Secondaire", "qa.client-secondaire@prorecup.test", roleIds.client]
         ];
         for (const [id, nom, email, roleId] of utilisateurs) {
             await client.query(`
@@ -435,6 +440,10 @@ async function creerFixtures(client) {
             VALUES($1,$2,$3,true) ON CONFLICT(client_id,utilisateur_id) DO UPDATE SET actif=true
         `, [organisationId, ids.client, ids.clientUser]);
         await client.query(`
+            INSERT INTO client_utilisateurs(organisation_id,client_id,utilisateur_id,actif)
+            VALUES($1,$2,$3,true) ON CONFLICT(client_id,utilisateur_id) DO UPDATE SET actif=true
+        `, [organisationId, ids.client, ids.clientSecondary]);
+        await client.query(`
             INSERT INTO sites_de_collecte(id,nom,adresse,zone_geographique,responsable_nom,organisation_id)
             VALUES($1,'Site Recette Product Finish','Adresse synthétique','Kinshasa','Responsable Recette',$2)
             ON CONFLICT(id) DO UPDATE SET nom=EXCLUDED.nom
@@ -453,6 +462,11 @@ async function creerFixtures(client) {
             VALUES($1,$2,'+243900000001','actif',true,CURRENT_DATE)
             ON CONFLICT(utilisateur_id) DO UPDATE SET statut='actif',disponible=true,modifie_le=CURRENT_TIMESTAMP
         `, [ids.agentProfile, ids.agent]);
+        await client.query(`
+            INSERT INTO agents(id,utilisateur_id,telephone,statut,disponible,date_embauche)
+            VALUES($1,$2,'+243900000002','actif',true,CURRENT_DATE)
+            ON CONFLICT(utilisateur_id) DO UPDATE SET statut='actif',disponible=true,modifie_le=CURRENT_TIMESTAMP
+        `, [ids.agentProfileB, ids.agentB]);
         await client.query(`
             INSERT INTO tricycles(id,organisation_id,numero_interne,plaque_identification,marque,modele,capacite_kg,statut,etat)
             VALUES($1,$2,'TRI-RECETTE-BASE','PR-TEST-BASE','Fixture','Product Finish',250,'disponible','bon')

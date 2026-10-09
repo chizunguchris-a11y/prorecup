@@ -20,6 +20,8 @@ Les noms ci-dessous sont préparés dans `render.alpha.yaml`, mais les services 
 
 Aucun mot de passe, jeton ou secret ne doit être ajouté à ce document. Le coordinateur collecte séparément les six adresses e-mail, déclenche les invitations et transmet les accès par un canal privé.
 
+La préparation technique crée déjà six comptes synthétiques sur TEST (un Admin, un Manager, deux Agents et deux Clients). Avant remise à des personnes réelles, le coordinateur remplace les adresses synthétiques par les adresses des testeurs et impose des accès individuels transmis hors Git.
+
 ## Relais conseillé
 
 Administrateur → Manager → Client principal → Client secondaire → Agent A → Agent B. Chaque personne vérifie connexion, navigation, compte/sécurité, action métier principale et déconnexion. Les Agents testent ensuite une action hors ligne, ferment l'application, la rouvrent, rétablissent le réseau et confirment une seule synchronisation.

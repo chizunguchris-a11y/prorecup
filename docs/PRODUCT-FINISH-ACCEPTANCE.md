@@ -18,8 +18,8 @@ Cette checklist distingue les validations réellement exécutées des étapes ex
 | AGENT TERRAIN | PASS | Auth, tournée, queue, preuves, reprise et synchronisation validées. |
 | PWA | PASS | Edge headless réel : manifest, Service Worker, shell offline, IndexedDB, reload et retour réseau. |
 | DATABASE TEST | PASS | Base distincte de production, migrations 1–20, rollback et concurrence PostgreSQL. |
-| RESPONSIVE | PARTIAL | Pages publiques déjà validées ; consolidation authentifiée 390 px à finaliser sur l'URL Alpha. |
-| NAVIGATION | PARTIAL | Contrats et pages locales valides ; dernier smoke public dépend du déploiement Alpha. |
+| RESPONSIVE | PASS | Admin, Manager, Client et Agent validés dans Edge en 1440 px puis 390 px, sans overflow. |
+| NAVIGATION | PASS | Connexions et redirections des quatre rôles sans 404 ni erreur console ; smoke public Alpha à rejouer après déploiement. |
 | ERROR STATES | PASS | Doublons, tokens invalides/expirés/utilisés, suspension et refus RBAC couverts. |
 | DEPLOYMENT | BLOCKED | Le Blueprint Alpha est prêt, mais les deux services Render Alpha ne sont pas encore créés. |
 | HUMAN ALPHA READINESS | BLOCKED | URLs publiques Alpha et coordonnées des six testeurs non configurées ; ne pas utiliser la production. |
@@ -35,4 +35,4 @@ Cette checklist distingue les validations réellement exécutées des étapes ex
 - Scénarios Product Finish ajoutés : **3 passing**.
 - Agent hors suite Mocha : **15 groupes frontend + 5 tests retry + 2 tests navigateur/PWA**, tous réussis.
 
-Ne marquer `DEPLOYMENT`, `RESPONSIVE`, `NAVIGATION` ou `HUMAN ALPHA READINESS` comme `PASS` qu'après création des services décrits dans `render.alpha.yaml` et smoke test de leurs URLs.
+Ne marquer `DEPLOYMENT` ou `HUMAN ALPHA READINESS` comme `PASS` qu'après création des services décrits dans `render.alpha.yaml` et smoke test de leurs URLs.

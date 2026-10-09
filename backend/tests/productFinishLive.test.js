@@ -255,10 +255,18 @@ import emailService from "../src/services/RecoveryEmailService.js";
             const managerToken = await connexion("qa.manager@prorecup.test");
             const agentToken = await connexion("qa.agent@prorecup.test");
             const clientToken = await connexion("qa.client@prorecup.test");
+            const agentBToken = await connexion("qa.agent-b@prorecup.test");
+            const clientSecondaryToken = await connexion("qa.client-secondaire@prorecup.test");
 
             await request(app).get("/api/dashboard").set("Authorization", `Bearer ${managerToken}`).expect(200);
             await request(app).get("/api/terrain/me").set("Authorization", `Bearer ${agentToken}`).expect(200);
             await request(app).get("/api/portail-client/me").set("Authorization", `Bearer ${clientToken}`).expect(200);
+            await request(app).get("/api/terrain/me").set("Authorization", `Bearer ${agentBToken}`).expect(200);
+            const clientSecondaire = await request(app)
+                .get("/api/portail-client/me")
+                .set("Authorization", `Bearer ${clientSecondaryToken}`)
+                .expect(200);
+            assert.equal(clientSecondaire.body.data.clients[0].id, "20000000-0000-4000-8000-000000000001");
             await request(app).get("/api/onboarding/client").set("Authorization", `Bearer ${managerToken}`).expect(403);
             await request(app).get("/api/utilisateurs").set("Authorization", `Bearer ${agentToken}`).expect(403);
             await request(app).get("/api/utilisateurs").set("Authorization", `Bearer ${clientToken}`).expect(403);

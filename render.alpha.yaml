@@ -39,3 +39,7 @@ services:
     buildCommand: node scripts/build-alpha-static.js
     staticPublishPath: ./alpha-dist
     autoDeploy: false
+    routes:
+      - type: rewrite
+        source: /favicon.ico
+        destination: /brand/favicon.svg

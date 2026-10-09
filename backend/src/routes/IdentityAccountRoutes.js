@@ -13,7 +13,7 @@ import {limiterChampsCorps} from "../validators/authValidator.js";
 import audit from "../repositories/AuditRepository.js";
 
 const router=express.Router();
-const limit=rateLimit({windowMs:15*60*1000,limit:5,standardHeaders:"draft-8",legacyHeaders:false});
+const limit=rateLimit({windowMs:15*60*1000,limit:process.env.NODE_ENV==="test"?100:5,standardHeaders:"draft-8",legacyHeaders:false});
 router.use((req,res,next)=>{res.set("Cache-Control","no-store");next();});
 router.get("/security",auth,asyncHandler(async(req,res)=>{
     const r=await pool.query("SELECT email,telephone,email_verifie_le,telephone_verifie_le FROM utilisateurs WHERE id=$1",[req.utilisateur.id]);

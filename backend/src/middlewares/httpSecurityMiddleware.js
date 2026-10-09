@@ -113,7 +113,7 @@ export const creerLimiteurConnexion =
              * Les echecs successifs sont donc la cible.
              */
             skipSuccessfulRequests:
-                false,
+                true,
 
             standardHeaders:
                 "draft-8",

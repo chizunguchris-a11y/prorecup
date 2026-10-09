@@ -59,6 +59,7 @@ describe("Concurrence réelle PostgreSQL des allocations vente/lot", function ()
                 quantite numeric(12,3) NOT NULL,
                 prix_unitaire numeric(12,2) NOT NULL,
                 montant_total numeric(12,2) NOT NULL,
+                devise varchar(3) NOT NULL,
                 acheteur_nom text NOT NULL,
                 reference_vente text,
                 statut text NOT NULL,
@@ -142,6 +143,7 @@ describe("Concurrence réelle PostgreSQL des allocations vente/lot", function ()
             stock_id: ids.stock,
             quantite: 7,
             prix_unitaire: 500,
+            devise: "USD",
             acheteur_nom: `Acheteur ${suffixe}`,
             reference_vente: `VTE-CONC-${suffixe}`,
             cree_par: ids.utilisateur

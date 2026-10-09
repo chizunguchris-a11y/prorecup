@@ -154,7 +154,7 @@ import app from "../src/app.js";
                             `Client CRUD Modifié ${numeroTest}`,
 
                         type_client:
-                            "Société",
+                            "Institution",
 
                         contact_email:
                             `client-modifie-${numeroTest}@test.com`,
@@ -189,7 +189,7 @@ import app from "../src/app.js";
 
             assert.equal(
                 reponse.body.data.type_client,
-                "Société"
+                "institution"
             );
 
             assert.equal(

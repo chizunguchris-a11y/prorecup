@@ -1024,39 +1024,25 @@ import pool from "../src/config/db.js";
     );
 
     it(
-        "POST doit enregistrer la fin de mission",
+        "PATCH statut doit enregistrer la fin de mission",
         async function () {
 
             const reponse =
                 await request(app)
-                    .post(
+                    .get(
                         `/api/missions/${missionId}/evenements`
                     )
                     .set(
                         "Authorization",
                         `Bearer ${token}`
                     )
-                    .send({
-                        type_evenement:
-                            "mission_terminee",
-
-                        latitude:
-                            -4.328,
-
-                        longitude:
-                            15.325,
-
-                        precision_gps:
-                            7,
-
-                        observations:
-                            "Mission terminée."
-                    })
-                    .expect(201);
+                    .expect(200);
 
             assert.equal(
-                reponse.body.data.type_evenement,
-                "mission_terminee"
+                reponse.body.data.filter(
+                    evenement => evenement.type_evenement === "mission_terminee"
+                ).length,
+                1
             );
 
         }

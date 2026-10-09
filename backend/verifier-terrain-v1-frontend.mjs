@@ -67,6 +67,18 @@ function harness() {
                 if (!queued.some(r => JSON.stringify(r.context) === JSON.stringify(context)))
                     queued.push(calls.at(-1));
             },
+            async enqueueBatch(entries) {
+                const batch = entries.map(({ context, payload, blob }) => ({
+                    context: { ...context }, payload: { ...payload }, blob
+                }));
+                calls.push(...batch);
+                if (state.pendingRequest) await state.pendingRequest;
+                if (state.fail) throw state.fail;
+                for (const row of batch) {
+                    if (!queued.some(saved => JSON.stringify(saved.context) === JSON.stringify(row.context)))
+                        queued.push(row);
+                }
+            },
             async view() { return { missions: [] }; },
             async saveDay() {}
         },
@@ -330,11 +342,11 @@ await test('CSS ajouté : absence des + parasites et propriétés valides', asyn
             assert.match(declaration.trim(), /^[a-z-]+:\s*[^;{}]+;$/);
     }
 });
-await test('récupération photo : message non sensible, sélection ciblée et cache v1-17', async () => {
+await test('récupération photo : message non sensible, sélection ciblée et cache courant', async () => {
     assert.match(html, /id="bouton-remplacer-preuve"/);
     assert.match(html, /Reprenez-la ou sélectionnez une nouvelle photo pour cette action uniquement/);
-    assert.match(html, /\.\/js\/offline\.js\?v=1-9/);
-    assert.match(source, /\.\/sw\.js\?v=1-17/);
+    assert.match(html, /\.\/js\/offline\.js\?v=1-10/);
+    assert.match(source, /\.\/sw\.js\?v=1-18/);
     assert.match(source, /last_error === 'BLOB_ILLISIBLE'/);
     assert.match(source, /replaceUnreadablePhoto/);
     assert.equal(source.includes('erreur.response?.data'), false);

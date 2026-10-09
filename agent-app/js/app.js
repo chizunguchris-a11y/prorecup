@@ -1246,15 +1246,13 @@
             }),
             ...(estPhoto(contexte.action) ? { empreinte } : {})
         };
-        // Sauvegarder avant le POST : pas d'envoi si la sauvegarde échoue.
-        if (!estPhoto(contexte.action)) {
-
-            localStorage.setItem(
-                cleOperation(contexte),
-                JSON.stringify(tentative)
-            );
-
-        }
+        // Sauvegarder les métadonnées avant la file : un nouvel essai conserve
+        // le même operation_id, y compris pour une preuve. Le Blob reste hors
+        // du Web Storage et doit être conservé en mémoire ou resélectionné.
+        localStorage.setItem(
+            cleOperation(contexte),
+            JSON.stringify(tentative)
+        );
         return tentative;
     };
 
@@ -4455,7 +4453,7 @@ Object.entries(boutonsNavigation).forEach(([nom, bouton]) => {
 
 
     if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('./sw.js?v=1-17').catch(() => {
+        navigator.serviceWorker.register('./sw.js?v=1-18').catch(() => {
             afficherMessage(messageApplication, 'Le cache hors ligne n’a pas pu être installé. Réessayez avec une connexion.', 'erreur');
         });
     }

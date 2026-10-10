@@ -35,7 +35,6 @@ services:
   - type: web
     name: prorecup-alpha
     runtime: static
-    plan: free
     buildCommand: node scripts/build-alpha-static.js
     staticPublishPath: ./alpha-dist
     autoDeploy: false

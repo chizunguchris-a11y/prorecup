@@ -28,7 +28,7 @@
             );
 
             erreur.textContent =
-                "Une ressource essentielle de Pro R?cup n?a pas pu ?tre charg?e. Actualisez la page. Si le probl?me persiste, contactez l?administrateur.";
+                "Une ressource essentielle de Pro Récup n’a pas pu être chargée. Actualisez la page. Si le problème persiste, contactez l’administrateur.";
 
             document.body.prepend(
                 erreur

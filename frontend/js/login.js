@@ -357,7 +357,7 @@ if (tokenExistant) {
 
         afficherMessage(
             messageErreur,
-            "Votre session a expir?. Reconnectez-vous pour continuer."
+            "Votre session a expiré. Reconnectez-vous pour continuer."
         );
 
     } else if (
@@ -366,7 +366,7 @@ if (tokenExistant) {
 
         afficherMessage(
             messageErreur,
-            "Votre compte est d?sactiv?. Contactez l?administrateur si vous pensez qu?il s?agit d?une erreur."
+            "Votre compte est désactivé. Contactez l’administrateur si vous pensez qu’il s’agit d’une erreur."
         );
     }
 

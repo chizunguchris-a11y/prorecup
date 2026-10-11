@@ -28,7 +28,7 @@
             );
 
             erreur.textContent =
-                "Une ressource essentielle de Pro R?cup n?a pas pu ?tre charg?e. Actualisez la page. Si le probl?me persiste, contactez l?administrateur.";
+                "Une ressource essentielle de Pro Récup n’a pas pu être chargée. Actualisez la page. Si le problème persiste, contactez l’administrateur.";
 
             document.body.prepend(
                 erreur
@@ -172,7 +172,7 @@
             !valeurs ||
             typeof valeurs !== "object"
         ) {
-            return "0 de chiffre d?affaires";
+            return "0 de chiffre d’affaires";
         }
 
         var devises =
@@ -181,7 +181,7 @@
             ).sort();
 
         if (!devises.length) {
-            return "0 de chiffre d?affaires";
+            return "0 de chiffre d’affaires";
         }
 
         return devises
@@ -212,7 +212,7 @@
 
                 }
             )
-            .join(" ? ");
+            .join(" · ");
 
     }
 
@@ -1730,9 +1730,9 @@
         definirTexte(
             "ccMissionsDetail",
             missionsEnCours +
-            " en cours ? " +
+            " en cours · " +
             missionsTerminees +
-            " termin?e(s)"
+            " terminée(s)"
         );
 
 
@@ -1747,7 +1747,7 @@
         definirTexte(
             "ccCollectesDetail",
             collectesAction
-                ? "Collectes n?cessitant une action"
+                ? "Collectes nécessitant une action"
                 : "Aucune collecte en attente"
         );
 
@@ -1765,7 +1765,7 @@
             agentsSuspendus
                 ? agentsSuspendus +
                   " agent(s) suspendu(s)"
-                : "Aucune suspension d?tect?e"
+                : "Aucune suspension détectée"
         );
 
 
@@ -1810,10 +1810,10 @@
             );
 
         var titrePriorite =
-            "Situation op?rationnelle normale";
+            "Situation opérationnelle normale";
 
         var detailPriorite =
-            "Aucune action urgente d?tect?e par le syst?me.";
+            "Aucune action urgente détectée par le système.";
 
         var lienPriorite =
             "./missions.html";
@@ -1826,8 +1826,8 @@
 
         var texteStatut =
             missionsEnCours
-                ? "Op?rations en cours"
-                : "Situation sous contr?le";
+                ? "Opérations en cours"
+                : "Situation sous contrôle";
 
 
         if (incidentsCritiques > 0) {
@@ -1861,11 +1861,11 @@
                 "Intervention requise";
 
             titrePriorite =
-                "Traiter les collectes en ?chec";
+                "Traiter les collectes en échec";
 
             detailPriorite =
                 collectesEchec +
-                " collecte(s) n?cessitent une v?rification imm?diate.";
+                " collecte(s) nécessitent une vérification immédiate.";
 
             lienPriorite =
                 "./collectes.html";
@@ -1880,10 +1880,10 @@
                 "statut-vigilance";
 
             texteStatut =
-                "Capacit? r?duite";
+                "Capacité réduite";
 
             titrePriorite =
-                "S?curiser la capacit? logistique";
+                "Sécuriser la capacité logistique";
 
             detailPriorite =
                 tricyclesMaintenance +
@@ -1902,10 +1902,10 @@
                 "statut-vigilance";
 
             texteStatut =
-                "Ressources ? v?rifier";
+                "Ressources à vérifier";
 
             titrePriorite =
-                "V?rifier les agents suspendus";
+                "Vérifier les agents suspendus";
 
             detailPriorite =
                 agentsSuspendus +
@@ -1931,7 +1931,7 @@
 
             detailPriorite =
                 collectesAction +
-                " collecte(s) attendent une action op?rationnelle.";
+                " collecte(s) attendent une action opérationnelle.";
 
             lienPriorite =
                 "./collectes.html";
@@ -1998,7 +1998,7 @@
 
         definirTexte(
             "ccDerniereActualisation",
-            "Actualis? ? " +
+            "Actualisé à " +
             maintenant.toLocaleTimeString(
                 "fr-FR",
                 {
@@ -2015,7 +2015,7 @@
     ) {
 
         var noms = [
-            "R?sum?",
+            "Résumé",
             "Missions",
             "Collectes",
             "Agents",
@@ -2112,7 +2112,7 @@
                 "command-center-sources sources-critiques";
 
             cible.textContent =
-                "Vue incompl?te ? " +
+                "Vue incomplète · " +
                 etat.disponibles +
                 "/" +
                 etat.total;
@@ -2124,7 +2124,7 @@
                 "command-center-sources sources-partielles";
 
             cible.textContent =
-                "Donn?es partielles ? " +
+                "Données partielles · " +
                 etat.disponibles +
                 "/" +
                 etat.total;
@@ -2161,20 +2161,20 @@
                     "command-center-statut statut-critique";
 
                 statutGlobal.textContent =
-                    "Vue op?rationnelle incompl?te";
+                    "Vue opérationnelle incomplète";
 
             }
 
             definirTexte(
                 "ccPrioriteTitre",
-                "Certaines donn?es ne sont pas disponibles"
+                "Certaines données ne sont pas disponibles"
             );
 
             definirTexte(
                 "ccPrioriteDetail",
                 "Sources indisponibles : " +
                 etat.indisponibles.join(", ") +
-                ". Ne pas interpr?ter les valeurs manquantes comme des z?ros."
+                ". Ne pas interpréter les valeurs manquantes comme des zéros."
             );
 
             var action =
@@ -2208,7 +2208,7 @@
                 "command-center-statut statut-vigilance";
 
             statutGlobal.textContent =
-                "Donn?es partielles";
+                "Données partielles";
 
         }
 
@@ -2241,7 +2241,7 @@
 
             return {
                 principal: "?",
-                detail: "Aucune donn?e disponible"
+                detail: "Aucune donnée disponible"
             };
 
         }
@@ -2272,7 +2272,7 @@
 
             return {
                 principal: "0",
-                detail: "Aucune vente confirm?e"
+                detail: "Aucune vente confirmée"
             };
 
         }
@@ -2298,8 +2298,8 @@
             principal: lignes[0],
             detail:
                 lignes.length > 1
-                    ? lignes.slice(1).join(" ? ")
-                    : "Montant confirm?"
+                    ? lignes.slice(1).join(" · ")
+                    : "Montant confirmé"
         };
 
     }
@@ -2364,9 +2364,9 @@
             definirTexte(
                 "ccExecutionDetail",
                 terminees +
-                " termin?e(s) sur " +
+                " terminée(s) sur " +
                 total +
-                " mission(s) aujourd?hui"
+                " mission(s) aujourd’hui"
             );
 
         }
@@ -2388,12 +2388,12 @@
         if (!sourceDashboardOk) {
 
             definirTexte("ccStockTotal", "?");
-            definirTexte("ccStockDetail", "R?sum? indisponible");
+            definirTexte("ccStockDetail", "Résumé indisponible");
             definirTexte("ccVentesConfirmees", "?");
             definirTexte("ccChiffreAffaires", "?");
             definirTexte(
                 "ccChiffreAffairesDetail",
-                "R?sum? indisponible"
+                "Résumé indisponible"
             );
 
             return;
@@ -2422,7 +2422,7 @@
                     stock.nombre_types || 0
                 )
             ) +
-            " type(s) de mati?re en stock"
+            " type(s) de matière en stock"
         );
 
         definirTexte(

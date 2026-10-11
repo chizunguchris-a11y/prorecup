@@ -23,6 +23,14 @@ describe("Product Finish — navigation et marque", () => {
         assert.ok(verification.includes("history.replaceState"));
     });
 
+    it("propose la copie du lien d'activation uniquement quand le backend Alpha le fournit", async () => {
+        const invitations = await lire("frontend/js/invitations.js");
+        assert.ok(invitations.includes("Copier le lien d'activation"));
+        assert.ok(invitations.includes('data.statut==="invitation_non_envoyee"'));
+        assert.ok(invitations.includes("isAdmin&&data.statut"));
+        assert.ok(invitations.includes("navigator.clipboard.writeText(data.lienInvitation)"));
+    });
+
     it("ne conserve aucun chemin /frontend cassé dans l'application Agent", async () => {
         const html = await lire("agent-app/index.html");
         assert.equal(html.includes("../frontend/"), false);

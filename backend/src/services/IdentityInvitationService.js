@@ -39,7 +39,7 @@ class IdentityInvitationService {
             await connection.query("COMMIT");
         } catch (error) { await connection.query("ROLLBACK"); throw error; }
         finally { connection.release(); }
-        return this.deliver(user, raw);
+        return this.deliver(actor, user, raw);
     }
 
     async issue(user, raw, connection) {
@@ -47,10 +47,17 @@ class IdentityInvitationService {
         await tokens.creerToken({ id: randomUUID(), utilisateurId: user.id, purpose: "invitation", channel: "email", tokenHash: hashToken(raw), expireLe: new Date(Date.now()+48*60*60*1000) }, connection);
     }
 
-    async deliver(user, raw) {
+    async deliver(actor, user, raw) {
         const link = emailService.lien("activer.html", raw);
         const delivery = await emailService.envoyerTransaction({email:user.email,nom:user.nom,lien:link,subject:"Activez votre accès Pro Récup",texte:"Vous avez été invité à rejoindre Pro Récup. Ce lien personnel expire dans 48 heures.",bouton:"Activer mon accès"});
-        return { utilisateurId:user.id, statut:delivery.sent?"invitation_envoyee":"invitation_non_envoyee", code:delivery.code, expireDansHeures:48 };
+        const result = { utilisateurId:user.id, statut:delivery.sent?"invitation_envoyee":"invitation_non_envoyee", code:delivery.code, expireDansHeures:48 };
+        if (!delivery.sent &&
+            delivery.code === "EMAIL_PROVIDER_TEST_DOMAIN_RESTRICTION" &&
+            process.env.PRORECUP_ALPHA_MODE === "true" &&
+            actor.role === "admin") {
+            result.lienInvitation = link;
+        }
+        return result;
     }
 
     async manage(actor, id, cancel = false) {
@@ -74,7 +81,7 @@ class IdentityInvitationService {
             await connection.query("COMMIT");
         } catch(error){await connection.query("ROLLBACK");throw error;}
         finally{connection.release();}
-        return cancel ? {statut:"invitation_annulee"} : this.deliver(user,raw);
+        return cancel ? {statut:"invitation_annulee"} : this.deliver(actor,user,raw);
     }
 
     async activate(raw,password) {

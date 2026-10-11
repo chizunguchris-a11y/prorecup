@@ -7,7 +7,7 @@ import pool from "../src/config/db.js";
 import invitations,{invitationRoles,hashToken} from "../src/services/IdentityInvitationService.js";
 import tokens from "../src/repositories/IdentityRecoveryRepository.js";
 import audit from "../src/repositories/AuditRepository.js";
-import mail from "../src/services/RecoveryEmailService.js";
+import mail,{estRestrictionDomaineTest} from "../src/services/RecoveryEmailService.js";
 import onboarding from "../src/repositories/ClientOnboardingRepository.js";
 import provisioning from "../src/services/ClientProvisioningService.js";
 import recovery from "../src/services/IdentityRecoveryService.js";
@@ -18,9 +18,11 @@ const actor={id,organisationId:id,role:"admin"};
 const raw="a".repeat(64);
 describe("Product Finish — invitations, activation et permissions",function(){
     this.timeout(10000);
-    let restore,state;
+    let restore,state,previousAlphaMode;
     const replace=(object,key,value)=>{const previous=object[key];restore.push(()=>object[key]=previous);object[key]=value;};
     beforeEach(()=>{
+        previousAlphaMode=process.env.PRORECUP_ALPHA_MODE;
+        delete process.env.PRORECUP_ALPHA_MODE;
         restore=[];state={commands:[],pending:true,used:false,duplicate:false,token:null,audits:[]};
         replace(pool,"query",async()=>({rows:[{actif:true,auth_epoch:1}]}));
         replace(pool,"connect",async()=>({release(){},async query(sql,values=[]){state.commands.push({sql,values});
@@ -39,7 +41,10 @@ describe("Product Finish — invitations, activation et permissions",function(){
         replace(audit,"creer",async data=>state.audits.push(data));
         replace(mail,"envoyerTransaction",async data=>{state.delivery=data;return {sent:false,code:"EMAIL_PROVIDER_NOT_CONFIGURED"};});
     });
-    afterEach(()=>restore.reverse().forEach(fn=>fn()));
+    afterEach(()=>{
+        restore.reverse().forEach(fn=>fn());
+        previousAlphaMode===undefined?delete process.env.PRORECUP_ALPHA_MODE:process.env.PRORECUP_ALPHA_MODE=previousAlphaMode;
+    });
     it("expose un statut public neutre pour le domaine identité",async()=>{const r=await request(app).get("/api/identity");assert.equal(r.status,200);assert.equal(r.body.status,"operational");assert.equal(r.headers["cache-control"],"no-store");});
     it("le Manager ne peut inviter ni Admin ni Client",()=>{assert.deepEqual(invitationRoles({...actor,role:"manager"}),["agent_valorisation_carbone"]);});
     it("une invitation valide stocke uniquement un hash et un mot de passe aléatoire",async()=>{
@@ -49,6 +54,30 @@ describe("Product Finish — invitations, activation et permissions",function(){
         assert.equal(state.token.tokenHash,hashToken(linkToken));assert.equal(state.token.purpose,"invitation");assert.ok(state.token.expireLe>Date.now());assert.equal(state.token.token,undefined);
         assert.equal(result.lienInvitation,undefined);
         assert.ok(state.commands.some(c=>c.sql.includes("false,true")));assert.ok(state.audits.some(a=>a.action==="INVITATION_CREEE"));
+    });
+    it("reconnaît uniquement le refus Resend lié au domaine de test",async()=>{
+        const message="You can only send testing emails to your own email address. To send emails to other recipients, please verify a domain.";
+        assert.equal(estRestrictionDomaineTest(403,message),true);
+        assert.equal(estRestrictionDomaineTest(422,message),false);
+        assert.equal(estRestrictionDomaineTest(403,"API key is invalid"),false);
+    });
+    it("expose le lien uniquement à l'Admin Alpha après le refus du domaine de test",async()=>{
+        process.env.PRORECUP_ALPHA_MODE="true";
+        replace(mail,"envoyerTransaction",async data=>{state.delivery=data;return {sent:false,code:"EMAIL_PROVIDER_TEST_DOMAIN_RESTRICTION"};});
+        const result=await invitations.create(actor,{nom:"Invité",email:"invite@example.com",role:"manager"});
+        assert.equal(result.lienInvitation,state.delivery.lien);
+        assert.equal(new URLSearchParams(new URL(result.lienInvitation).hash.slice(1)).get("token").length,64);
+    });
+    it("n'expose jamais le lien hors Alpha, pour un Manager ou pour une autre erreur",async()=>{
+        replace(mail,"envoyerTransaction",async()=>({sent:false,code:"EMAIL_PROVIDER_TEST_DOMAIN_RESTRICTION"}));
+        const horsAlpha=await invitations.create(actor,{nom:"Invité",email:"alpha-off@example.com",role:"manager"});
+        assert.equal(horsAlpha.lienInvitation,undefined);
+        process.env.PRORECUP_ALPHA_MODE="true";
+        const manager=await invitations.create({...actor,role:"manager"},{nom:"Invité",email:"manager@example.com",role:"agent_valorisation_carbone"});
+        assert.equal(manager.lienInvitation,undefined);
+        replace(mail,"envoyerTransaction",async()=>({sent:false,code:"EMAIL_PROVIDER_ERROR"}));
+        const autreErreur=await invitations.create(actor,{nom:"Invité",email:"other-error@example.com",role:"manager"});
+        assert.equal(autreErreur.lienInvitation,undefined);
     });
     it("refuse l'adresse d'un compte existant et rollback",async()=>{state.duplicate=true;await assert.rejects(()=>invitations.create(actor,{nom:"Test",email:"existing@example.com",role:"manager"}),/déjà utilisée/);assert.equal(state.token,null);assert.ok(state.commands.some(c=>c.sql==="ROLLBACK"));});
     it("un Manager ne peut créer Admin même par appel direct",async()=>{await assert.rejects(()=>invitations.create({...actor,role:"manager"},{role:"admin"}),e=>e.statut===403);});

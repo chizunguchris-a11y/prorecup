@@ -20,7 +20,10 @@ CREATE TABLE organisations (
     devise VARCHAR(10) NOT NULL,
     fuseau_horaire VARCHAR(100) NOT NULL,
 
-    logo TEXT,
+    numero_identification VARCHAR(150),
+    site_web TEXT,
+    description TEXT,
+    logo_url TEXT,
 
     actif BOOLEAN NOT NULL DEFAULT TRUE,
 

@@ -253,7 +253,8 @@ class IdentityRecoveryService {
         }
 
 
-        await recoveryEmailService
+        const livraison =
+            await recoveryEmailService
             .envoyerLienMotDePasse({
                 email:
                     utilisateur.email,
@@ -265,9 +266,27 @@ class IdentityRecoveryService {
             });
 
 
-        return {
+        const resultat = {
             accepted: true
         };
+
+
+        if (
+            process.env.PRORECUP_ALPHA_MODE === "true" &&
+            livraison.sent === false &&
+            livraison.code === "EMAIL_PROVIDER_TEST_DOMAIN_RESTRICTION"
+        ) {
+
+            resultat.lienRecuperation =
+                recoveryEmailService
+                    .lienMotDePasse(
+                        token
+                    );
+
+        }
+
+
+        return resultat;
 
     }
 

@@ -35,6 +35,10 @@
                     <input id="email-reset" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="vous@entreprise.com">
                     <button class="primary-button" type="submit">Recevoir le lien de récupération</button>
                 </form>
+                <div id="manual-recovery" class="manual-recovery" hidden>
+                    <p>L’e-mail n’a pas pu être envoyé par Resend sur cet environnement Alpha. Copiez ce lien personnel et ouvrez-le dans le navigateur de la personne concernée. Il expire dans 30 minutes et ne fonctionne qu’une fois.</p>
+                    <button id="copy-recovery-link" class="secondary-button" type="button">Copier le lien de récupération</button>
+                </div>
             </section>
             <section id="panel-help" class="panel" role="tabpanel" aria-labelledby="tab-help" hidden>
                 <form id="form-help" novalidate>

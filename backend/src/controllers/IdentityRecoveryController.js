@@ -36,9 +36,14 @@ const identityRecoveryController = {
         res
     ) => {
 
+        let resultat =
+            null;
+
+
         try {
 
-            await identityRecoveryService
+            resultat =
+                await identityRecoveryService
                 .demanderResetMotDePasse(
                     req.body.email,
                     contexte(
@@ -61,13 +66,29 @@ const identityRecoveryController = {
         }
 
 
-        return res.status(
-            200
-        ).json({
+        const reponse = {
             success: true,
             message:
                 "Si un compte correspond a cette adresse, des instructions de recuperation seront envoyees."
-        });
+        };
+
+
+        if (
+            typeof resultat?.lienRecuperation ===
+            "string"
+        ) {
+
+            reponse.lienRecuperation =
+                resultat.lienRecuperation;
+
+        }
+
+
+        return res.status(
+            200
+        ).json(
+            reponse
+        );
 
     },
 

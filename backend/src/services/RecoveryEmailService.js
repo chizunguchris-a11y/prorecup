@@ -23,6 +23,12 @@ export const estRestrictionDomaineTest = (status, body) => {
 
 class RecoveryEmailService {
 
+    lienMotDePasse(token) {
+        return baseFrontend() +
+            "/acces/reinitialiser.html?token=" +
+            encodeURIComponent(token);
+    }
+
     lien(page, token) {
         const url = new URL(baseFrontend() + "/acces/" + page);
         if (process.env.NODE_ENV === "production" && url.protocol !== "https:") throw new Error("HTTPS requis pour les liens transactionnels.");
@@ -93,9 +99,7 @@ class RecoveryEmailService {
 
 
         const lien =
-            baseFrontend() +
-            "/acces/reinitialiser.html?token=" +
-            encodeURIComponent(
+            this.lienMotDePasse(
                 token
             );
 
@@ -187,23 +191,38 @@ class RecoveryEmailService {
 
             if (!reponse.ok) {
 
-                console.error(
-                    "Recovery email HTTP " +
-                    reponse.status
-                );
+                const corps =
+                    await reponse.text()
+                        .catch(
+                            () => ""
+                        );
 
 
                 return {
                     sent: false,
                     reason:
-                        "provider_error"
+                        estRestrictionDomaineTest(
+                            reponse.status,
+                            corps
+                        )
+                            ? "testing_domain_restriction"
+                            : "provider_error",
+                    code:
+                        estRestrictionDomaineTest(
+                            reponse.status,
+                            corps
+                        )
+                            ? "EMAIL_PROVIDER_TEST_DOMAIN_RESTRICTION"
+                            : "EMAIL_PROVIDER_ERROR"
                 };
 
             }
 
 
             return {
-                sent: true
+                sent: true,
+                code:
+                    "EMAIL_SENT"
             };
 
         }
@@ -218,7 +237,9 @@ class RecoveryEmailService {
             return {
                 sent: false,
                 reason:
-                    "provider_unavailable"
+                    "provider_unavailable",
+                code:
+                    "EMAIL_PROVIDER_UNAVAILABLE"
             };
 
         }

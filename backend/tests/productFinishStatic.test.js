@@ -31,6 +31,16 @@ describe("Product Finish — navigation et marque", () => {
         assert.ok(invitations.includes("navigator.clipboard.writeText(data.lienInvitation)"));
     });
 
+    it("propose la copie du lien de récupération uniquement quand le backend Alpha le fournit", async () => {
+        const html = await lire("frontend/acces/index.html");
+        const acces = await lire("frontend/acces/acces.js");
+        assert.ok(html.includes('id="manual-recovery"'));
+        assert.ok(html.includes("Copier le lien de récupération"));
+        assert.ok(acces.includes('typeof resultat.lienRecuperation==="string"'));
+        assert.ok(acces.includes("navigator.clipboard.writeText(lienRecuperation)"));
+        assert.ok(acces.includes("masquerRecuperationManuelle()"));
+    });
+
     it("ne conserve aucun chemin /frontend cassé dans l'application Agent", async () => {
         const html = await lire("agent-app/index.html");
         assert.equal(html.includes("../frontend/"), false);

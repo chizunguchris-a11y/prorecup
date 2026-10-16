@@ -95,7 +95,11 @@ class IdentityInvitationService {
                 WHERE u.id=$1 FOR UPDATE OF u`,[token.utilisateur_id]);
             if(!user.rows[0]?.invitation_en_attente) throw new ApiError(400,"Cette invitation ne peut plus être utilisée.");
             const hash=await bcrypt.hash(password,12);
-            await connection.query("UPDATE utilisateurs SET mot_de_passe=$1,actif=true,invitation_en_attente=false,invitation_statut='utilisee',email_verifie_le=CURRENT_TIMESTAMP,auth_epoch=auth_epoch+1,modifie_le=CURRENT_TIMESTAMP WHERE id=$2",[hash,token.utilisateur_id]);
+            const activated=await connection.query("UPDATE utilisateurs SET mot_de_passe=$1,actif=true,invitation_en_attente=false,invitation_statut='utilisee',email_verifie_le=CURRENT_TIMESTAMP,auth_epoch=auth_epoch+1,modifie_le=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id",[hash,token.utilisateur_id]);
+            if(activated.rowCount!==1) throw new ApiError(409,"Cette invitation ne peut plus être utilisée.");
+            if(String(user.rows[0].role||"").toLowerCase()==="client") {
+                await connection.query("UPDATE client_utilisateurs SET actif=true,modifie_le=CURRENT_TIMESTAMP WHERE utilisateur_id=$1 AND organisation_id=$2",[token.utilisateur_id,user.rows[0].organisation_id]);
+            }
             await tokens.invaliderTokens(token.utilisateur_id,"invitation",connection);
             await audit.creer({organisation_id:user.rows[0].organisation_id,utilisateur_id:token.utilisateur_id,action:"INVITATION_ACTIVEE",ressource:"utilisateur",ressource_id:token.utilisateur_id},connection);
             await connection.query("COMMIT");

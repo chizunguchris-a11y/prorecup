@@ -12,6 +12,7 @@ import onboarding from "../src/repositories/ClientOnboardingRepository.js";
 import provisioning from "../src/services/ClientProvisioningService.js";
 import recovery from "../src/services/IdentityRecoveryService.js";
 import refresh from "../src/repositories/RefreshTokenRepository.js";
+import utilisateurRepository from "../src/repositories/utilisateurRepository.js";
 
 const id="11111111-1111-4111-8111-111111111111";
 const actor={id,organisationId:id,role:"admin"};
@@ -23,16 +24,17 @@ describe("Product Finish — invitations, activation et permissions",function(){
     beforeEach(()=>{
         previousAlphaMode=process.env.PRORECUP_ALPHA_MODE;
         delete process.env.PRORECUP_ALPHA_MODE;
-        restore=[];state={commands:[],pending:true,used:false,duplicate:false,token:null,audits:[]};
+        restore=[];state={commands:[],pending:true,used:false,duplicate:false,token:null,audits:[],accountActive:false,clientLinkActive:false,activationRole:"manager"};
         replace(pool,"query",async()=>({rows:[{actif:true,auth_epoch:1}]}));
         replace(pool,"connect",async()=>({release(){},async query(sql,values=[]){state.commands.push({sql,values});
             if(sql.includes("SELECT id FROM utilisateurs WHERE LOWER"))return {rows:state.duplicate?[{id}]:[]};
             if(sql.includes("SELECT id FROM roles"))return {rows:[{id}]};
             if(sql.includes("INSERT INTO utilisateurs"))return {rows:[{id,nom:"Invité",email:"invite@example.com",organisation_id:id}]};
             if(sql.includes("SELECT u.*, r.nom AS role"))return {rows:[{id,nom:"Invité",email:"invite@example.com",organisation_id:id,invitation_en_attente:state.pending,invitation_statut:state.pending?"en_attente":"annulee",actif:false,role:"manager"}]};
-            if(sql.includes("SELECT u.id,u.organisation_id,u.invitation_en_attente"))return {rows:[{id,organisation_id:id,invitation_en_attente:state.pending,role:"manager"}]};
+            if(sql.includes("SELECT u.id,u.organisation_id,u.invitation_en_attente"))return {rows:[{id,organisation_id:id,invitation_en_attente:state.pending,role:state.activationRole}]};
             if(sql.includes("UPDATE utilisateurs u SET email_verifie_le"))return {rows:[{organisation_id:id,role:"manager"}]};
-            if(sql.includes("UPDATE utilisateurs SET mot_de_passe")){state.pending=false;state.password=values[0];}
+            if(sql.includes("UPDATE utilisateurs SET mot_de_passe")){state.pending=false;state.accountActive=true;state.password=values[0];return {rows:[{id}],rowCount:1};}
+            if(sql.includes("UPDATE client_utilisateurs SET actif=true")){state.clientLinkActive=true;return {rows:[],rowCount:1};}
             return {rows:[],rowCount:1};
         }}));
         replace(tokens,"creerToken",async data=>{state.token=data;});
@@ -85,6 +87,25 @@ describe("Product Finish — invitations, activation et permissions",function(){
     it("aucun rôle ni organisation du navigateur n'est accepté lors de l'activation",async()=>{const r=await request(app).post("/api/identity/invitations/activate").send({token:raw,nouveauMotDePasse:"Activation2026!",confirmationMotDePasse:"Activation2026!",role:"admin",organisationId:id});assert.equal(r.status,400);});
     for(const reason of ["invalide","expiré","déjà utilisé"]){it(`refuse un token ${reason}`,async()=>{replace(tokens,"trouverTokenValide",async()=>null);await assert.rejects(()=>invitations.activate(raw,"Activation2026!"),e=>e.statut===400);assert.ok(!state.password);});}
     it("active une seule fois, vérifie l'e-mail et définit un hash bcrypt",async()=>{await invitations.activate(raw,"Activation2026!");assert.ok(await bcrypt.compare("Activation2026!",state.password));assert.ok(state.commands.some(c=>c.sql.includes("email_verifie_le=CURRENT_TIMESTAMP")));assert.ok(state.audits.some(a=>a.action==="INVITATION_ACTIVEE"));await assert.rejects(()=>invitations.activate(raw,"Activation2026!"),e=>e.statut===400);});
+    it("réactive un Client principal inactif et son rattachement puis permet sa connexion",async()=>{
+        state.activationRole="client";
+        replace(utilisateurRepository,"findByEmail",async email=>({id,nom:"Client principal",email,mot_de_passe:state.password,organisation_id:id,role_id:id,role_nom:"client",actif:state.accountActive,auth_epoch:1}));
+        replace(utilisateurRepository,"enregistrerDernierAcces",async()=>{});
+        replace(refresh,"creer",async()=>({id}));
+        const avantActivation=await request(app).post("/api/auth/login").send({email:"client@example.com",motDePasse:"ActivationClient2026!"});
+        assert.equal(avantActivation.status,403);
+        assert.equal(avantActivation.body.error,"Votre compte est désactivé. Contactez un administrateur.");
+        const activation=await invitations.activate(raw,"ActivationClient2026!");
+        assert.equal(activation.produit,"portail_client");
+        assert.equal(state.accountActive,true);
+        assert.equal(state.clientLinkActive,true);
+        assert.ok(state.commands.some(c=>c.sql.includes("invitation_statut='utilisee'")&&c.sql.includes("actif=true")));
+        assert.ok(state.commands.some(c=>c.sql.includes("UPDATE client_utilisateurs SET actif=true")));
+        const connexion=await request(app).post("/api/auth/login").send({email:"client@example.com",motDePasse:"ActivationClient2026!"});
+        assert.equal(connexion.status,200);
+        assert.equal(connexion.body.success,true);
+        assert.equal(connexion.body.utilisateur.role,"client");
+    });
     it("une invitation annulée ou un compte suspendu n'est pas activable",async()=>{state.pending=false;await assert.rejects(()=>invitations.activate(raw,"Activation2026!"),e=>e.statut===400);});
     it("annule une invitation et invalide son jeton",async()=>{const resultat=await invitations.manage(actor,id,true);assert.equal(resultat.statut,"invitation_annulee");assert.equal(state.used,true);assert.ok(state.commands.some(c=>c.sql.includes("auth_epoch=auth_epoch+1")));assert.ok(state.audits.some(a=>a.action==="INVITATION_ANNULEE"));});
     it("renouvelle une invitation en invalidant la précédente",async()=>{const resultat=await invitations.manage(actor,id,false);assert.equal(resultat.code,"EMAIL_PROVIDER_NOT_CONFIGURED");assert.equal(state.used,true);assert.ok(state.token?.tokenHash);assert.ok(state.audits.some(a=>a.action==="INVITATION_RENOUVELEE"));});

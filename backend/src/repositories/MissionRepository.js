@@ -269,7 +269,9 @@ class MissionRepository {
         agentId,
         datePrevue,
         missionIgnoreeId = null,
-        connexion = pool
+        connexion = pool,
+        heureDepart = null,
+        heureRetour = null
     ) {
 
         const requete = `
@@ -279,6 +281,11 @@ class MissionRepository {
 
             WHERE agent_id = $1
               AND date_prevue = $2
+              AND (
+                  $4::time IS NULL OR $5::time IS NULL
+                  OR heure_depart_prevue IS NULL OR heure_retour_prevue IS NULL
+                  OR (heure_depart_prevue < $5::time AND heure_retour_prevue > $4::time)
+              )
               AND statut IN
               (
                   'planifiee',
@@ -299,7 +306,9 @@ class MissionRepository {
                 [
                     agentId,
                     datePrevue,
-                    missionIgnoreeId
+                    missionIgnoreeId,
+                    heureDepart,
+                    heureRetour
                 ]
             );
 
@@ -313,7 +322,9 @@ class MissionRepository {
         tricycleId,
         datePrevue,
         missionIgnoreeId = null,
-        connexion = pool
+        connexion = pool,
+        heureDepart = null,
+        heureRetour = null
     ) {
 
         const requete = `
@@ -323,6 +334,11 @@ class MissionRepository {
 
             WHERE tricycle_id = $1
               AND date_prevue = $2
+              AND (
+                  $4::time IS NULL OR $5::time IS NULL
+                  OR heure_depart_prevue IS NULL OR heure_retour_prevue IS NULL
+                  OR (heure_depart_prevue < $5::time AND heure_retour_prevue > $4::time)
+              )
               AND statut IN
               (
                   'planifiee',
@@ -343,7 +359,9 @@ class MissionRepository {
                 [
                     tricycleId,
                     datePrevue,
-                    missionIgnoreeId
+                    missionIgnoreeId,
+                    heureDepart,
+                    heureRetour
                 ]
             );
 

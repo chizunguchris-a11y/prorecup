@@ -418,7 +418,7 @@ class TerrainJourneeService {
 
             if (
                 mission.statut ===
-                "planifiee"
+                "planifiee" && total > 0
             ) {
 
                 actionSuivante =

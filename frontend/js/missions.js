@@ -2124,7 +2124,7 @@
                 ProRecup.afficherNotification(
                     missionId
                         ? "Mission modifiée avec succès."
-                        : "Mission créée avec succès.",
+                        : "Mission créée. Associez maintenant ses collectes via le bouton Collectes avant le départ de l’Agent.",
                     "succes"
                 );
 

@@ -43,11 +43,21 @@ class MissionService {
 
         }
 
+        const secondes = valeur => {
+            if (!valeur) return null;
+            if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(valeur)) {
+                throw new ApiError(400, "Horaire prévu invalide.");
+            }
+            const [h, m, sec = 0] = valeur.split(":").map(Number);
+            return h * 3600 + m * 60 + sec;
+        };
+        const depart = secondes(mission.heure_depart_prevue);
+        const retour = secondes(mission.heure_retour_prevue);
+
         if (
             mission.heure_depart_prevue &&
             mission.heure_retour_prevue &&
-            mission.heure_retour_prevue <=
-                mission.heure_depart_prevue
+            retour <= depart
         ) {
 
             throw new ApiError(
@@ -145,7 +155,9 @@ class MissionService {
         tricycleId,
         datePrevue,
         missionIgnoreeId,
-        connexion
+        connexion,
+        heureDepart = null,
+        heureRetour = null
     ) {
 
         const conflitAgent =
@@ -154,14 +166,16 @@ class MissionService {
                     agentId,
                     datePrevue,
                     missionIgnoreeId,
-                    connexion
+                    connexion,
+                    heureDepart,
+                    heureRetour
                 );
 
         if (conflitAgent) {
 
             throw new ApiError(
                 409,
-                "Cet agent possède déjà une mission planifiée à cette date."
+                "Cet agent possède une mission sur ce créneau (ou sans horaires complets)."
             );
 
         }
@@ -172,14 +186,16 @@ class MissionService {
                     tricycleId,
                     datePrevue,
                     missionIgnoreeId,
-                    connexion
+                    connexion,
+                    heureDepart,
+                    heureRetour
                 );
 
         if (conflitTricycle) {
 
             throw new ApiError(
                 409,
-                "Ce tricycle est déjà affecté à une mission à cette date."
+                "Ce tricycle est déjà affecté sur ce créneau (ou sans horaires complets)."
             );
 
         }
@@ -252,7 +268,9 @@ class MissionService {
                 donnees.tricycle_id,
                 donnees.date_prevue,
                 null,
-                connexion
+                connexion,
+                donnees.heure_depart_prevue,
+                donnees.heure_retour_prevue
             );
 
             const mission =
@@ -516,7 +534,9 @@ class MissionService {
                 missionModifiee.tricycle_id,
                 missionModifiee.date_prevue,
                 missionId,
-                connexion
+                connexion,
+                missionModifiee.heure_depart_prevue,
+                missionModifiee.heure_retour_prevue
             );
 
             const mission =
@@ -731,8 +751,7 @@ class MissionService {
             if (
                 nouveauStatut ===
                     "terminee" ||
-                nouveauStatut ===
-                    "annulee"
+                (nouveauStatut === "annulee" && mission.statut === "en_cours")
             ) {
 
                 const agentDisponible =

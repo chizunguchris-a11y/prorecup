@@ -1112,7 +1112,7 @@
             !item.progression?.collecte_terminee ||
             !preuvePresente(item, "apres_collecte")
         );
-        if (mission.bloquee) return { action: "aucune" };
+        if (mission.bloquee || !(mission.collectes || []).length) return { action: "aucune" };
         if (mission.statut === "planifiee") return { action: "demarrer_mission" };
         if (mission.statut !== "en_cours") return { action: "aucune" };
         if (!collecte) return { action: "terminer_mission" };
@@ -1486,6 +1486,7 @@
 
                                             <br>
 
+                                            ${(mission.collectes || []).length === 0 ? '<strong>Mission à préparer : aucune collecte associée. Contactez le Manager, puis actualisez la journée.</strong><br>' : ''}
                                             Collectes :
                                             ${Number(
                                                 progression.terminees ||
@@ -2941,6 +2942,7 @@
 
                                 <br>
 
+                                ${collectes.length === 0 ? '<strong>Mission à préparer : aucune collecte associée. Contactez le Manager, puis actualisez la journée.</strong><br>' : ''}
                                 Collectes :
                                 ${Number(
                                     progression

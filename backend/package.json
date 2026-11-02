@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "mocha --require ./tests/test-environment.js tests/**/*.test.js --exit",
-    "db:export": "node scripts/export-database.js"
+    "db:export": "node scripts/export-database.js",
+    "test:mission01": "node --test tests/mission01.regression.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

@@ -68,13 +68,16 @@ class ClientCompteRepository {
                         id,
                         email
                     FROM utilisateurs
-                    WHERE LOWER(email) = LOWER($1)
-                    LIMIT 1;
+                    WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+                    ORDER BY id
+                    LIMIT 2;
                 `,
                 [email]
             );
 
-        return resultat.rows[0];
+        // This lookup is used only as an existence check by the service.
+        // Do not select an arbitrary identity if global emails collide.
+        return resultat.rows.length > 0 ? { existe: true } : null;
 
     }
 

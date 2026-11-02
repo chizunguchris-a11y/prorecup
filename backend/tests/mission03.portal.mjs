@@ -26,6 +26,7 @@ const sqlConnection={query:async(sql,args)=>{
  const statement=db.prepare(sql.replace(/::(?:uuid|numeric|text|timestamptz|integer)/g,''));
  return {rows:statement.all(Object.fromEntries(args.map((v,i)=>['$'+(i+1),v])))};
 }};
+const roleIds=Object.freeze({client:'m03-client-role',manager:'m03-manager-role'});
 const originalTrace=repository.tracabiliteAutorisee.bind(repository);
 beforeEach(()=>{
  for(const table of ['clients','sites_de_collecte','collectes','client_utilisateurs','lots','contenants','lot_contenants','missions','pesees','tracabilite_matiere_evenements'])db.exec('DELETE FROM '+table);
@@ -42,12 +43,20 @@ beforeEach(()=>{
  repository.trouverUtilisateur=async(u,o)=>o===org&&[user,secondUser,manager].includes(u)?{utilisateur_id:u,organisation_id:o,utilisateur_actif:true,role_actif:true,role_nom:u===manager?'manager':'client'}:null;
  repository.listerClientsAutorises=async(u,o)=>o===org?[{client_id:u===user?clientA:clientB}]:[];
  pool.query=async(sql,args)=>{
-  assert.match(sql,/auth_epoch/);return {rows:[{actif:true,auth_epoch:1}]};
+  assert.match(sql,/auth_epoch/);
+  const [actorId, orgId]=args;
+  if (orgId!==org || ![user,secondUser,manager].includes(actorId)) return {rows:[]};
+  const dbRole=actorId===manager?'manager':'client';
+  return {rows:[{
+   actif:true,auth_epoch:1,
+   role_id:roleIds[dbRole],role_nom:dbRole,
+   role_actif:true,role_organisation_id:null
+  }]};
  };
 });
 const app=express();app.use(express.json());app.use('/api/portail-client',clientRoutes);app.use('/api/lots',lotRoutes);
 app.use((error,req,res,next)=>res.status(error.statut||500).json({success:false,message:error.message}));
-const token=(id=user,organisationId=org,role='client',options={})=>jwt.sign({id,organisationId,role,...options},process.env.JWT_SECRET,{expiresIn:'1h'});
+const token=(id=user,organisationId=org,role='client',options={})=>jwt.sign({id,organisationId,role,roleId:roleIds[role],...options},process.env.JWT_SECRET,{expiresIn:'1h'});
 test('SQL exécuté : lot partagé, seul 20 kg du client A ; aucun prorata de reste',async()=>{
  const rows=await repository.tracabiliteAutorisee(user,org,coA);const result=projectionClient(rows);
  assert.equal(result.length,1);assert.equal(result[0].quantite_origine_kg,20);assert.equal(result[0].reste_attribuable_kg,null);assert.equal(result[0].co2e_attribuable_kg,null);

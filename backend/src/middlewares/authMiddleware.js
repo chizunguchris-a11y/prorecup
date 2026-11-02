@@ -101,10 +101,19 @@ const authMiddleware = async (
         const etatAuthentification =
             await pool.query(
                 `
-                SELECT actif, auth_epoch
-                FROM utilisateurs
-                WHERE id = $1
-                  AND organisation_id = $2
+                SELECT
+                    u.actif,
+                    u.auth_epoch,
+                    u.role_id,
+                    r.nom AS role_nom,
+                    r.actif AS role_actif,
+                    r.organisation_id AS role_organisation_id
+                FROM utilisateurs u
+                JOIN roles r ON r.id = u.role_id
+                WHERE u.id = $1
+                  AND u.organisation_id = $2
+                  AND u.supprime_le IS NULL
+                  AND r.supprime_le IS NULL
                 LIMIT 1;
                 `,
                 [
@@ -118,18 +127,35 @@ const authMiddleware = async (
 
         const epochToken =
             Number(
-                contenuToken.authEpoch ||
-                contenuToken.auth_epoch ||
+                contenuToken.authEpoch ??
+                contenuToken.auth_epoch ??
                 1
             );
 
+        // Privileges taken from the current DB, never from a stale JWT.
+        const roleActuel = String(
+            utilisateurActuel?.role_nom || ""
+        ).trim().toLowerCase();
+        const roleIdToken = String(
+            contenuToken.roleId ||
+            contenuToken.role_id || ""
+        ).trim();
+        const roleIdActuel = String(
+            utilisateurActuel?.role_id || ""
+        ).trim();
+
         if (
             !utilisateurActuel ||
-            utilisateurActuel.actif === false ||
-            Number(
-                utilisateurActuel.auth_epoch ||
-                1
-            ) !== epochToken
+            utilisateurActuel.actif !== true ||
+            utilisateurActuel.role_actif !== true ||
+            utilisateurActuel.role_organisation_id != null ||
+            !roleActuel ||
+            roleActuel !== role ||
+            !roleIdToken ||
+            !roleIdActuel ||
+            roleIdToken !== roleIdActuel ||
+            !Number.isSafeInteger(epochToken) ||
+            Number(utilisateurActuel.auth_epoch ?? 1) !== epochToken
         ) {
 
             return res.status(401).json({
@@ -200,15 +226,11 @@ const authMiddleware = async (
             organisation_id:
                 organisationId,
 
-            role,
+            role: roleActuel,
 
-            role_nom:
-                role,
+            role_nom: roleActuel,
 
-            roleId:
-                contenuToken.roleId ||
-                contenuToken.role_id ||
-                null,
+            roleId: roleIdActuel,
 
             authEpoch:
                 epochToken,

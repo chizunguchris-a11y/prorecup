@@ -22,9 +22,10 @@ const identityRecoveryRepository = {
                     email_verifie_le,
                     telephone_verifie_le
                 FROM utilisateurs
-                WHERE LOWER(email) =
-                    LOWER($1)
-                LIMIT 1;
+                WHERE LOWER(TRIM(email)) =
+                    LOWER(TRIM($1))
+                ORDER BY id
+                LIMIT 2;
                 `,
                 [
                     String(
@@ -34,8 +35,9 @@ const identityRecoveryRepository = {
             );
 
 
-        return resultat.rows[0] ||
-            null;
+        // A non-unique address must not select a random identity.
+        return resultat.rows.length === 1
+            ? resultat.rows[0] : null;
 
     },
 
@@ -114,7 +116,8 @@ const identityRecoveryRepository = {
                     ) = e.brut
                 )
                 OR (
-                    LENGTH(
+                    POSITION('@' IN e.brut) = 0
+                    AND LENGTH(
                         e.chiffres
                     ) >= 6
                     AND
@@ -129,7 +132,8 @@ const identityRecoveryRepository = {
                     ) = e.chiffres
                 )
 
-                LIMIT 1;
+                ORDER BY u.id
+                LIMIT 2;
                 `,
                 [
                     valeur
@@ -137,8 +141,9 @@ const identityRecoveryRepository = {
             );
 
 
-        return resultat.rows[0] ||
-            null;
+        // Shared telephone: no implicit account selection.
+        return resultat.rows.length === 1
+            ? resultat.rows[0] : null;
 
     },
 

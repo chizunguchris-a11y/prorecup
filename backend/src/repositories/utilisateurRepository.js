@@ -26,8 +26,9 @@ const utilisateurRepository = {
             FROM utilisateurs u
             LEFT JOIN roles r
                 ON r.id = u.role_id
-            WHERE LOWER(u.email) = LOWER($1)
-            LIMIT 1;
+            WHERE LOWER(TRIM(u.email)) = LOWER(TRIM($1))
+            ORDER BY u.id
+            LIMIT 2;
         `;
 
         const resultat =
@@ -40,7 +41,14 @@ const utilisateurRepository = {
                 ]
             );
 
-        return resultat.rows[0];
+        // Fail closed on legacy duplicates: also prevent a new registration.
+        if (resultat.rows.length > 1) {
+            const erreur = new Error("Identite email ambigue");
+            erreur.code = "IDENTITE_AMBIGUE";
+            throw erreur;
+        }
+
+        return resultat.rows[0] || null;
 
     },
 

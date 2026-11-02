@@ -109,17 +109,17 @@ class LotRepository {
     ) {
         const resultat = await client.query(`
             UPDATE lots
-            SET quantite_restante_kg = quantite_restante_kg - $3,
+            SET quantite_restante_kg = quantite_restante_kg - $3::numeric,
                 statut_lot = CASE
-                    WHEN quantite_restante_kg - $3 = 0 THEN 'vendu'
-                    WHEN quantite_restante_kg - $3 < poids_reel THEN 'partiellement_vendu'
+                    WHEN quantite_restante_kg - $3::numeric = 0 THEN 'vendu'
+                    WHEN quantite_restante_kg - $3::numeric < poids_reel THEN 'partiellement_vendu'
                     ELSE 'en_stock'
                 END,
                 modifie_le = CURRENT_TIMESTAMP
             WHERE id = $1
               AND organisation_id = $2
-              AND $3 > 0
-              AND quantite_restante_kg >= $3
+              AND $3::numeric > 0
+              AND quantite_restante_kg >= $3::numeric
               AND statut_lot IN ('en_stock', 'partiellement_vendu')
             RETURNING *;
         `, [lotId, organisationId, quantite]);

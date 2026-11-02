@@ -11,7 +11,9 @@
     "test:mission02": "node --test tests/mission02.server.mjs tests/mission02.browser.mjs tests/mission02.contracts.mjs",
     "test:mission02:server": "node --test tests/mission02.server.mjs",
     "test:mission02:browser": "node --test tests/mission02.browser.mjs",
-    "test:mission03": "node --test tests/mission03.services.mjs tests/mission03.portal.mjs tests/mission03.pesee.mjs tests/mission03.legacy.mjs tests/mission03.browser.mjs tests/mission03.baseline.mjs"
+    "test:mission03": "node --test tests/mission03.services.mjs tests/mission03.portal.mjs tests/mission03.pesee.mjs tests/mission03.legacy.mjs tests/mission03.browser.mjs tests/mission03.baseline.mjs",
+    "test:mission04": "node --test tests/mission04.protocol.mjs tests/mission04.legacy.mjs tests/mission04.browser.mjs",
+    "test:mission04:postgres": "node tests/mission04.pg-runner.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

@@ -1,3 +1,5 @@
+import operations from '../repositories/VenteOperationRepository.js';
+import { operationUuid, canoniserVente, empreinteVente, verifierOperation } from './VenteOperationProtocol.js';
 import { kilos } from './TracabiliteRules.js';
 import pool from "../config/db.js";
 import venteRepository from "../repositories/VenteRepository.js";
@@ -77,10 +79,26 @@ class VenteService {
             throw new ApiError(400, "La quantité vendue est limitée à trois décimales.");
         }
         const prixUnitaire = Number(vente.prix_unitaire);
+        const operationId = operationUuid(vente.operation_id);
+        const auteur = String(vente.cree_par || '').toLowerCase();
+        const demande = canoniserVente(vente, quantiteVendue, prixUnitaire, deviseDemandee);
+        vente = { ...vente, stock_id:demande.stock_id, acheteur_nom:demande.acheteur_nom, reference_vente:demande.reference_vente, cree_par:auteur };
+        let commitTente = false;
+        let detruireConnexion = false;
         const client = await pool.connect();
 
         try {
             await client.query("BEGIN");
+            await client.query("SET LOCAL lock_timeout = '5s'");
+            await client.query("SET LOCAL statement_timeout = '30s'");
+            const reservee = await operations.reserver(vente.organisation_id, operationId, auteur, demande, empreinteVente(demande), client);
+            if (!reservee) {
+                const originale = await operations.trouver(vente.organisation_id, operationId, client, true);
+                const reponse = verifierOperation(originale, auteur, demande);
+                commitTente = true;
+                await client.query('COMMIT');
+                return reponse;
+            }
 
             let devise = deviseDemandee;
 
@@ -180,6 +198,8 @@ class VenteService {
             }
 
             const montantTotal = Number((quantiteVendue * prixUnitaire).toFixed(2));
+            if (!Number.isFinite(montantTotal) || montantTotal >= 1e10)
+                throw new ApiError(400, 'Montant total hors capacité de stockage.');
             let nouvelleVente = await venteRepository.creer({
                 ...vente,
                 quantite: quantiteVendue,
@@ -269,22 +289,40 @@ class VenteService {
                 }
             }
 
-            await client.query("COMMIT");
-
-            return {
-                vente: nouvelleVente,
-                stock: stockMisAJour,
-                mouvement,
-                allocations_lots: allocationsCreees,
-                impact_carbone: impactCarbone,
-                avertissements
-            };
+            const reponse = await operations.terminer(vente.organisation_id, operationId, auteur, nouvelleVente.id, {
+                operation_id: operationId,
+                vente: { ...nouvelleVente, operation_id:operationId },
+                stock: stockMisAJour, mouvement, allocations_lots: allocationsCreees,
+                impact_carbone: impactCarbone, avertissements
+            }, client);
+            commitTente = true;
+            await client.query('COMMIT');
+            return reponse;
         } catch (erreur) {
-            await client.query("ROLLBACK");
+            try { await client.query('ROLLBACK'); } catch { detruireConnexion = true; }
+            if (commitTente) {
+                const error = new ApiError(503, 'Résultat de vente incertain. Reprenez exactement le même operation_id.');
+                error.code = 'VENTE_RESULTAT_INCERTAIN';throw error;
+            }
+            if (['42P01','42703'].includes(erreur.code)) {
+                const error = new ApiError(503, 'Schéma idempotence des ventes absent ou incompatible. Création suspendue.');
+                error.code = 'VENTE_IDEMPOTENCE_SCHEMA_REQUIRED';throw error;
+            }
+            if (['55P03','57014','40P01','40001'].includes(erreur.code)) {
+                const error = new ApiError(503, 'Transaction interrompue. Réessayez la même opération de vente.');
+                error.code = 'VENTE_RETRY_SAME_OPERATION';throw error;
+            }
             throw erreur;
         } finally {
-            client.release();
+            client.release(detruireConnexion);
         }
+    }
+
+    async consulterOperation(organisationId, auteurId, operationId) {
+        const operation = await operations.trouver(organisationId, operationUuid(operationId));
+        if (!operation || operation.auteur_id !== String(auteurId).toLowerCase())
+            throw new ApiError(404, 'Opération de vente introuvable.');
+        return verifierOperation(operation, operation.auteur_id, operation.demande);
     }
 
     async listerParOrganisation(organisationId) {

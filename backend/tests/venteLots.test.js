@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { doublerJournalVente } from './mission04.operation-fixture.js';
+let restaurerJournalVente;
 import { strict as assert } from "node:assert";
 
 describe("Allocations FIFO d'une vente hors réseau", function () {
@@ -57,6 +60,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     });
 
     beforeEach(function () {
+        restaurerJournalVente=doublerJournalVente();
         state = {
             commands: [],
             stock: {
@@ -168,6 +172,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     });
 
     afterEach(function () {
+        restaurerJournalVente?.();
         pool.connect = originals.connect;
         venteRepository.creer = originals.creerVente;
         venteRepository.marquerProvenanceComplete = originals.marquerComplete;
@@ -185,6 +190,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     });
 
     const creer = (quantite = 7) => venteService.creer({
+            operation_id: randomUUID(),
         organisation_id: "organisation-1",
         devise: "CDF",
         stock_id: "stock-acier",
@@ -206,7 +212,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
         assert.equal(resultat.impact_carbone, null);
         assert.equal(resultat.avertissements[0].code, "CARBON_FACTOR_NOT_FOUND");
         assert.deepEqual(state.contenants, contenantsAvant);
-        assert.deepEqual(state.commands, ["BEGIN", "COMMIT"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "COMMIT"]);
     });
 
     it("épuise un lot vendu intégralement", async function () {
@@ -234,14 +240,14 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     it("refuse une divergence entre stock agrégé et lots", async function () {
         state.stock.quantite = 21;
         await assert.rejects(() => creer(7), /Stock traçable incohérent/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.allocations.length, 0);
     });
 
     it("refuse un stock actif contenant une quantité restante NULL", async function () {
         state.lots[0].quantite_restante_kg = null;
         await assert.rejects(() => creer(7), /lots non réconciliés/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.allocations.length, 0);
         assert.equal(state.ventes.length, 0);
     });
@@ -249,7 +255,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     it("refuse un stock actif contenant un statut de lot inconnu", async function () {
         state.lots[0].statut_lot = "inconnu";
         await assert.rejects(() => creer(7), /lots non réconciliés/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.allocations.length, 0);
         assert.equal(state.ventes.length, 0);
     });
@@ -259,7 +265,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
             throw new Error("Erreur allocation simulée");
         };
         await assert.rejects(() => creer(7), /Erreur allocation simulée/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.stock.quantite, 20);
         assert.equal(state.lots[0].quantite_restante_kg, 20);
         assert.equal(state.mouvements.length, 0);
@@ -282,7 +288,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
         };
 
         await assert.rejects(() => creer(12), /Seconde allocation refusée/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.deepEqual(state.lots.map(item => item.quantite_restante_kg), [5, 10]);
         assert.equal(state.allocations.length, 0);
         assert.equal(state.ventes.length, 0);
@@ -303,7 +309,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
             throw new Error("Erreur SQL carbone simulée");
         };
         await assert.rejects(() => creer(7), /Erreur SQL carbone simulée/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.stock.quantite, 20);
         assert.equal(state.lots[0].quantite_restante_kg, 20);
         assert.equal(state.allocations.length, 0);
@@ -316,7 +322,7 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
         state.lots[0].poids_reel = 6;
         state.lots[0].quantite_restante_kg = 6;
         await assert.rejects(() => creer(7), /Stock insuffisant/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.ventes.length, 0);
         assert.equal(state.allocations.length, 0);
     });
@@ -324,6 +330,6 @@ describe("Allocations FIFO d'une vente hors réseau", function () {
     it("refuse une quantité de lots insuffisante même si le stock annonce davantage", async function () {
         state.lots[0].quantite_restante_kg = 6;
         await assert.rejects(() => creer(7), /Stock traçable incohérent/);
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
     });
 });

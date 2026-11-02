@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { doublerJournalVente } from './mission04.operation-fixture.js';
+let restaurerJournalVente;
 import { strict as assert } from "node:assert";
 
 describe("Nouveau lot ajouté à un stock legacy puis vendu hors réseau", function () {
@@ -59,6 +62,7 @@ describe("Nouveau lot ajouté à un stock legacy puis vendu hors réseau", funct
     });
 
     beforeEach(function () {
+        restaurerJournalVente=doublerJournalVente();
         state = {
             stock: {
                 id: "stock-legacy",
@@ -119,6 +123,7 @@ describe("Nouveau lot ajouté à un stock legacy puis vendu hors réseau", funct
     });
 
     afterEach(function () {
+        restaurerJournalVente?.();
         pool.connect = originals.connect;
         stockRepository.trouverParTypeDechetPourMiseAJour = originals.stockType;
         stockRepository.trouverParIdPourMiseAJour = originals.stockId;
@@ -148,12 +153,14 @@ describe("Nouveau lot ajouté à un stock legacy puis vendu hors réseau", funct
         assert.equal(state.lot.quantite_restante_kg, null);
 
         const resultat = await venteService.creer({
+            operation_id: randomUUID(),
             organisation_id: "organisation-1",
             devise: "CDF",
             stock_id: "stock-legacy",
             quantite: 15,
             prix_unitaire: 500,
-            acheteur_nom: "Acheteur legacy"
+            acheteur_nom: "Acheteur legacy",
+            cree_par: "utilisateur-1"
         });
 
         assert.equal(state.stock.quantite, 105);

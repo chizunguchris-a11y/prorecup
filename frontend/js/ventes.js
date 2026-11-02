@@ -869,6 +869,33 @@ const calculerMontant = () => {
 
 };
 
+const champsVente = () => [selectStock,champQuantite,champPrixUnitaire,selectDevise,champAcheteur,champReference];
+const restaurerVenteEnAttente = () => {
+    const saved = ProRecupVenteOperation.lire();
+    for (const champ of champsVente()) { champ.disabled=false;champ.readOnly=false; }
+    if (!saved) { boutonEnregistrer.textContent='Enregistrer la vente';return false; }
+    boutonEnregistrer.disabled=false;
+    const p=saved.payload;
+    selectStock.replaceChildren(new Option('Stock de la vente en attente — ' + p.stock_id,p.stock_id));
+    champQuantite.value=p.quantite;champPrixUnitaire.value=p.prix_unitaire;
+    if (![...selectDevise.options].some(option=>option.value===p.devise)) selectDevise.add(new Option(p.devise,p.devise));
+    selectDevise.value=p.devise;champAcheteur.value=p.acheteur_nom;champReference.value=p.reference_vente || '';
+    for (const champ of champsVente()) { if (champ.tagName==='SELECT') champ.disabled=true;else champ.readOnly=true; }
+    informationStock.textContent='Vente en attente de confirmation. Les paramètres d’origine sont conservés, même si le stock a changé.';
+    boutonEnregistrer.textContent='Reprendre la vente en attente';calculerMontant();return true;
+};
+const envoyerVenteEnAttente = async () => {
+    if (boutonEnregistrer.disabled) return;
+    boutonEnregistrer.disabled=true;
+    try {
+        const resultat=await ProRecupVenteOperation.envoyer();
+        const absent=resultat.data?.avertissements?.some(item=>item.code==='CARBON_FACTOR_NOT_FOUND');
+        fermerModale();ProRecup.afficherNotification(absent?"Vente confirmée. Impact carbone non calculé : aucun facteur carbone applicable.":"Vente confirmée, stock diminué et impact carbone calculé.",absent?"avertissement":"succes");
+        await chargerVentes();
+    } catch(error) { afficherErreurFormulaire(error.message + ' La tentative et son UUID sont conservés.'); }
+    finally { boutonEnregistrer.disabled=false;try{boutonEnregistrer.textContent=ProRecupVenteOperation.lire()?'Reprendre la vente en attente':'Enregistrer la vente'}catch{boutonEnregistrer.textContent='Vérifier la tentative avec le compte d’origine'} }
+};
+
 const ouvrirModale = async () => {
 
     formulaireVente.reset();
@@ -888,7 +915,9 @@ const ouvrirModale = async () => {
         "Chargement...";
 
     try {
-
+        if (restaurerVenteEnAttente()) {
+            fenetreVente.classList.remove('cache');fenetreVente.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';return;
+        }
         await Promise.all([
             chargerStocksDisponibles(),
             chargerDeviseOrganisation()
@@ -968,6 +997,7 @@ formulaireVente.addEventListener(
         evenement.preventDefault();
 
         cacherErreurFormulaire();
+        if (ProRecupVenteOperation.lire()) { await envoyerVenteEnAttente();return; }
 
         const stock =
             obtenirStockSelectionne();
@@ -1090,64 +1120,10 @@ formulaireVente.addEventListener(
 
         };
 
-        boutonEnregistrer.disabled =
-            true;
-
-        boutonEnregistrer.textContent =
-            "Enregistrement...";
-
         try {
-
-            const resultat =
-                await ProRecup.requete(
-                    "/api/ventes",
-                    {
-                        method: "POST",
-
-                        body: JSON.stringify(
-                            donneesVente
-                        )
-                    }
-                );
-
-            const facteurCarboneAbsent =
-                Array.isArray(
-                    resultat.data?.avertissements
-                ) &&
-                resultat.data.avertissements.some(
-                    (avertissement) =>
-                        avertissement.code ===
-                        "CARBON_FACTOR_NOT_FOUND"
-                );
-
-            fermerModale();
-
-            ProRecup.afficherNotification(
-                facteurCarboneAbsent
-                    ? "Vente enregistrée et stock diminué. Impact carbone non calculé : aucun facteur carbone applicable."
-                    : "Vente enregistrée, stock diminué et impact carbone calculé.",
-                facteurCarboneAbsent
-                    ? "avertissement"
-                    : "succes"
-            );
-
-            await chargerVentes();
-
-        } catch (erreur) {
-
-            afficherErreurFormulaire(
-                erreur.message
-            );
-
-        } finally {
-
-            boutonEnregistrer.disabled =
-                false;
-
-            boutonEnregistrer.textContent =
-                "Enregistrer la vente";
-
-        }
+            ProRecupVenteOperation.preparer(donneesVente);
+            await envoyerVenteEnAttente();
+        } catch (erreur) { afficherErreurFormulaire(erreur.message); }
 
     }
 );

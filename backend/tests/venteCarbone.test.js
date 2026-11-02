@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto';
+import { doublerJournalVente } from './mission04.operation-fixture.js';
+let restaurerJournalVente;
 import { strict as assert } from "node:assert";
 
 describe("Création d'une vente et impact carbone hors réseau", function () {
@@ -48,6 +51,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
     });
 
     beforeEach(function () {
+        restaurerJournalVente=doublerJournalVente();
         state = {
             commands: [],
             stockUpdates: [],
@@ -103,6 +107,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
     });
 
     afterEach(function () {
+        restaurerJournalVente?.();
         pool.connect = originals.connect;
         venteRepository.creer = originals.creerVente;
         stockRepository.trouverParIdPourMiseAJour = originals.trouverStock;
@@ -115,6 +120,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
 
     const creerVente = () =>
         venteService.creer({
+            operation_id: randomUUID(),
             organisation_id: "organisation-1",
             devise: "CDF",
             stock_id: "stock-acier",
@@ -151,7 +157,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
                 message: "Impact carbone non calculé : aucun facteur carbone applicable."
             }
         ]);
-        assert.deepEqual(state.commands, ["BEGIN", "COMMIT"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "COMMIT"]);
         assert.equal(state.released, true);
     });
 
@@ -173,7 +179,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
         });
         assert.equal(resultat.impact_carbone.co2e_estime_kg, 5.25);
         assert.deepEqual(resultat.avertissements, []);
-        assert.deepEqual(state.commands, ["BEGIN", "COMMIT"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "COMMIT"]);
     });
 
     it("propage une erreur technique carbone et conserve le rollback", async function () {
@@ -186,7 +192,7 @@ describe("Création d'une vente et impact carbone hors réseau", function () {
             /Erreur SQL simulée/
         );
 
-        assert.deepEqual(state.commands, ["BEGIN", "ROLLBACK"]);
+        assert.deepEqual(state.commands.filter(sql=>!sql.startsWith('SET LOCAL')), ["BEGIN", "ROLLBACK"]);
         assert.equal(state.impacts.length, 0);
         assert.equal(state.released, true);
     });

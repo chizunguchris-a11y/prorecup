@@ -1,6 +1,7 @@
 ﻿import { body } from "express-validator";
 
 const venteValidator = [
+    body('operation_id').notEmpty().withMessage('Un UUID de vente stable est obligatoire.').bail().isUUID(4).withMessage('operation_id doit être un UUID v4.'),
 
     body("stock_id")
         .notEmpty()

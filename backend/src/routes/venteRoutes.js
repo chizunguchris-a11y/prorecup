@@ -167,4 +167,5 @@ router.post(
     venteController.creer
 );
 
+router.get('/operations/:operationId', authMiddleware, roleMiddleware(['manager','admin']), venteController.operation);
 export default router;

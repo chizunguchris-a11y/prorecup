@@ -4,6 +4,9 @@ import ApiResponse from "../utils/ApiResponse.js";
 
 const venteController = {
 
+    operation: asyncHandler(async (req,res) => ApiResponse.success(res, 'Reçu de vente récupéré.',
+        await venteService.consulterOperation(req.utilisateur.organisationId, req.utilisateur.id, req.params.operationId))),
+
     creer: asyncHandler(async (req, res) => {
 
         const donneesVente = {

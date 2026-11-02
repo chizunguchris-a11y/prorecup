@@ -1,3 +1,5 @@
+﻿import { verifierReplay } from './TerrainParcoursService.js';
+import { verifierFinMission } from './TerrainParcoursService.js';
 ﻿import pool
     from "../config/db.js";
 
@@ -186,6 +188,9 @@ class TerrainMissionService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             /*
@@ -235,6 +240,7 @@ class TerrainMissionService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante
@@ -244,6 +250,7 @@ class TerrainMissionService {
                         .cree_par !==
                         agentTerrain
                             .utilisateur_id
+                    || operationExistante.type_evenement !== 'mission_demarree'
                 ) {
 
                     throw new ApiError(
@@ -548,6 +555,9 @@ class TerrainMissionService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             /*
@@ -599,6 +609,7 @@ class TerrainMissionService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante
@@ -715,6 +726,7 @@ class TerrainMissionService {
             /*
              * Libérer les ressources.
              */
+            await verifierFinMission(connexion, missionId, donnees.survenu_le);
             const agent =
                 await terrainMissionRepository
                     .rendreAgentDisponible(

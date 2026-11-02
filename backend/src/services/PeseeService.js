@@ -1,3 +1,4 @@
+import { verifierEtape } from './TerrainParcoursService.js';
 import pool from "../config/db.js";
 import peseeRepository from "../repositories/PeseeRepository.js";
 import ApiError from "../utils/ApiError.js";
@@ -51,6 +52,9 @@ class PeseeService {
         const connexion = await pool.connect();
         try {
             await connexion.query("BEGIN");
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
             const codesQr = Array.isArray(donnees.codes_qr)
                 ? [...new Set(donnees.codes_qr.map(code => String(code).trim().toUpperCase()).filter(Boolean))].sort()
                 : [];
@@ -63,6 +67,9 @@ class PeseeService {
                     ? Number(existante.tare) : Number(donnees.tare);
                 if (existante.mission_id !== missionId || existante.collecte_id !== collecteId ||
                     existante.utilisateur_id !== identite.utilisateur_id || existante.type !== type ||
+                    ['latitude', 'longitude', 'precision_gps'].some(key =>
+                        (existante[key] == null ? null : Number(existante[key])) !==
+                        (donnees[key] == null ? null : Number(donnees[key]))) ||
                     existante.balance_id !== donnees.balance_id ||
                     Number(existante.poids_brut) !== Number(donnees.poids_brut) ||
                     Number(existante.tare) !== tareDemandee ||
@@ -107,6 +114,7 @@ class PeseeService {
                 if (new Date(valeurs.dateHeure) < new Date(contexte.collecte_demarree_le))
                     throw new ApiError(409, "La pesée ne peut pas précéder le démarrage de la collecte.");
             }
+            if (type === 'terrain') await verifierEtape(connexion, missionId, collecteId, 'enregistrer_pesee', valeurs.dateHeure);
             const derniere = await peseeRepository.trouverDerniere(
                 collecteId, identite.organisation_id, type, connexion);
             const devientCourante = doitSuperseder(valeurs.dateHeure, derniere?.date_heure);

@@ -9,7 +9,8 @@ class TerrainPreuveRepository {
         collecteId,
         agentId,
         organisationId,
-        connexion = pool
+        connexion = pool,
+        verrouiller = false
     ) {
 
         const resultat =
@@ -49,7 +50,8 @@ class TerrainPreuveRepository {
                   AND m.agent_id = $3
                   AND m.organisation_id = $4
 
-                LIMIT 1;
+                LIMIT 1
+                ${verrouiller ? 'FOR UPDATE OF m, mc' : ''};
                 `,
                 [
                     missionId,

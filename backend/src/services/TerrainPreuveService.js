@@ -1,3 +1,5 @@
+﻿import { verifierEtape } from './TerrainParcoursService.js';
+import pool from "../config/db.js";
 ﻿import {
     createHash
 } from "node:crypto";
@@ -166,12 +168,37 @@ class TerrainPreuveService {
     }
 
 
-    async enregistrer(
+    async lierTicket(...args) {
+        const lien = await peseeRepository.lierPreuveParOperation(...args);
+        if (!lien) throw new ApiError(409, 'Ce ticket est déjà lié à une autre pesée ou cette pesée possède déjà une autre preuve.');
+        return lien;
+    }
+
+    async enregistrer(missionId, collecteId, agentTerrain, donnees, fichier) {
+        this.validerUuid(donnees.operation_id, "L'identifiant de l'opération");
+        const connexion = await pool.connect();
+        try {
+            await connexion.query('BEGIN');
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
+            const result = await this.enregistrerAvecConnexion(missionId, collecteId, agentTerrain, donnees, fichier, connexion);
+            await connexion.query('COMMIT');
+            return result;
+        } catch (error) {
+            await connexion.query('ROLLBACK');
+            // A failed COMMIT may already be durable: never delete the immutable Storage object here.
+            throw error;
+        } finally { connexion.release(); }
+    }
+
+    async enregistrerAvecConnexion(
         missionId,
         collecteId,
         agentTerrain,
         donnees,
-        fichier
+        fichier,
+        connexion
     ) {
 
         this.validerUuid(
@@ -332,7 +359,9 @@ const extension =
                     collecteId,
                     agentTerrain.agent_id,
                     agentTerrain
-                        .organisation_id
+                        .organisation_id,
+                    connexion,
+                    true
                 );
 
 
@@ -345,13 +374,94 @@ const extension =
 
         }
 
+        const hash =
+            createHash(
+                "sha256"
+            )
+                .update(
+                    fichier.buffer
+                )
+                .digest(
+                    "hex"
+                );
+
+
+        /*
+         * Idempotence AVANT upload.
+         */
+        const existante =
+            await terrainPreuveRepository
+                .trouverParOperation(
+                    donnees.operation_id,
+                    agentTerrain
+                        .organisation_id,
+                    connexion
+                );
+
+
+        if (existante) {
+
+            if (
+                existante.mission_id !==
+                    missionId ||
+                existante.collecte_id !==
+                    collecteId ||
+                existante.cree_par !==
+                    agentTerrain
+                        .utilisateur_id ||
+                existante.type_preuve !==
+                    typePreuve ||
+                existante.hash_sha256 !== hash ||
+                new Date(existante.pris_le).getTime() !== datePrise.getTime() ||
+                ['latitude', 'longitude', 'precision_gps'].some(key =>
+                    (existante[key] == null ? null : Number(existante[key])) !==
+                    (donnees[key] == null || donnees[key] === '' ? null : Number(donnees[key])))
+            ) {
+
+                throw new ApiError(
+                    409,
+                    "Cet identifiant d'opération a déjà été utilisé pour une autre preuve."
+                );
+
+            }
+
+
+            if (
+                typePreuve === "ticket_balance" &&
+                donnees.pesee_operation_id
+            ) {
+                await this.lierTicket(
+                    donnees.pesee_operation_id,
+                    existante.id,
+                    agentTerrain.organisation_id,
+                    missionId,
+                    collecteId,
+                    agentTerrain.utilisateur_id,
+                    connexion
+                );
+            }
+
+            return {
+
+                deja_traitee:
+                    true,
+
+                preuve:
+                    existante
+
+            };
+
+        }
+
+
         if (
             typePreuve === "ticket_balance" &&
             donnees.pesee_operation_id
         ) {
             const pesee = await peseeRepository.trouverParOperation(
                 donnees.pesee_operation_id,
-                agentTerrain.organisation_id
+                agentTerrain.organisation_id,
+                connexion
             );
             if (
                 !pesee ||
@@ -440,79 +550,8 @@ const extension =
         }
 
 
-        /*
-         * Idempotence AVANT upload.
-         */
-        const existante =
-            await terrainPreuveRepository
-                .trouverParOperation(
-                    donnees.operation_id,
-                    agentTerrain
-                        .organisation_id
-                );
-
-
-        if (existante) {
-
-            if (
-                existante.mission_id !==
-                    missionId ||
-                existante.collecte_id !==
-                    collecteId ||
-                existante.cree_par !==
-                    agentTerrain
-                        .utilisateur_id ||
-                existante.type_preuve !==
-                    typePreuve
-            ) {
-
-                throw new ApiError(
-                    409,
-                    "Cet identifiant d'opération a déjà été utilisé pour une autre preuve."
-                );
-
-            }
-
-
-            if (
-                typePreuve === "ticket_balance" &&
-                donnees.pesee_operation_id
-            ) {
-                await peseeRepository.lierPreuveParOperation(
-                    donnees.pesee_operation_id,
-                    existante.id,
-                    agentTerrain.organisation_id,
-                    missionId,
-                    collecteId,
-                    agentTerrain.utilisateur_id
-                );
-            }
-
-            return {
-
-                deja_traitee:
-                    true,
-
-                preuve:
-                    existante
-
-            };
-
-        }
-
-
-        const hash =
-            createHash(
-                "sha256"
-            )
-                .update(
-                    fichier.buffer
-                )
-                .digest(
-                    "hex"
-                );
-
-
+        if (['avant_collecte', 'apres_collecte'].includes(typePreuve))
+            await verifierEtape(connexion, missionId, collecteId, typePreuve, donnees.pris_le);
         const chemin =
             [
                 agentTerrain
@@ -524,13 +563,9 @@ const extension =
 
                 typePreuve,
 
-                `${donnees.operation_id}.${extension}`
+                `${donnees.operation_id}-${hash}.${extension}`
             ]
                 .join("/");
-
-
-        let fichierEnvoye =
-            false;
 
 
         try {
@@ -546,11 +581,9 @@ const extension =
                         mimeType:
     			    mimeReel
                     }
-                );
-
-
-            fichierEnvoye =
-                true;
+                ).catch(error => {
+                    if (error.code !== 'STORAGE_DUPLICATE') throw error;
+                });
 
 
             const preuve =
@@ -628,7 +661,8 @@ const extension =
                             operation_id:
                                 donnees.operation_id
 
-                        }
+                        },
+                        connexion
                     );
 
 
@@ -639,7 +673,8 @@ const extension =
                         .trouverParOperation(
                             donnees.operation_id,
                             agentTerrain
-                                .organisation_id
+                                .organisation_id,
+                            connexion
                         );
 
 
@@ -649,13 +684,14 @@ const extension =
                         typePreuve === "ticket_balance" &&
                         donnees.pesee_operation_id
                     ) {
-                        await peseeRepository.lierPreuveParOperation(
+                        await this.lierTicket(
                             donnees.pesee_operation_id,
                             existanteApres.id,
                             agentTerrain.organisation_id,
                             missionId,
                             collecteId,
-                            agentTerrain.utilisateur_id
+                            agentTerrain.utilisateur_id,
+                            connexion
                         );
                     }
 
@@ -681,13 +717,14 @@ const extension =
                 typePreuve === "ticket_balance" &&
                 donnees.pesee_operation_id
             ) {
-                await peseeRepository.lierPreuveParOperation(
+                await this.lierTicket(
                     donnees.pesee_operation_id,
                     preuve.id,
                     agentTerrain.organisation_id,
                     missionId,
                     collecteId,
-                    agentTerrain.utilisateur_id
+                    agentTerrain.utilisateur_id,
+                    connexion
                 );
             }
 
@@ -703,30 +740,8 @@ const extension =
 
 
         } catch (erreur) {
-
-            /*
-             * Compensation :
-             * pas de ligne PostgreSQL =
-             * pas de fichier orphelin.
-             */
-            if (
-                fichierEnvoye
-            ) {
-
-                try {
-
-                    await terrainStorageService
-                        .supprimerFichier(
-                            chemin
-                        );
-
-                } catch {
-                    // Ne masque pas l'erreur initiale.
-                }
-
-            }
-
-
+            // Keep the content-addressed object: the database commit/link may be uncertain.
+            // A retry reuses this exact path and never overwrites another proof.
             throw erreur;
 
         }

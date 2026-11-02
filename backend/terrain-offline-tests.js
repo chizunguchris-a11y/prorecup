@@ -137,7 +137,7 @@ document.getElementById('run').onclick = async () => {
             };
             opening.onerror = () => reject(opening.error);
         });
-        check(raw.row.statut === 'envoi' && raw.row.blob instanceof Blob && raw.meta.statut === 'en_attente' && raw.meta.retry_count === 0 && raw.meta.last_error === null && raw.meta.next_attempt_at === 0 && raw.meta.post_initiated === false, 'double rechargement : Blob historique intact et queue_meta incohérent réparé');
+        check(raw.row.statut === 'envoi' && raw.row.blob instanceof Blob && raw.meta.statut === 'envoi' && afterDoubleReload[0].retry_count === 0 && afterDoubleReload[0].last_error === null, 'double rechargement : Blob historique intact, métadonnées lues sans réarmer un autre onglet');
         let reloadedSent = 0;
         await store.sync({ post: async () => reloadedSent++ }, () => true);
         check(reloadedSent === 1 && !(await store.list()).length, 'double rechargement : reprise réelle de la photo historique');
@@ -171,7 +171,7 @@ document.getElementById('run').onclick = async () => {
         brokenRows = await store.list();
         check(brokenRows[0].statut === 'recuperation' && brokenRows[0].operation_id === brokenPhoto.operation_id, 'double rechargement : récupération et operation_id conservés');
         const replacementDate = '2026-09-22T11:00:00.000Z';
-        const replaced = await store.replaceUnreadablePhoto(new Blob(['nouvelle-photo'], { type: 'image/jpeg' }), replacementDate);
+        const replaced = await store.replaceUnreadablePhoto(new Blob(['nouvelle-photo'], { type: 'image/jpeg' }), replacementDate, { latitude: 0, longitude: 0, precision_gps: 1 });
         brokenRows = await store.list();
         check(replaced.operation_id === brokenPhoto.operation_id && brokenRows[0].payload.pris_le === replacementDate && await brokenRows[0].blob.text() === 'nouvelle-photo' && brokenRows[0].statut === 'en_attente', 'remplacement ciblé : données métier et operation_id sûr conservés');
         const recoveryOrder = [];
@@ -192,7 +192,7 @@ document.getElementById('run').onclick = async () => {
             opening.onerror = () => reject(opening.error);
         });
         let uncertainReplacementBlocked = false;
-        try { await store.replaceUnreadablePhoto(new Blob(['autre-preuve'], { type: 'image/jpeg' }), replacementDate); }
+        try { await store.replaceUnreadablePhoto(new Blob(['autre-preuve'], { type: 'image/jpeg' }), replacementDate, { latitude: 0, longitude: 0, precision_gps: 1 }); }
         catch (error) { uncertainReplacementBlocked = /déjà pu commencer/.test(error.message); }
         check(uncertainReplacementBlocked && (await store.list())[0].operation_id !== null, 'POST déjà initié : remplacement local refusé, aucune nouvelle operation_id');
         store.close();
@@ -205,14 +205,18 @@ document.getElementById('run').onclick = async () => {
             const result = await store.sync({ post: async () => { calls++; throw error; } }, () => true);
             const rows = await store.list();
             check(calls === 1 && rows.length === 2 && rows[0].operation_id === p.operation_id && rows[0].payload.survenu_le === p.survenu_le, 'conservation et blocage après ' + (error.status || error.code));
-            if (error.status === 400) {
+            if ([400, 403].includes(error.status)) {
                 check(rows[0].statut === 'erreur' && (await store.view()).missions[0].bloquee, '4xx définitif bloque la mission');
                 await store.sync({ post: async () => calls++ }, () => true);
                 check(calls === 1, 'pas de retry automatique du refus');
-                await store.discardRejected();
-                const next = await store.enqueue(context('demarrer_mission'), payload('demarrer_mission'));
-                check(next.operation_id !== p.operation_id, 'nouvelle tentative après refus : nouvel identifiant');
-            } else if ([401, 403].includes(error.status)) {
+                let deletionDenied = false;
+                try { await store.discardRejected(); } catch { deletionDenied = true; }
+                check(deletionDenied && (await store.list()).length === 2, 'suppression destructive interdite');
+                await store.retryRejected(rows[0].id);
+                const ids = [];
+                await store.sync({ post: async (url, body) => ids.push(body.operation_id) }, () => true);
+                check(ids[0] === p.operation_id && !(await store.list()).length, 'reprise explicite du même UUID sans perte des dépendances');
+            } else if (error.status === 401) {
                 check(result.stopped === 'auth', 'reconnexion requise sans perte');
                 await store.sync({ post: async () => calls++ }, () => true);
                 check((await store.list()).length === 0, 'reprise après reconnexion');
@@ -307,9 +311,12 @@ document.getElementById('cache-test').onclick = async () => {
                 });
             });
         }
-        const cache = await caches.open('prorecup-terrain-shell-v1-6');
-        const urls = (await cache.keys()).map(r => r.url);
-        document.getElementById('result').textContent = urls.length === 10 && !urls.some(u => u.includes('/api/')) ? 'PASS 10 fichiers du shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.' : 'FAIL cache : ' + urls.join(', ');
+        const names = (await caches.keys()).filter(name => name.startsWith('prorecup-terrain-shell-'));
+        const urls = (await Promise.all(names.map(async name => (await (await caches.open(name)).keys()).map(request => request.url)))).flat();
+        const essential = ['index.html', 'js/app.js', 'js/offline.js'].every(file => urls.some(url => new URL(url).pathname.endsWith('/' + file)));
+        document.getElementById('result').textContent = essential && !urls.some(url => new URL(url).pathname.includes('/api/'))
+            ? 'PASS shell en cache, aucune réponse API. Ouvrez /agent-app/index.html puis coupez le serveur du shell et rechargez.'
+            : 'FAIL cache : ' + urls.join(', ');
     } catch (e) { document.getElementById('result').textContent = 'FAIL ' + e.message; }
 };
 document.getElementById('stop-shell').onclick = async () => {

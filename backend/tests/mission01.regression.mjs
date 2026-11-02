@@ -86,7 +86,7 @@ test('association presente: API expose 0/1 puis 1/1 avec evenement de fin',async
 test('PWA: message de recuperation et versions du shell coherentes',()=>{
  const app=readFileSync(new URL('../../agent-app/js/app.js',import.meta.url),'utf8');assert.match(app,/Mission à préparer : aucune collecte associée/);
  const sw=readFileSync(new URL('../../agent-app/sw.js',import.meta.url),'utf8');const html=readFileSync(new URL('../../agent-app/index.html',import.meta.url),'utf8');
- assert.ok(sw.includes('app.js?v=1-21'));assert.ok(html.includes('app.js?v=1-21'));
+ const version = sw.match(/app\.js\?v=[^'\"]+/)?.[0];assert.ok(version);assert.ok(html.includes(version));
 });
 
 test('PWA hors ligne: mission vide sans depart ni fin proposes',async()=>{

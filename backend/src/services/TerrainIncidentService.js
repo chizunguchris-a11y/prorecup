@@ -1,3 +1,4 @@
+﻿import { verifierReplay } from './TerrainParcoursService.js';
 ﻿import pool
     from "../config/db.js";
 
@@ -289,6 +290,9 @@ class TerrainIncidentService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             const mission =
@@ -332,6 +336,7 @@ class TerrainIncidentService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante

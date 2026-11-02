@@ -409,9 +409,12 @@
         clearTimeout(syncTimer);
         const store = terrainStore;
         const avaitDesActions = (await store.list()).length > 0;
-        synchronisation = store.sync(api, authorized, () => { updateQueueUI().catch(() => {}); }, { forceBackoff });
+        const owner = terrainOwner;
+        const ownsStore = () => terrainStore === store && terrainOwner === owner && authorized();
+        synchronisation = store.sync(api, ownsStore, () => { updateQueueUI().catch(() => {}); }, { forceBackoff });
         try {
             const result = await synchronisation;
+            if (terrainStore !== store || terrainOwner !== owner) return;
             if (result.stopped === 'auth' && navigator.onLine) {
                 reconnexionRequise = true;
                 afficherMessage(messageConnexion, 'Reconnectez-vous pour envoyer vos actions conservées sur cet appareil.', 'erreur');
@@ -422,6 +425,10 @@
                 afficherMessage(messageApplication, result.replacementAllowed
                     ? 'La preuve photo locale est illisible. Remplacez uniquement cette photo pour reprendre la synchronisation.'
                     : 'La preuve photo locale est illisible, mais un envoi a déjà pu commencer. Faites vérifier cette preuve avant tout remplacement.', 'erreur');
+            } else if (result.stopped === 'lock') {
+                afficherMessage(messageApplication, 'Envoi suspendu : ce navigateur ne permet pas la synchronisation exclusive. Vos actions restent conservées.', 'erreur');
+            } else if (result.stopped === 'refresh') {
+                afficherMessage(messageApplication, 'Actions envoyées ; relecture serveur non confirmée. Actualisez la journée avant de poursuivre.', 'erreur');
             } else if (result.stopped === 'backoff' && navigator.onLine) {
                 syncTimer = setTimeout(synchroniser, Math.max(1000, result.at - Date.now()));
             } else if (!result.stopped && avaitDesActions) {
@@ -456,7 +463,7 @@
             validerPhoto(file);
             const instant = new Date(localDate);
             if (!Number.isFinite(instant.getTime())) throw new Error('Indiquez la date et l’heure réelles de prise de la photo.');
-            await terrainStore.replaceUnreadablePhoto(file, instant.toISOString());
+            await terrainStore.replaceUnreadablePhoto(file, instant.toISOString(), await obtenirGps());
             replaceProofForm.reset();
             replaceProofForm.hidden = true;
             afficherMessage(messageApplication, 'Nouvelle preuve enregistrée. La synchronisation reprend.', 'succes');
@@ -1058,20 +1065,26 @@
             !(
                 await confirmerTerrain({
                     titre:
-                        "Retirer les actions refus\u00e9es ?",
+                        "Réessayer l’action refusée ?",
                     message:
-                        'Retirer l’action refusée et toutes les actions suivantes, y compris leurs photos ? Vous devrez les saisir à nouveau.',
+                        'Après vérification de la tournée, réessayer exactement la même action ? Les photos, pesées et actions suivantes seront conservées. Un refus persistant nécessite l’aide du Manager.',
                     texteConfirmer:
-                        "Retirer et recommencer",
+                        "Vérifier et réessayer",
                     danger:
                         true
                 })
             )
         ) return;
         try {
-            await terrainStore.discardRejected();
-            await chargerJournee();
+            if (!authorized()) throw new Error('Reconnectez-vous au compte propriétaire des actions.');
+            const store = terrainStore;
+            const first = (await store.list()).find(row => row.statut === 'erreur');
+            const response = await api.get('/terrain/journee');
+            if (store !== terrainStore || !authorized()) throw new Error('La session a changé.');
+            await store.saveDay(response?.data || response);
+            if (first) await store.retryRejected(first.id);
             await updateQueueUI();
+            await synchroniser({ forceBackoff: true });
         } catch (e) { afficherMessage(messageApplication, e.message, 'erreur'); }
     });
     let journeeCourante = null;
@@ -1080,6 +1093,8 @@
     const fichiersTentatives = new Map();
     const actionsAcquittees = new Set();
     const photosFormulaires = new WeakMap();
+    const ticketsFormulaires = new WeakMap();
+    const brouillonsEnCours = new WeakMap();
     const preparationsPhoto = new WeakSet();
     const fermerCameras = new WeakMap();
     const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -1654,6 +1669,9 @@
         if ((actionEnCours && !pendantAction) || synchronisation) return null;
         if (chargementJournee) return chargementJournee;
         if (!silencieux) masquerMessage(messageApplication);
+        const store = terrainStore;
+        const owner = terrainOwner;
+        const current = () => store === terrainStore && owner === terrainOwner;
         chargementJournee = (async () => {
             try {
                 if (!navigator.onLine) throw Object.assign(new Error('Hors ligne'), { code: 'NETWORK_ERROR' });
@@ -1664,15 +1682,18 @@
                         ),
                         5000
                     );
+                if (!current()) return null;
                 const journee = reponse?.data || reponse;
                 listeMissions.querySelectorAll(".saisie-terrain").forEach(formulaire =>
                     fermerCameras.get(formulaire)?.());
-                await terrainStore.saveDay(journee);
-                const locale = await terrainStore.view();
+                await store.saveDay(journee);
+                if (!current()) return null;
+                const locale = await store.view();
                 afficherJournee(locale);
                 return locale;
             } catch (erreur) {
-                if (terrainStore && window.ProRecup.offline.retryable(erreur)) {
+                if (!current()) return null;
+                if (store && window.ProRecup.offline.retryable(erreur)) {
                     const locale = await terrainStore.view();
                     afficherJournee(locale);
                     if (!silencieux) afficherMessage(messageApplication, 'Tournée locale — les nouvelles actions seront conservées sur cet appareil.', 'succes');
@@ -1718,7 +1739,9 @@
             );
 
 
+            if (synchronisation) await synchronisation;
             const owner = auth.obtenirUtilisateur()?.id;
+            if (!UUID.test(owner || '')) throw new Error('Identité de session invalide.');
             reconnexionRequise = false;
             if (terrainOwner !== owner) {
                 terrainStore?.close();
@@ -2025,6 +2048,7 @@
                     .toISOString().slice(0, 19);
                 dateInput.readOnly = true;
                 message.textContent = "Photo prise. Vous pouvez l’enregistrer ou la reprendre.";
+                formulaire.dispatchEvent(new Event('change', { bubbles: true }));
                 arreter();
             } catch (erreur) {
                 message.textContent = erreur.message;
@@ -2085,12 +2109,12 @@
         });
     };
 
-    const ouvrirSaisie = (carte, action, mission, etape) => {
+    const ouvrirSaisie = async (carte, action, mission, etape) => {
         fermerSaisie(carte.querySelector(".saisie-terrain"));
         const formulaire = document.createElement("form");
         formulaire.className = "saisie-terrain";
         if (action === "terminer_collecte") {
-            const pesee = [...(etape.collecte?.pesees || [])].reverse().find(item => item.type === "terrain");
+            const pesee = [...(etape.collecte?.pesees || [])].reverse().find(item => item.type === "terrain" && item.est_courante !== false);
             formulaire.innerHTML = [
                 '<label>Résultat<select name="resultat_terrain" required>',
                 '<option value="collectee">Collectée</option>',
@@ -2133,6 +2157,35 @@
         formulaire.querySelector("[data-annuler]").addEventListener("click", () => fermerSaisie(formulaire));
         if (estPhoto(action)) preparerPhoto(formulaire);
         if (action === "enregistrer_pesee") preparerScannerQr(formulaire);
+        const contexte = contexteOperation(mission, etape);
+        const store = terrainStore;
+        formulaire.insertAdjacentHTML('beforeend', '<p data-draft-status role="status"></p>');
+        const status = formulaire.querySelector('[data-draft-status]');
+        const draft = await store.getDraft(contexte);
+        if (draft) {
+            for (const [key, value] of Object.entries(draft.fields || {})) {
+                const field = formulaire.elements.namedItem(key);
+                if (field && field.type !== 'file') field.value = value;
+            }
+            if (draft.blob && estPhoto(action)) photosFormulaires.set(formulaire, { fichier: draft.blob, pris_le: draft.pris_le });
+            if (draft.blob && action === 'enregistrer_pesee') ticketsFormulaires.set(formulaire, draft.blob);
+            status.textContent = 'Brouillon local restauré, photo éventuelle conservée. Vérifiez puis enregistrez.';
+        }
+        const save = () => {
+            if (actionEnCours) return;
+            const fields = Object.fromEntries([...new FormData(formulaire)].filter(([, value]) => typeof value === 'string'));
+            const capture = photosFormulaires.get(formulaire);
+            const ticket = formulaire.elements.ticket_balance?.files?.[0] || ticketsFormulaires.get(formulaire);
+            const blob = estPhoto(action) ? capture?.fichier : ticket;
+            const values = { fields, pris_le: capture?.pris_le || null };
+            const previous = brouillonsEnCours.get(formulaire) || Promise.resolve();
+            const saving = previous.catch(() => {}).then(() => store.saveDraft(contexte, values, blob));
+            brouillonsEnCours.set(formulaire, saving);
+            saving.then(() => { if (brouillonsEnCours.get(formulaire) !== saving) return; status.textContent = 'Brouillon conservé sur cet appareil. Enregistrez pour le synchroniser.'; },
+                () => { status.textContent = 'Brouillon non sauvegardé : stockage indisponible. Gardez cette saisie ouverte.'; });
+        };
+        formulaire.addEventListener('input', save);
+        formulaire.addEventListener('change', save);
         return formulaire;
     };
 
@@ -2140,6 +2193,7 @@
         // L'instant est pris au clic, avant le GPS et tout accès réseau.
         const instantAction = new Date().toISOString();
         const contexte = contexteOperation(mission, etape);
+        if (formulaire) await brouillonsEnCours.get(formulaire);
         const cle = cleOperation(contexte);
         if (actionsAcquittees.has(cle)) return;
         const photo = estPhoto(contexte.action);
@@ -2155,7 +2209,7 @@
                     throw new Error("Cette tentative attend la photo d’origine. Resélectionnez-la pour réessayer, ou actualisez la tournée.");
             }
             if (contexte.action === "enregistrer_pesee") {
-                const ticket = formulaire?.elements.ticket_balance?.files?.[0];
+                const ticket = formulaire?.elements.ticket_balance?.files?.[0] || ticketsFormulaires.get(formulaire);
                 if (ticket?.size) validerPhoto(ticket);
                 fichier = ticket?.size ? ticket : null;
             }
@@ -2187,7 +2241,7 @@
                 if (contexte.action === "enregistrer_pesee") {
                     const champs = Object.fromEntries(new FormData(formulaire));
                     Object.assign(donnees, validerPesee(champs));
-                    const ticket = formulaire.elements.ticket_balance?.files?.[0];
+                    const ticket = formulaire.elements.ticket_balance?.files?.[0] || ticketsFormulaires.get(formulaire);
                     if (ticket?.size) validerPhoto(ticket);
                     fichier = ticket?.size ? ticket : null;
                 }
@@ -2371,7 +2425,7 @@
                 ].includes(etape.action)
             ) {
                 const formulaire =
-                    ouvrirSaisie(
+                    await ouvrirSaisie(
                         carte,
                         etape.action,
                         mission,

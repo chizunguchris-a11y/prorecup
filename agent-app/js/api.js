@@ -65,6 +65,8 @@
 
 
             let reponse;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
 
 
             try {
@@ -74,6 +76,8 @@
                         config.API_BASE_URL +
                         chemin,
                         {
+                            signal: controller.signal,
+                            cache: 'no-store',
                             method:
                                 options.method ||
                                 "GET",
@@ -95,6 +99,7 @@
 
             } catch (erreur) {
 
+                clearTimeout(timeout);
                 const erreurReseau =
                     new Error(
                         "Impossible de joindre le serveur Pro Récup."
@@ -121,6 +126,12 @@
             }
 
 
+            clearTimeout(timeout);
+            if (reponse.ok && (!donnees || typeof donnees !== 'object' || donnees.success !== true)) {
+                const error = new Error('Réponse serveur non confirmée. La même opération sera réessayée.');
+                error.code = 'PROTOCOL_ERROR';
+                throw error;
+            }
             if (!reponse.ok) {
 
                 const message =
@@ -153,6 +164,7 @@
 
 
     window.ProRecup.api = {
+        requireReceipt: true,
 
         get:
             function (

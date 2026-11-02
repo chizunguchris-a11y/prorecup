@@ -272,11 +272,11 @@ class TerrainStorageService {
                                         "Erreur Storage inconnue.";
 
 
-                                    reject(
-                                        new Error(
-                                            `Supabase Storage ${reponse.statusCode} : ${message}`
-                                        )
-                                    );
+                                    const error = new Error(`Supabase Storage ${reponse.statusCode} : ${message}`);
+                                    if (donnees?.error === 'Duplicate' || donnees?.code === 'Duplicate' ||
+                                        (reponse.statusCode === 409 && message === 'The resource already exists'))
+                                        error.code = 'STORAGE_DUPLICATE';
+                                    reject(error);
 
                                 }
                             );
@@ -285,6 +285,7 @@ class TerrainStorageService {
                     );
 
 
+                requete.setTimeout(20000, () => requete.destroy(new Error('Délai Storage dépassé. Réessayez la même opération.')));
                 requete.on(
                     "error",
                     reject
@@ -422,6 +423,7 @@ class TerrainStorageService {
                     );
 
 
+                requete.setTimeout(20000, () => requete.destroy(new Error('Délai Storage dépassé. Réessayez la même opération.')));
                 requete.on(
                     "error",
                     reject
@@ -682,6 +684,7 @@ class TerrainStorageService {
                     );
 
 
+                requete.setTimeout(20000, () => requete.destroy(new Error('Délai Storage dépassé. Réessayez la même opération.')));
                 requete.on(
                     "error",
                     reject

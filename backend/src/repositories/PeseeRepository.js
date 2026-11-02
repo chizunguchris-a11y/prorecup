@@ -110,7 +110,11 @@ class PeseeRepository {
               AND mission_id = $4
               AND collecte_id = $5
               AND utilisateur_id = $6
-              AND preuve_id IS NULL
+              AND (preuve_id IS NULL OR preuve_id = $1)
+              AND NOT EXISTS (
+                  SELECT 1 FROM pesees autre
+                  WHERE autre.preuve_id = $1 AND autre.operation_id <> $2
+              )
             RETURNING id;
         `, [preuveId, operationId, organisationId, missionId, collecteId, utilisateurId]);
         return resultat.rows[0] || null;

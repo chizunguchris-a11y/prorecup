@@ -3,8 +3,8 @@
     const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const actions = ['demarrer_mission', 'arriver_site', 'demarrer_collecte', 'avant_collecte', 'enregistrer_pesee', 'ticket_balance', 'terminer_collecte', 'apres_collecte', 'terminer_mission', 'signaler_incident'];
     const photo = type => ['avant_collecte', 'apres_collecte', 'ticket_balance'].includes(type);
-    const retryable = e => e.code === 'NETWORK_ERROR' || [408, 425, 429].includes(e.status) || e.status >= 500;
-    const safeErrors = ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'UPLOAD_RESEAU', 'ERREUR_SERVEUR', 'REFUS_DEFINITIF', 'BLOB_ILLISIBLE'];
+    const retryable = e => ['NETWORK_ERROR', 'PROTOCOL_ERROR'].includes(e.code) || [408, 425, 429].includes(e.status) || e.status >= 500;
+    const safeErrors = ['RECONNEXION', 'RESEAU_OU_SERVEUR', 'UPLOAD_RESEAU', 'ERREUR_SERVEUR', 'REFUS_DEFINITIF', 'BLOB_ILLISIBLE', 'ACCES_REFUSE', 'REPONSE_INVALIDE'];
     const request = r => new Promise((resolve, reject) => {
         r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error);
     });
@@ -111,6 +111,9 @@
     // Explicit allowlist: never store the authenticated API response as a whole.
     function snapshot(day) {
         return {
+            date: day?.date || null,
+            genere_le: day?.genere_le || null,
+            timezone: day?.timezone || null,
             balances:
                 (day?.balances || []).map(b => ({
                     id: b.id,
@@ -151,6 +154,7 @@
 
                     id:
                         m.id,
+                    local_only: m.local_only === true,
 
                     statut:
                         m.statut,
@@ -528,7 +532,7 @@
         for (const r of rows) {
             const m = result.missions.find(m => m.id === r.mission_id);
             if (!m) continue;
-            if (r.statut === 'erreur') { m.bloquee = true; continue; }
+            if (['erreur', 'recuperation'].includes(r.statut)) { m.bloquee = true; continue; }
             if (m.bloquee) continue;
             const c = m.collectes.find(c => c.id === r.collecte_id);
             if (r.type === 'demarrer_mission') m.statut = 'en_cours';
@@ -538,15 +542,18 @@
                 if (key) c.progression[key] = true;
                 if (photo(r.type) && !c.preuves.some(p => p.type_preuve === r.type)) c.preuves.push({ type_preuve: r.type });
                 if (r.type === 'enregistrer_pesee' && !c.pesees.some(p => p.operation_id === r.operation_id)) {
-                    c.pesees.filter(p => p.type === 'terrain').forEach(p => { p.est_courante = false; });
+                    const devientCourante = !c.pesees.some(p => p.type === 'terrain' &&
+                        Date.parse(p.date_heure) > Date.parse(r.payload.survenu_le));
+                    if (devientCourante) c.pesees.filter(p => p.type === 'terrain').forEach(p => { p.est_courante = false; });
                     c.pesees.push({ operation_id: r.operation_id, type: 'terrain', poids_brut: r.payload.poids_brut,
                         tare: r.payload.tare, poids_net: r.payload.poids_brut - r.payload.tare,
                         balance_id: r.payload.balance_id, codes_qr: r.payload.codes_qr || [],
-                        date_heure: r.payload.survenu_le, est_courante: true });
+                        date_heure: r.payload.survenu_le, est_courante: devientCourante });
                 }
             }
         }
         for (const m of result.missions) {
+            if (m.local_only) m.bloquee = true;
             const n = m.collectes.length, done = m.collectes.filter(c => c.progression.collecte_terminee).length;
             m.progression = { nombre_collectes: n, terminees: done, restantes: n - done, pourcentage: n ? done * 100 / n : 0 };
         }
@@ -656,7 +663,8 @@
             }
             return interrupted;
         });
-        let interruptedAtOpen = await repairMetadata();
+        // Opening another tab does not imply that the first tab has died.
+        // Interrupted metadata is repaired only under the exclusive sync lock.
         const mergedRows = async tx => {
             const rows = await request(tx.objectStore('queue').getAll());
             return Promise.all(rows.map(async row => ({ ...row, ...safeMetadata(row, await request(tx.objectStore('queue_meta').get(row.id))) })));
@@ -666,7 +674,36 @@
             const q = mergedRows(tx), s = request(tx.objectStore('state').get('day'));
             return project(await s, await q);
         });
-        const saveDay = day => transact(['state'], 'readwrite', tx => request(tx.objectStore('state').put(snapshot(day), 'day')));
+        const saveDay = day => {
+            if (!day || !Array.isArray(day.missions)) throw new Error('Journée serveur invalide : données locales conservées.');
+            return transact(['state', 'queue'], 'readwrite', async tx => {
+                const state = tx.objectStore('state');
+                const previous = await request(state.get('day'));
+                const rows = await request(tx.objectStore('queue').getAll());
+                const next = snapshot(day);
+                for (const mission of previous?.missions || []) {
+                    if (!next.missions.some(m => m.id === mission.id) && rows.some(row => row.mission_id === mission.id))
+                        next.missions.push({ ...mission, local_only: true });
+                }
+                return request(state.put(next, 'day'));
+            });
+        };
+        const draftKey = context => {
+            if (!UUID.test(context.mission || '') || !UUID.test(context.collecte || '') || !actions.includes(context.action))
+                throw new Error('Contexte de brouillon invalide.');
+            return 'draft:' + [context.mission, context.collecte, context.action].join(':');
+        };
+        const draftFields = ['balance_id', 'poids_brut', 'tare', 'codes_qr', 'resultat_terrain', 'poids_reel', 'motif_terrain', 'pris_le'];
+        const saveDraft = (context, values, blob) => {
+            const key = draftKey(context);
+            if (blob) validateBlob(blob);
+            const fields = Object.fromEntries(draftFields.filter(key => typeof values.fields?.[key] === 'string')
+                .map(key => [key, values.fields[key].slice(0, key === 'codes_qr' ? 10000 : 2000)]));
+            return transact(['state'], 'readwrite', tx => request(tx.objectStore('state').put({ fields,
+                pris_le: values.pris_le || null, saved_at: new Date().toISOString(),
+                ...(blob ? { blob: blob.slice(0, blob.size, blob.type) } : {}) }, key)));
+        };
+        const getDraft = context => transact(['state'], 'readonly', tx => request(tx.objectStore('state').get(draftKey(context))));
         const preparerEntree =
             function (
                 context,
@@ -766,7 +803,8 @@
             return transact(
                 [
                     "queue",
-                    "queue_meta"
+                    "queue_meta",
+                    "state"
                 ],
                 "readwrite",
                 async function (tx) {
@@ -788,19 +826,16 @@
                         of entrees
                     ) {
 
-                        const existing =
-                            entree.type ===
-                            "signaler_incident"
-                                ? null
-                                : await request(
-                                    q
-                                        .index("context")
-                                        .get([
-                                            entree.mission_id,
-                                            entree.collecte_id,
-                                            entree.type
-                                        ])
-                                  );
+                        const byOperation = await request(q.index('operation').get(entree.safe.operation_id));
+                        if (byOperation && (byOperation.type !== entree.type ||
+                            byOperation.mission_id !== entree.mission_id || byOperation.collecte_id !== entree.collecte_id ||
+                            JSON.stringify(byOperation.payload) !== JSON.stringify(entree.safe))) {
+                            throw new Error("Cet identifiant d’opération appartient à une autre action.");
+                        }
+                        const repeatable = ['enregistrer_pesee', 'ticket_balance', 'signaler_incident'].includes(entree.type);
+                        const existing = byOperation || (repeatable ? null : await request(q.index('context').get([
+                            entree.mission_id, entree.collecte_id, entree.type
+                        ])));
 
                         if (existing) {
 
@@ -886,6 +921,9 @@
 
                     }
 
+                    for (const item of items) {
+                        if (item.context.collecte) await request(tx.objectStore('state').delete(draftKey(item.context)));
+                    }
                     return resultat;
 
                 }
@@ -939,20 +977,39 @@
         function sync(api, authorized, notify = () => {}, options = {}) {
             if (running) return running;
             const run = async () => {
+                await repairMetadata();
                 let forceBackoff = options.forceBackoff === true;
+                let blockedResult = null;
+                const blockedMissions = new Set();
                 for (const row of await list()) {
-                    if (!navigator.onLine || !authorized()) return { stopped: 'auth' };
-                    if (row.statut === 'erreur') return { stopped: 'erreur' };
-                    if (row.statut === 'recuperation') return { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                    if (!navigator.onLine) return { stopped: 'offline' };
+                    if (!authorized()) return { stopped: 'auth' };
+                    if (blockedMissions.has(row.mission_id)) continue;
+                    if (['erreur', 'recuperation'].includes(row.statut)) {
+                        blockedMissions.add(row.mission_id);
+                        blockedResult ||= row.statut === 'erreur' ? { stopped: 'erreur' }
+                            : { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                        continue;
+                    }
                     if (row.next_attempt_at > Date.now() && !forceBackoff) return { stopped: 'backoff', at: row.next_attempt_at };
                     forceBackoff = false;
                     row.statut = 'envoi'; await update(row); notify();
                     try {
                         const prepared = await prepare(row);
                         // This durable flag separates a local read failure from an uncertain HTTP attempt.
+                        if (!authorized()) { row.statut = 'en_attente'; await update(row); return { stopped: 'auth' }; }
                         row.post_initiated = true;
                         await update(row);
-                        await api.post(prepared.url, prepared.body);
+                        const response = await api.post(prepared.url, prepared.body);
+                        if (api.requireReceipt) {
+                            const receipt = response?.data?.evenement || response?.data?.arrivee || response?.data?.preuve || response?.data?.pesee || response?.data?.incident;
+                            if (!receipt || receipt.operation_id !== row.operation_id || receipt.mission_id !== row.mission_id ||
+                                (row.collecte_id && receipt.collecte_id !== row.collecte_id)) {
+                                const error = new Error('Accusé de réception incohérent : action conservée.');
+                                error.code = 'PROTOCOL_ERROR';
+                                throw error;
+                            }
+                        }
                     }
                     catch (e) {
                         if (e.code === 'BLOB_ILLISIBLE') {
@@ -960,16 +1017,23 @@
                             row.last_error = 'BLOB_ILLISIBLE';
                             row.next_attempt_at = 0;
                             await update(row); notify();
-                            return { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                            blockedMissions.add(row.mission_id);
+                            blockedResult ||= { stopped: 'recuperation', replacementAllowed: !row.post_initiated };
+                            continue;
                         }
                         row.retry_count++;
-                        const auth = e.status === 401 || e.status === 403;
+                        const auth = e.status === 401;
                         row.statut = auth || retryable(e) ? 'en_attente' : 'erreur';
                         // Never persist server messages, which may contain personal data or credentials.
-                        row.last_error = auth ? 'RECONNEXION' : e.code === 'NETWORK_ERROR' ? 'UPLOAD_RESEAU' : retryable(e) ? 'ERREUR_SERVEUR' : 'REFUS_DEFINITIF';
+                        row.last_error = auth ? 'RECONNEXION' : e.status === 403 ? 'ACCES_REFUSE' : e.code === 'PROTOCOL_ERROR' ? 'REPONSE_INVALIDE' : e.code === 'NETWORK_ERROR' ? 'UPLOAD_RESEAU' : retryable(e) ? 'ERREUR_SERVEUR' : 'REFUS_DEFINITIF';
                         row.next_attempt_at = auth ? 0 : Date.now() + Math.min(300000, 2000 * 2 ** Math.min(row.retry_count - 1, 8));
                         await update(row); notify();
-                        return { stopped: auth ? 'auth' : row.statut === 'erreur' ? 'erreur' : 'backoff', at: row.next_attempt_at };
+                        if (row.statut === 'erreur') {
+                            blockedMissions.add(row.mission_id);
+                            blockedResult ||= { stopped: 'erreur' };
+                            continue;
+                        }
+                        return { stopped: auth ? 'auth' : 'backoff', at: row.next_attempt_at };
                     }
                     // Atomically advance the durable base and acknowledge the queue entry.
                     await transact(['queue', 'queue_meta', 'state'], 'readwrite', async tx => {
@@ -981,23 +1045,30 @@
                     });
                     notify();
                 }
-                return { stopped: null };
+                if (api.get && authorized() && navigator.onLine) {
+                    try {
+                        const response = await api.get('/terrain/journee');
+                        if (!authorized()) return { stopped: 'auth' };
+                        await saveDay(response?.data || response);
+                    } catch (e) {
+                        return { stopped: e.status === 401 ? 'auth' : 'refresh', status: e.status };
+                    }
+                }
+                return blockedResult || { stopped: null };
             };
-            // Idempotent operation_id values make stealing a stale pre-reload lock safe.
+            // Never steal a lock from a live sender. If Web Locks is unavailable,
+            // keep the queue intact rather than race two writers.
             const locked = navigator.locks
-                ? interruptedAtOpen
-                    ? navigator.locks.request(name + ':sync', { steal: true }, run)
-                    : navigator.locks.request(name + ':sync', run)
-                : run();
-            interruptedAtOpen = false;
+                ? navigator.locks.request(name + ':sync', run)
+                : Promise.resolve({ stopped: 'lock' });
             running = locked.finally(() => { running = null; });
             return running;
         }
-        const replaceUnreadablePhoto = async (blob, prisLe) => {
+        const replaceUnreadablePhoto = async (blob, prisLe, gps) => {
             const replacement = await freshBlob(blob);
             if (typeof prisLe !== 'string' || !Number.isFinite(Date.parse(prisLe)) || Date.parse(prisLe) > Date.now() + 5000)
                 throw new Error('Date de prise de photo invalide.');
-            return transact(['queue', 'queue_meta'], 'readwrite', async tx => {
+            return transact(['queue', 'queue_meta', 'state'], 'readwrite', async tx => {
                 const q = tx.objectStore('queue'), metaStore = tx.objectStore('queue_meta');
                 const rows = await request(q.getAll());
                 const first = rows[0];
@@ -1007,20 +1078,31 @@
                     throw new Error('Cette action ne demande pas de remplacement de photo.');
                 if (meta.post_initiated)
                     throw new Error('Un envoi a déjà pu commencer. La preuve doit être vérifiée avant remplacement.');
-                const payload = clean(first.type, { ...first.payload, pris_le: prisLe });
+                if (!gps) throw new Error('Un nouveau relevé GPS est obligatoire pour remplacer cette preuve.');
+                const payload = clean(first.type, { ...first.payload, ...gps, pris_le: prisLe });
+                const state = tx.objectStore('state');
+                const archiveKey = 'recovery:' + first.operation_id;
+                const previousArchive = await request(state.get(archiveKey));
+                await request(state.put({ row: first, metadata: meta, replaced_at: new Date().toISOString() },
+                    previousArchive ? archiveKey + ':' + crypto.randomUUID() : archiveKey));
                 await request(q.put({ ...first, payload, blob: replacement }));
                 const reset = { statut: 'en_attente', retry_count: 0, last_error: null, next_attempt_at: 0, post_initiated: false };
                 await request(metaStore.put(reset, first.id));
                 return { ...first, payload, blob: replacement, ...reset };
             });
         };
-        // Explicit operator recovery only: the rejected action and its dependent successors.
-        const discardRejected = () => transact(['queue', 'queue_meta'], 'readwrite', async tx => {
-            const q = tx.objectStore('queue'), rows = await mergedRows(tx);
-            const first = rows.find(r => r.statut === 'erreur');
-            if (first) for (const r of rows) if (r.id >= first.id) { q.delete(r.id); tx.objectStore('queue_meta').delete(r.id); }
+        // Re-arm the exact immutable operation after explicit review. Never delete successors.
+        const retryRejected = id => transact(['queue', 'queue_meta', 'state'], 'readwrite', async tx => {
+            const row = await request(tx.objectStore('queue').get(id));
+            if (!row) throw new Error('Action introuvable.');
+            const meta = safeMetadata(row, await request(tx.objectStore('queue_meta').get(id)));
+            if (meta.statut !== 'erreur') throw new Error('Cette action ne peut pas être réarmée.');
+            await request(tx.objectStore('state').put({ operation_id: row.operation_id, metadata: meta,
+                retried_at: new Date().toISOString() }, 'retry:' + row.operation_id + ':' + Date.now()));
+            await request(tx.objectStore('queue_meta').put({ ...meta, statut: 'en_attente', last_error: null, next_attempt_at: 0 }, id));
         });
-        return { list, view, saveDay, enqueue, enqueueBatch, sync, replaceUnreadablePhoto, discardRejected, close: () => db.close() };
+        const discardRejected = () => Promise.reject(new Error('Suppression désactivée : vérifiez puis réessayez la même action.'));
+        return { list, view, saveDay, saveDraft, getDraft, enqueue, enqueueBatch, sync, replaceUnreadablePhoto, retryRejected, discardRejected, close: () => db.close() };
     }
     window.ProRecup.offline = { open, clean, snapshot, project, retryable };
 })();

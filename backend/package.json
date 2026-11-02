@@ -7,7 +7,10 @@
     "start": "node src/server.js",
     "test": "mocha --require ./tests/test-environment.js tests/**/*.test.js --exit",
     "db:export": "node scripts/export-database.js",
-    "test:mission01": "node --test tests/mission01.regression.mjs"
+    "test:mission01": "node --test tests/mission01.regression.mjs",
+    "test:mission02": "node --test tests/mission02.server.mjs tests/mission02.browser.mjs tests/mission02.contracts.mjs",
+    "test:mission02:server": "node --test tests/mission02.server.mjs",
+    "test:mission02:browser": "node --test tests/mission02.browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

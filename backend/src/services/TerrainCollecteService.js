@@ -1,3 +1,5 @@
+﻿import { verifierReplay } from './TerrainParcoursService.js';
+import { verifierEtape } from './TerrainParcoursService.js';
 ﻿import pool
     from "../config/db.js";
 
@@ -265,6 +267,9 @@ class TerrainCollecteService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             /*
@@ -309,6 +314,7 @@ class TerrainCollecteService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante
@@ -703,6 +709,9 @@ class TerrainCollecteService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             const contexte =
@@ -736,6 +745,7 @@ class TerrainCollecteService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante.mission_id !==
@@ -1202,6 +1212,9 @@ class TerrainCollecteService {
             await connexion.query(
                 "BEGIN"
             );
+            await connexion.query("SET LOCAL lock_timeout = '5s'");
+            await connexion.query("SET LOCAL statement_timeout = '30s'");
+            await connexion.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [donnees.operation_id]);
 
 
             const contexte =
@@ -1237,6 +1250,7 @@ class TerrainCollecteService {
 
 
             if (operationExistante) {
+                verifierReplay(operationExistante, donnees);
 
                 if (
                     operationExistante
@@ -1353,6 +1367,7 @@ class TerrainCollecteService {
             }
 
 
+            await verifierEtape(connexion, missionId, collecteId, 'terminer_collecte', donnees.survenu_le);
             const dernierePeseeTerrain =
                 await peseeRepository.trouverDerniere(
                     collecteId,

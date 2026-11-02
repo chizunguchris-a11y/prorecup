@@ -29,7 +29,7 @@ describe("Interfaces pesée et balances", function () {
         assert.match(terrainJs, /Corriger la pesée/);
         assert.match(terrainJs, /action: "enregistrer_pesee"/);
         assert.match(offlineJs, /p\.est_courante = false/);
-        assert.match(offlineJs, /est_courante: true/);
+        assert.match(offlineJs, /est_courante: devientCourante/);
     });
 
     it("envoie l'instant terrain ISO sous survenu_le et le mappe explicitement côté API", function () {

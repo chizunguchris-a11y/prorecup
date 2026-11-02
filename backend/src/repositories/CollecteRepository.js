@@ -17,7 +17,14 @@ class CollecteRepository {
                 poids_estime,
                 statut
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            SELECT $1::uuid, $2::uuid, $3::uuid, $4::uuid, $5::numeric, $6
+            WHERE EXISTS (
+                SELECT 1 FROM client_sites cs
+                JOIN clients cl ON cl.id=cs.client_id AND cl.organisation_id=$7
+                JOIN sites_de_collecte s ON s.id=cs.site_id AND s.organisation_id=$7
+                WHERE cs.site_id=$1 AND cs.client_id=$2 AND cs.organisation_id=$7 AND cs.actif=TRUE
+            ) AND EXISTS(SELECT 1 FROM types_dechets WHERE id=$4)
+            AND ($3::uuid IS NULL OR EXISTS(SELECT 1 FROM utilisateurs WHERE id=$3 AND organisation_id=$7 AND actif=TRUE))
             RETURNING *;
         `;
 
@@ -27,7 +34,8 @@ class CollecteRepository {
             collecte.agent_id || null,
             collecte.type_dechet_id,
             collecte.poids_estime,
-            collecte.statut || "en_attente"
+            collecte.statut || "en_attente",
+            collecte.organisation_id
         ];
 
         const resultat =

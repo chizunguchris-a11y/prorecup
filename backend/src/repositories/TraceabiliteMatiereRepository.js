@@ -180,7 +180,7 @@ class TraceabiliteMatiereRepository {
                 collecte_origine_id=COALESCE(collecte_origine_id,$2),site_courant_id=$3,
                 client_courant_id=CASE WHEN $10::text='terrain' THEN $4::uuid ELSE NULL::uuid END,
                 type_dechet_id=COALESCE(type_dechet_id,$5),
-                poids_courant_kg=CASE WHEN $9=1 THEN $6 ELSE NULL END,modifie_le=CURRENT_TIMESTAMP
+                poids_courant_kg=CASE WHEN $9::integer=1 THEN $6::numeric ELSE NULL::numeric END,modifie_le=CURRENT_TIMESTAMP
                 WHERE id=$7 AND organisation_id=$8 AND NOT EXISTS (
                   SELECT 1 FROM pesees_unites pu JOIN pesees p ON p.id=pu.pesee_id
                   WHERE pu.contenant_id=$7 AND p.organisation_id=$8 AND p.type=$10

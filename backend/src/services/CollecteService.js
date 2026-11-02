@@ -60,7 +60,7 @@ class CollecteService {
         }
 
         if (
-            Number.isNaN(
+            !Number.isFinite(
                 Number(
                     collecte.poids_estime
                 )
@@ -84,9 +84,10 @@ class CollecteService {
             collecte
         );
 
-        return collecteRepository.creer(
-            collecte
-        );
+        if (!collecte.organisation_id) throw new ApiError(400, "L'organisation authentifiée est obligatoire.");
+        const resultat = await collecteRepository.creer({...collecte,statut:'en_attente'});
+        if (!resultat) throw new ApiError(404, 'Site, client, association ou auteur introuvable pour cette organisation.');
+        return resultat;
 
     }
 

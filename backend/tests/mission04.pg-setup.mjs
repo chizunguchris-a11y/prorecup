@@ -7,7 +7,7 @@ if(!process.env.M04_ISOLATED_CONTEXT)throw Error('Lancer uniquement mission04.pg
 const ctx=JSON.parse(await readFile(process.env.M04_ISOLATED_CONTEXT,'utf8'));
 if(!/^m04_synthetic_[0-9a-f]{32}$/.test(ctx.database)||!Number.isInteger(ctx.port)||!ctx.nonce||!path.basename(ctx.runDir).startsWith('fresh-'))throw Error('Contexte PostgreSQL isolé invalide.');
 const resolved={};
-for(const name of ['pg','express','express-validator','jsonwebtoken','supertest']) {
+for(const name of ['pg','express','express-validator','jsonwebtoken','supertest','qrcode']) {
  const dir=name==='pg'?process.env.M04_TEST_MODULES:process.env.M03_TEST_MODULES;
  resolved[name]=require.resolve(name,dir?{paths:[dir]}:undefined);
 }

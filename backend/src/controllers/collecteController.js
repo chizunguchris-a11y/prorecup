@@ -71,6 +71,7 @@ const collecteController = {
             const donneesCollecte = {
 
                 ...req.body,
+                organisation_id: organisationId,
 
                 agent_id:
                     utilisateurId

@@ -1,3 +1,4 @@
+const millisecondes = valeur => valeur == null ? NaN : new Date(valeur).getTime();
 import ApiError from '../utils/ApiError.js';
 
 // Called under the mission row lock and in the same transaction as the write.
@@ -10,15 +11,15 @@ export async function verifierEtape(connexion, missionId, collecteId, action, in
           (SELECT MAX(date_heure) FROM pesees WHERE mission_id=$1 AND collecte_id=$2 AND type='terrain') AS pesee
     `, [missionId, collecteId]);
     const etape = rows[0] || {};
-    const date = Date.parse(instant);
+    const date = millisecondes(instant);
     const requis = action === 'apres_collecte' ? ['fin'] :
         action === 'terminer_collecte' ? ['debut', 'avant', 'pesee'] :
         action === 'enregistrer_pesee' ? ['debut', 'avant'] : ['debut'];
-    if (!Number.isFinite(date) || requis.some(key => !etape[key] || !Number.isFinite(Date.parse(etape[key])) || Date.parse(etape[key]) > date))
+    if (!Number.isFinite(date) || requis.some(key => !etape[key] || !Number.isFinite(millisecondes(etape[key])) || millisecondes(etape[key]) > date))
         throw new ApiError(409, 'Les étapes précédentes et leur chronologie doivent être validées avant cette action.');
     if (action === 'enregistrer_pesee' && etape.fin)
         throw new ApiError(409, 'Une collecte terminée ne peut plus recevoir de nouvelle pesée terrain.');
-    if (action === 'avant_collecte' && etape.fin && date > Date.parse(etape.fin))
+    if (action === 'avant_collecte' && etape.fin && date > millisecondes(etape.fin))
         throw new ApiError(409, 'La preuve avant collecte ne peut pas être postérieure à sa fin.');
 }
 
@@ -39,7 +40,7 @@ export async function verifierFinMission(connexion, missionId, instant) {
 
 export function verifierReplay(evenement, donnees) {
     const egalNombre = (a, b) => (a == null || a === '' ? null : Number(a)) === (b == null || b === '' ? null : Number(b));
-    if (Date.parse(evenement.survenu_le) !== Date.parse(donnees.survenu_le) ||
+    if (millisecondes(evenement.survenu_le) !== millisecondes(donnees.survenu_le) ||
         ['latitude', 'longitude', 'precision_gps'].some(key => !egalNombre(evenement[key], donnees[key])) ||
         (donnees.resultat_terrain !== undefined && (
             evenement.contexte?.resultat_terrain !== donnees.resultat_terrain ||

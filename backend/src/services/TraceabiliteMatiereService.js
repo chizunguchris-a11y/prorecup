@@ -1,3 +1,4 @@
+const millisecondes = valeur => valeur == null ? NaN : new Date(valeur).getTime();
 import { kilos, grammes, instant } from './TracabiliteRules.js';
 import { randomUUID } from "node:crypto";
 import QRCode from "qrcode";
@@ -103,7 +104,7 @@ class TraceabiliteMatiereService {
             (donnees.code_qr && lot.code_qr !== this.normaliserCode(donnees.code_qr, 'lot')) ||
             (donnees.poids_reel != null && donnees.poids_reel !== '' && grammes(lot.poids_reel) !== grammes(kilos(donnees.poids_reel))) ||
             lot.createur_id !== utilisateurId ||
-            (donnees.survenu_le && Date.parse(lot.date_regroupement) !== Date.parse(instant(donnees.survenu_le))))
+            (donnees.survenu_le && millisecondes(lot.date_regroupement) !== millisecondes(instant(donnees.survenu_le))))
             throw new ApiError(409, "Cet identifiant d'opération a déjà été utilisé avec d'autres données.");
     }
 
@@ -163,7 +164,7 @@ class TraceabiliteMatiereService {
             if (grammes(poidsReel) !== grammes(poidsCalcule))
                 throw new ApiError(409, 'Le poids du lot doit égaler la somme de ses contenants mesurés.');
             const survenuLe = instant(donnees.survenu_le || new Date().toISOString());
-            if (mesures.some(mesure => !Number.isFinite(Date.parse(mesure.date_heure)) || Date.parse(mesure.date_heure) > Date.parse(survenuLe)))
+            if (mesures.some(mesure => !Number.isFinite(millisecondes(mesure.date_heure)) || millisecondes(mesure.date_heure) > millisecondes(survenuLe)))
                 throw new ApiError(409, 'Le regroupement doit être postérieur aux pesées dépôt de ses contenants.');
             const lot = await repository.regrouperLot({ organisation_id: organisationId,
                 utilisateur_id: utilisateurId, operation_id: donnees.operation_id, site_id: donnees.site_id,

@@ -40,7 +40,7 @@ test('SQL exécuté : pesée collective ne conserve pas des poids individuels p�
  db.prepare('INSERT INTO pesees VALUES (?,?,?,?)').run(weigh,org,'depot',p.date_heure);
  const cx={query:async(sql,args)=>{
   if(sql.includes('tracabilite_matiere_evenements'))return {rows:[]};
-  const stmt=db.prepare(sql.replace(/::(?:text|uuid|timestamptz)/g,''));const result=stmt.run(Object.fromEntries(args.map((v,i)=>['$'+(i+1),v ?? null])));return {rows:[],rowCount:result.changes};
+  const stmt=db.prepare(sql.replace(/::(?:text|uuid|timestamptz|integer|numeric)/g,''));const result=stmt.run(Object.fromEntries(args.map((v,i)=>['$'+(i+1),v ?? null])));return {rows:[],rowCount:result.changes};
  }};
  await trace.lierPesee(weigh,[{id:a,nature:'contenant'},{id:b,nature:'contenant'}],{organisation_id:org,utilisateur_id:user,operation_id:randomUUID(),collecte_id:c,mission_id:m,type_dechet_id:mat,survenu_le:p.date_heure,poids_net:20,nombre_unites:2,type:'depot'},cx);
  assert.deepEqual(db.prepare('SELECT poids_courant_kg FROM contenants').all().map(row=>row.poids_courant_kg),[null,null]);

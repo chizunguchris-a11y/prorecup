@@ -1,3 +1,4 @@
+import { kilos } from './TracabiliteRules.js';
 import facteurCarboneRepository
     from "../repositories/FacteurCarboneRepository.js";
 
@@ -69,8 +70,7 @@ class ImpactCarboneService {
             return null;
         }
 
-        const quantiteKg =
-            Number(vente.quantite);
+        const quantiteKg = kilos(vente.quantite);
 
         const facteurUtilise =
             Number(
@@ -78,6 +78,8 @@ class ImpactCarboneService {
                     .facteur_kg_co2e_par_kg
             );
 
+        if (!Number.isFinite(facteurUtilise) || facteurUtilise < 0)
+            throw new ApiError(409, 'Le facteur carbone doit être fini et non négatif.');
         const co2eEstimeKg =
             Number(
                 (
@@ -86,6 +88,7 @@ class ImpactCarboneService {
                 ).toFixed(6)
             );
 
+        if (!Number.isFinite(co2eEstimeKg)) throw new ApiError(409, 'Impact carbone non calculable.');
         return await impactCarboneRepository
             .creer(
                 {

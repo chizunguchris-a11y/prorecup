@@ -1,3 +1,4 @@
+import { projectionClient, consulterQr } from '../services/PortailTracabiliteService.js';
 import asyncHandler
     from "../middlewares/asyncHandler.js";
 
@@ -42,6 +43,9 @@ const validerUuid = (
 
 
 const portailClientController = {
+
+    tracabiliteQr: asyncHandler(async (req,res) => ApiResponse.success(res, 'Traçabilité de vos contributions.',
+        await consulterQr(req.portailClient.utilisateur_id, req.portailClient.organisation_id, req.params.code))),
 
     me: (
         req,
@@ -234,6 +238,8 @@ const portailClientController = {
 
             }
 
+            collecte.tracabilite = projectionClient(await portailClientRepository.tracabiliteAutorisee(
+                req.portailClient.utilisateur_id, req.portailClient.organisation_id, req.params.id));
             return ApiResponse.success(
                 res,
                 "Detail de la collecte recupere avec succes.",

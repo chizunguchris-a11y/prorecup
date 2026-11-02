@@ -1,4 +1,6 @@
-﻿import pool from "../config/db.js";
+﻿import { kilos, grammes } from './TracabiliteRules.js';
+import stockRepository from '../repositories/StockRepository.js';
+import pool from "../config/db.js";
 
 import lotRepository
     from "../repositories/LotRepository.js";
@@ -39,15 +41,7 @@ class LotService {
             );
         }
 
-        if (
-            !lot.poids_reel ||
-            Number(lot.poids_reel) <= 0
-        ) {
-            throw new ApiError(
-                400,
-                "Le poids réel doit être supérieur à zéro."
-            );
-        }
+        lot = { ...lot, poids_reel: kilos(lot.poids_reel) };
 
         const client =
             await pool.connect();
@@ -58,9 +52,11 @@ class LotService {
 
             const collecte =
                 await collecteRepository
-                    .trouverParId(
+                    .trouverParIdPourOrganisation(
                         lot.collecte_id,
-                        client
+                        lot.organisation_id,
+                        client,
+                        true
                     );
 
             if (!collecte) {
@@ -105,11 +101,20 @@ class LotService {
                     );
 
             if (lotExistant) {
-                throw new ApiError(
-                    409,
-                    "Un lot existe déjà pour cette collecte."
-                );
+                if (lotExistant.organisation_id !== lot.organisation_id || lotExistant.type_dechet_id !== lot.type_dechet_id ||
+                    grammes(lotExistant.poids_reel) !== grammes(lot.poids_reel))
+                    throw new ApiError(409, 'Un lot existe déjà pour cette collecte avec des données différentes.');
+                const stock = await stockRepository.trouverParTypeDechet(lot.organisation_id, lot.type_dechet_id, client);
+                await client.query('COMMIT');
+                return { lot: lotExistant, stock, deja_traitee: true };
             }
+            const [origine] = await traceabiliteRepository.originesPourMiseAJour(lot.organisation_id, [lot.collecte_id], client);
+            if (!origine || (origine.parcours_present && !origine.parcours_complet))
+                throw new ApiError(409, 'Le parcours terrain doit être terminé et synchronisé avant la création du lot.');
+            if (grammes(kilos(collecte.poids_reel)) !== grammes(lot.poids_reel))
+                throw new ApiError(409, 'Le poids du lot doit correspondre au poids validé de la collecte.');
+            if (await traceabiliteRepository.contenantsPourCollecte(lot.organisation_id, lot.collecte_id, client))
+                throw new ApiError(409, 'Cette collecte porte des contenants QR : utilisez leur regroupement pour conserver la filiation.');
 
             const nouveauLot =
                 await lotRepository.creer(

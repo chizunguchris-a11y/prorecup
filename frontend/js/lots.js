@@ -285,9 +285,7 @@ const afficherLots = (
 
         ligne.appendChild(
             creerCellule(
-                `${ProRecup.formaterNombre(
-                    lot.poids_reel
-                )} kg`
+                `${lot.poids_reel != null && Number.isFinite(Number(lot.poids_reel)) && Number(lot.poids_reel)>=0 ? ProRecup.formaterNombre(lot.poids_reel) : 'non déterminé'} kg initiaux — reste : ${lot.quantite_restante_kg == null || !Number.isFinite(Number(lot.quantite_restante_kg)) || Number(lot.quantite_restante_kg)<0 ? 'non déterminé' : ProRecup.formaterNombre(lot.quantite_restante_kg) + ' kg'}`
             )
         );
 
@@ -938,18 +936,56 @@ const chargerUnites = async () => {
     unitesQr = Array.isArray(resultat.data) ? resultat.data : []; afficherUnites();
 };
 
-document.getElementById("boutonNouveauContenant").addEventListener("click", () => ouvrirFenetre(fenetreContenant));
+document.getElementById('boutonNouveauContenant').addEventListener('click', () => {
+    try {
+        const pending = localStorage.getItem(cleTentativeRegroupement('contenant'));
+        if (pending) {
+            const { payload } = JSON.parse(pending);
+            document.getElementById('type_contenant').value = payload.type_contenant;
+            document.getElementById('tare_contenant').value = payload.tare_kg == null ? '' : payload.tare_kg;
+            document.getElementById('code_contenant').value = payload.code_qr;
+        }
+        ouvrirFenetre(fenetreContenant);
+    } catch (error) { ProRecup.afficherNotification(error.message,'erreur'); }
+});
 document.getElementById("fermerContenant").addEventListener("click", () => fermerFenetre(fenetreContenant));
 document.getElementById("annulerContenant").addEventListener("click", () => fermerFenetre(fenetreContenant));
 document.getElementById("fermerTrace").addEventListener("click", () => fermerFenetre(fenetreTrace));
 document.getElementById("fermerRegroupement").addEventListener("click", () => fermerFenetre(fenetreRegroupement));
 document.getElementById("annulerRegroupement").addEventListener("click", () => fermerFenetre(fenetreRegroupement));
+const cleTentativeRegroupement = (nature = 'regroupement') => {
+    const user = ProRecup.obtenirUtilisateur();
+    if (!user?.id) throw new Error('Reconnectez-vous avant de regrouper des contenants.');
+    return 'prorecup-' + nature + '-v1:' + user.id + ':' + (user.organisation_id || user.organisationId || '');
+};
+const preparerTentativeRegroupement = (champs, nature = 'regroupement') => {
+    const key = cleTentativeRegroupement(nature);
+    const fingerprint = JSON.stringify(champs);
+    const previous = localStorage.getItem(key);
+    if (previous) {
+        const saved = JSON.parse(previous);
+        if (saved.fingerprint !== fingerprint) throw new Error('Une tentative reste à vérifier. Reprenez ses paramètres restaurés avant de créer un autre regroupement.');
+        return saved.payload;
+    }
+    const payload = { ...champs, operation_id: crypto.randomUUID(), survenu_le: new Date().toISOString() };
+    localStorage.setItem(key, JSON.stringify({ fingerprint, payload }));
+    return payload;
+};
+
 document.getElementById("boutonRegrouperLot").addEventListener("click", async () => {
     try {
         const resultat = await ProRecup.requete("/api/sites");
         const sites = Array.isArray(resultat.data) ? resultat.data : [];
         document.getElementById("site_regroupement").innerHTML = '<option value="">Sélectionnez le dépôt</option>' +
             sites.map(site => `<option value="${echapper(site.id)}">${echapper(site.nom)}</option>`).join("");
+        const pending = localStorage.getItem(cleTentativeRegroupement());
+        if (pending) {
+            const { payload } = JSON.parse(pending);
+            document.getElementById('site_regroupement').value = payload.site_id;
+            document.getElementById('codes_regroupement').value = payload.codes_qr.join('\n');
+            document.getElementById('code_lot_regroupement').value = payload.code_qr || '';
+            document.getElementById('poids_lot_regroupement').value = payload.poids_reel || '';
+        }
         ouvrirFenetre(fenetreRegroupement);
     } catch (erreur) { ProRecup.afficherNotification(erreur.message, "erreur"); }
 });
@@ -958,10 +994,18 @@ document.getElementById("formulaireContenant").addEventListener("submit", async 
     evenement.preventDefault();
     const tareTexte = document.getElementById("tare_contenant").value.trim();
     try {
-        const resultat = await ProRecup.requete("/api/lots/contenants", { method: "POST", body: JSON.stringify({
-            type_contenant: document.getElementById("type_contenant").value,
-            tare_kg: tareTexte === "" ? null : Number(tareTexte), code_qr: document.getElementById("code_contenant").value.trim() || undefined
-        }) });
+        const key = cleTentativeRegroupement('contenant');
+        const previous = localStorage.getItem(key);
+        const saved = previous ? JSON.parse(previous).payload : null;
+        const payload = preparerTentativeRegroupement({
+            type_contenant: document.getElementById('type_contenant').value,
+            tare_kg: tareTexte === '' ? null : Number(tareTexte),
+            code_qr: document.getElementById('code_contenant').value.trim().toUpperCase() || saved?.code_qr || 'PR-C-' + crypto.randomUUID().replaceAll('-','').toUpperCase()
+        }, 'contenant');
+        const resultat = await ProRecup.requete('/api/lots/contenants', { method:'POST', body:JSON.stringify(payload) });
+        if (key !== cleTentativeRegroupement('contenant') || resultat?.data?.code_qr !== payload.code_qr)
+            throw new Error('Création non confirmée. Conservez la tentative et vérifiez son QR.');
+        localStorage.removeItem(key);
         fermerFenetre(fenetreContenant); evenement.target.reset(); await chargerUnites(); await imprimerQr(resultat.data.code_qr);
     } catch (erreur) { const zone = document.getElementById("erreurContenant"); zone.textContent = erreur.message; zone.classList.remove("cache"); }
 });
@@ -971,13 +1015,16 @@ document.getElementById("formulaireRegroupement").addEventListener("submit", asy
     const codes = [...new Set(document.getElementById("codes_regroupement").value
         .split(/[\s,;]+/).map(code => code.trim().toUpperCase()).filter(Boolean))];
     try {
-        const resultat = await ProRecup.requete("/api/lots/regroupements", { method: "POST", body: JSON.stringify({
-            operation_id: crypto.randomUUID(), codes_qr: codes,
-            site_id: document.getElementById("site_regroupement").value,
-            code_qr: document.getElementById("code_lot_regroupement").value.trim() || undefined,
-            poids_reel: document.getElementById("poids_lot_regroupement").value.trim() || undefined,
-            survenu_le: new Date().toISOString()
-        }) });
+        const key = cleTentativeRegroupement();
+        const payload = preparerTentativeRegroupement({ codes_qr: codes.sort(),
+            site_id: document.getElementById('site_regroupement').value,
+            code_qr: document.getElementById('code_lot_regroupement').value.trim().toUpperCase() || undefined,
+            poids_reel: document.getElementById('poids_lot_regroupement').value.trim() || undefined });
+        const resultat = await ProRecup.requete('/api/lots/regroupements', { method:'POST', body:JSON.stringify(payload) });
+        if (key !== cleTentativeRegroupement()) throw new Error('Le compte a changé : vérifiez le résultat avec le compte d’origine.');
+        if (!resultat?.data?.id || resultat.data.operation_id !== payload.operation_id)
+            throw new Error('Résultat de regroupement non confirmé. Réessayez la même tentative.');
+        localStorage.removeItem(key);
         fermerFenetre(fenetreRegroupement); evenement.target.reset();
         await Promise.all([chargerLots(), chargerUnites()]); await imprimerQr(resultat.data.code_qr);
     } catch (erreur) { const zone = document.getElementById("erreurRegroupement"); zone.textContent = erreur.message; zone.classList.remove("cache"); }

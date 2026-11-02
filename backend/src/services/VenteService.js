@@ -1,3 +1,4 @@
+import { kilos } from './TracabiliteRules.js';
 import pool from "../config/db.js";
 import venteRepository from "../repositories/VenteRepository.js";
 import venteLotRepository from "../repositories/VenteLotRepository.js";
@@ -48,7 +49,7 @@ class VenteService {
         if (!vente.quantite || Number(vente.quantite) <= 0) {
             throw new ApiError(400, "La quantité vendue doit être supérieure à zéro.");
         }
-        if (vente.prix_unitaire === undefined || Number(vente.prix_unitaire) < 0) {
+        if (vente.prix_unitaire == null || String(vente.prix_unitaire).trim() === '' || !Number.isFinite(Number(vente.prix_unitaire)) || Number(vente.prix_unitaire) < 0) {
             throw new ApiError(400, "Le prix unitaire doit être supérieur ou égal à zéro.");
         }
         if (!vente.acheteur_nom) {
@@ -70,7 +71,7 @@ class VenteService {
             );
         }
 
-        const quantiteOriginale = Number(vente.quantite);
+        const quantiteOriginale = kilos(vente.quantite);
         const quantiteVendue = normaliserKg(quantiteOriginale);
         if (!quantitesEgales(quantiteOriginale, quantiteVendue)) {
             throw new ApiError(400, "La quantité vendue est limitée à trois décimales.");
@@ -121,7 +122,7 @@ class VenteService {
                 throw new ApiError(404, "Stock introuvable pour cette organisation.");
             }
 
-            const quantiteDisponible = normaliserKg(stock.quantite);
+            const quantiteDisponible = kilos(stock.quantite, false);
             if (quantiteDisponible < quantiteVendue) {
                 throw new ApiError(
                     409,

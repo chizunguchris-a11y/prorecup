@@ -239,10 +239,11 @@ class PortailClientRepository {
                       ON td.id = co.type_dechet_id
 
                     LEFT JOIN utilisateurs u
-                      ON u.id = co.agent_id
+                      ON u.id = co.agent_id AND u.organisation_id = cu.organisation_id
 
                     LEFT JOIN preuves_collecte pc
                       ON pc.collecte_id = co.id
+                     AND pc.type_preuve IN ('avant_collecte','apres_collecte','ticket_balance')
                      AND pc.organisation_id =
                          cu.organisation_id
 
@@ -332,6 +333,7 @@ class PortailClientRepository {
             "            SELECT 1",
             "            FROM preuves_collecte pc",
             "            WHERE pc.collecte_id = co.id",
+            "              AND pc.type_preuve IN ('avant_collecte','apres_collecte','ticket_balance')",
             "              AND pc.organisation_id = ca.organisation_id",
             "        ) AS documentee",
 
@@ -357,12 +359,13 @@ class PortailClientRepository {
 
             "    WHERE poids_reel IS NOT NULL",
             "      AND poids_reel > 0",
+            "      AND poids_reel <> 'NaN'::numeric",
 
             "      AND LOWER(COALESCE(statut, ''))",
             "          NOT IN ('annule', 'annulee', 'echec')",
 
             "      AND LOWER(COALESCE(resultat_terrain, ''))",
-            "          <> 'echec'",
+            "          NOT IN ('echec', 'non_collectee', 'aucune_matiere')",
 
             "),",
 
@@ -652,6 +655,7 @@ class PortailClientRepository {
 
                                 WHERE pc.collecte_id =
                                       co.id
+                                  AND pc.type_preuve IN ('avant_collecte','apres_collecte','ticket_balance')
 
                                   AND pc.organisation_id =
                                       cu.organisation_id
@@ -708,7 +712,7 @@ class PortailClientRepository {
                       ON td.id = co.type_dechet_id
 
                     LEFT JOIN utilisateurs u
-                      ON u.id = co.agent_id
+                      ON u.id = co.agent_id AND u.organisation_id = cu.organisation_id
 
                     WHERE cu.utilisateur_id = $1
                       AND cu.organisation_id = $2
@@ -728,6 +732,41 @@ class PortailClientRepository {
 
     }
 
+
+    async tracabiliteAutorisee(utilisateurId, organisationId, collecteId = null, code = null, connexion = pool) {
+        const result = await connexion.query(`WITH autorisees AS (
+          SELECT co.id,co.type_dechet_id,co.poids_reel AS collecte_poids,co.statut FROM collectes co
+          JOIN clients cl ON cl.id=co.client_id AND cl.organisation_id=$2
+          JOIN sites_de_collecte s ON s.id=co.site_id AND s.organisation_id=$2
+          WHERE ($3::uuid IS NULL OR co.id=$3) AND EXISTS(
+            SELECT 1 FROM client_utilisateurs cu WHERE cu.client_id=co.client_id
+              AND cu.organisation_id=$2 AND cu.utilisateur_id=$1 AND cu.actif=TRUE)
+        ), contributions AS (
+          SELECT l.id AS lot_id,l.code_qr,a.id AS collecte_id,l.statut_lot,
+            'collecte_directe'::text AS source_type,
+            CASE WHEN l.type_dechet_id=a.type_dechet_id AND a.statut='valide' AND ABS(l.poids_reel-a.collecte_poids)<0.0005 AND NOT EXISTS(SELECT 1 FROM lot_contenants lc WHERE lc.lot_id=l.id) THEN l.poids_reel ELSE NULL END AS quantite_origine_kg,
+            CASE WHEN l.type_dechet_id=a.type_dechet_id AND a.statut='valide' AND ABS(l.poids_reel-a.collecte_poids)<0.0005 AND NOT EXISTS(SELECT 1 FROM lot_contenants lc WHERE lc.lot_id=l.id) THEN l.quantite_restante_kg ELSE NULL END AS reste_attribuable_kg
+          FROM autorisees a JOIN lots l ON l.collecte_id=a.id AND l.organisation_id=$2
+          WHERE ($4::text IS NULL OR l.code_qr=$4)
+          UNION ALL
+          SELECT l.id,l.code_qr,a.id,l.statut_lot,'regroupement',
+            CASE WHEN NOT EXISTS (
+              SELECT 1 FROM lot_contenants lc2 JOIN contenants ct ON ct.id=lc2.contenant_id
+              WHERE lc2.lot_id=l.id AND (ct.organisation_id<>$2 OR ct.collecte_origine_id IS NULL OR
+                ct.poids_courant_kg IS NULL OR ct.poids_courant_kg<=0 OR ct.type_dechet_id IS DISTINCT FROM l.type_dechet_id)
+            ) AND l.type_dechet_id=a.type_dechet_id AND a.statut='valide' AND SUM(c.poids_courant_kg)<=a.collecte_poids AND ABS(l.poids_reel-(
+              SELECT SUM(ct.poids_courant_kg) FROM lot_contenants lc2 JOIN contenants ct ON ct.id=lc2.contenant_id AND ct.organisation_id=$2 WHERE lc2.lot_id=l.id
+            )) < 0.0005 THEN SUM(c.poids_courant_kg) ELSE NULL END,
+            NULL::numeric
+          FROM autorisees a JOIN contenants c ON c.collecte_origine_id=a.id AND c.organisation_id=$2
+          JOIN lot_contenants lc ON lc.contenant_id=c.id
+          JOIN lots l ON l.id=lc.lot_id AND l.organisation_id=$2 AND l.collecte_id IS NULL
+          WHERE ($4::text IS NULL OR l.code_qr=$4)
+          GROUP BY l.id,a.id,a.type_dechet_id,a.collecte_poids,a.statut
+        ) SELECT lot_id,code_qr,collecte_id,statut_lot,source_type,quantite_origine_kg,reste_attribuable_kg
+        FROM contributions ORDER BY lot_id,collecte_id`, [utilisateurId,organisationId,collecteId,code]);
+        return result.rows;
+    }
 
     async trouverPreuveAutorisee(
         utilisateurId,
@@ -769,6 +808,7 @@ class PortailClientRepository {
 
                     JOIN preuves_collecte pc
                       ON pc.collecte_id = co.id
+                     AND pc.type_preuve IN ('avant_collecte','apres_collecte','ticket_balance')
                      AND pc.organisation_id =
                          cu.organisation_id
 

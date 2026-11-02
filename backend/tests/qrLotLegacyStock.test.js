@@ -29,7 +29,9 @@ describe("Réponse de création d'un lot QR selon le mode du stock hors réseau"
             references: repository.verifierReferences,
             unites: repository.trouverUnitesParCodes,
             regrouper: repository.regrouperLot,
-            ajouterStock: stockService.ajouterAuStock
+            ajouterStock: stockService.ajouterAuStock,
+            origines: repository.originesPourMiseAJour,
+            mesures: repository.mesuresContenants
         };
     });
 
@@ -52,9 +54,12 @@ describe("Réponse de création d'un lot QR selon le mode du stock hors réseau"
             statut: "recu_depot",
             site_courant_id: "00000000-0000-4000-8000-000000000002",
             type_dechet_id: "acier",
+            collecte_origine_id: 'collecte-1',
             poids_courant: 20,
             tare_kg: 1
         }];
+        repository.originesPourMiseAJour = async () => [{id:'collecte-1',statut:'valide',poids_reel:20,type_dechet_id:'acier',deja_loti_kg:0}];
+        repository.mesuresContenants = async () => [{id:'contenant-1',collecte_id:'collecte-1',poids_net:20,tare:1,date_heure:'2026-09-22T08:00:00Z'}];
         repository.regrouperLot = async donnees => ({
             id: "lot-1",
             code_qr: donnees.code_qr,
@@ -76,6 +81,8 @@ describe("Réponse de création d'un lot QR selon le mode du stock hors réseau"
         repository.trouverUnitesParCodes = originals.unites;
         repository.regrouperLot = originals.regrouper;
         stockService.ajouterAuStock = originals.ajouterStock;
+        repository.originesPourMiseAJour = originals.origines;
+        repository.mesuresContenants = originals.mesures;
     });
 
     const regrouper = () => service.regrouper(
@@ -93,13 +100,15 @@ describe("Réponse de création d'un lot QR selon le mode du stock hors réseau"
     it("retourne NULL comme quantité restante lorsque le stock reste legacy", async function () {
         const lot = await regrouper();
         assert.equal(lot.quantite_restante_kg, null);
-        assert.deepEqual(commands, ["BEGIN", "COMMIT"]);
+        assert.equal(commands[0], 'BEGIN');assert.equal(commands.at(-1),'COMMIT');
+        assert.ok(commands.some(sql => sql.includes('pg_advisory_xact_lock')));
     });
 
     it("conserve le poids initial comme reste certifié pour un stock neuf traçable", async function () {
         stockTraceable = true;
         const lot = await regrouper();
         assert.equal(lot.quantite_restante_kg, 20);
-        assert.deepEqual(commands, ["BEGIN", "COMMIT"]);
+        assert.equal(commands[0], 'BEGIN');assert.equal(commands.at(-1),'COMMIT');
+        assert.ok(commands.some(sql => sql.includes('pg_advisory_xact_lock')));
     });
 });

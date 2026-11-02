@@ -58,7 +58,7 @@ class PeseeService {
             const codesQr = Array.isArray(donnees.codes_qr)
                 ? [...new Set(donnees.codes_qr.map(code => String(code).trim().toUpperCase()).filter(Boolean))].sort()
                 : [];
-            if (codesQr.some(code => !/^PR-[CL]-[A-Z0-9-]{6,60}$/.test(code)))
+            if (codesQr.length > 200 || codesQr.some(code => !/^PR-[CL]-[A-Z0-9-]{6,60}$/.test(code)))
                 throw new ApiError(400, "Un code QR est invalide.");
             const existante = await peseeRepository.trouverParOperation(
                 donnees.operation_id, identite.organisation_id, connexion);
@@ -95,9 +95,13 @@ class PeseeService {
             const unites = await traceabiliteRepository.trouverUnitesParCodes(
                 identite.organisation_id, codesQr, connexion, true);
             if (unites.length !== codesQr.length) throw new ApiError(404, "Un contenant ou lot QR est introuvable.");
-            const statutsInterdits = type === "terrain" ? ["recu_depot", "dans_lot", "vide", "retire", "vendu", "transforme"] : ["vide", "retire", "vendu", "transforme"];
-            if (unites.some(unite => statutsInterdits.includes(unite.statut)))
+            const statutsInterdits = type === "terrain" ? ["recu_depot", "dans_lot", "vide", "retire", "vendu", "transforme"] : ["dans_lot", "vide", "retire", "vendu", "transforme"];
+            if (unites.some(unite => unite.nature !== 'contenant' || statutsInterdits.includes(unite.statut)))
                 throw new ApiError(409, "Un contenant ou lot n'est pas disponible pour cette pesée.");
+            if (unites.some(unite => unite.collecte_origine_id && unite.collecte_origine_id !== collecteId))
+                throw new ApiError(409, 'Ce contenant est déjà rattaché à une autre collecte.');
+            if (unites.length && await traceabiliteRepository.lotDirectPourCollecte(identite.organisation_id, collecteId, connexion))
+                throw new ApiError(409, 'Cette collecte a déjà été comptabilisée dans un lot direct.');
             if (unites.some(unite => unite.type_dechet_id && unite.type_dechet_id !== contexte.type_dechet_id))
                 throw new ApiError(409, "La matière du QR ne correspond pas à la collecte.");
             if (type === "terrain" && unites.some(unite =>

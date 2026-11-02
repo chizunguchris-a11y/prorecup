@@ -118,6 +118,7 @@ class LotRepository {
                 modifie_le = CURRENT_TIMESTAMP
             WHERE id = $1
               AND organisation_id = $2
+              AND $3 > 0
               AND quantite_restante_kg >= $3
               AND statut_lot IN ('en_stock', 'partiellement_vendu')
             RETURNING *;
@@ -197,10 +198,10 @@ async listerParOrganisation(
             ON c.id = l.collecte_id
 
         LEFT JOIN clients cl
-            ON cl.id = COALESCE(l.client_courant_id, c.client_id)
+            ON cl.id = COALESCE(l.client_courant_id, c.client_id) AND cl.organisation_id = $1
 
         LEFT JOIN sites_de_collecte s
-            ON s.id = COALESCE(l.site_courant_id, c.site_id)
+            ON s.id = COALESCE(l.site_courant_id, c.site_id) AND s.organisation_id = $1
 
         JOIN types_dechets td
             ON td.id = l.type_dechet_id

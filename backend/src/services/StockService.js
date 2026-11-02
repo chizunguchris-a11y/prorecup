@@ -1,3 +1,4 @@
+import { kilos, grammes } from './TracabiliteRules.js';
 import pool from "../config/db.js";
 import stockRepository from "../repositories/StockRepository.js";
 import lotRepository from "../repositories/LotRepository.js";
@@ -22,6 +23,7 @@ class StockService {
         if (!lotId) {
             throw new ApiError(400, "Le lot est obligatoire.");
         }
+        kilos(quantiteAjoutee);
         if (!quantiteAjoutee || Number(quantiteAjoutee) <= 0) {
             throw new ApiError(400, "La quantité doit être supérieure à zéro.");
         }
@@ -63,6 +65,7 @@ class StockService {
         lotId,
         client
     ) {
+        quantite = kilos(quantite);
         // Même ordre que les ventes : stock d'abord, lot ensuite.
         let stockExistant = await stockRepository.trouverParTypeDechetPourMiseAJour(
             organisationId,
@@ -85,6 +88,8 @@ class StockService {
             throw new ApiError(409, "Ce lot possède déjà une entrée en stock.");
         }
 
+        if (grammes(kilos(lot.poids_reel)) !== grammes(quantite) || lot.statut_lot !== 'en_stock')
+            throw new ApiError(409, "Un stock traçable n'accepte qu'une entrée complète du poids initial d'un lot neuf, même en mode historique.");
         const quantiteRestante = lot.quantite_restante_kg === null ||
             lot.quantite_restante_kg === undefined
             ? null
@@ -139,7 +144,7 @@ class StockService {
 
             stock = await stockRepository.mettreAJour(
                 stockExistant.id,
-                Number(stockExistant.quantite) + quantite,
+                kilos(kilos(stockExistant.quantite, false) + quantite),
                 client
             );
         }
@@ -153,6 +158,13 @@ class StockService {
             if (!lotLegacy) {
                 throw new ApiError(409, "Impossible de rendre indéterminée la quantité restante du lot legacy.");
             }
+        }
+
+        if (stock.tracabilite_lots_active === true) {
+            const etat = await lotRepository.sommeQuantitesRestantes(organisationId, typeDechetId, client);
+            if (Number(etat.lots_non_initialises) || Number(etat.lots_statuts_inconnus) ||
+                grammes(etat.total) !== grammes(stock.quantite))
+                throw new ApiError(409, 'Stock traçable incohérent : réconciliez la somme des lots avant cette entrée.');
         }
 
         await mouvementStockService.enregistrerEntree(

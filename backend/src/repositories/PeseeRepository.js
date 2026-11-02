@@ -35,9 +35,11 @@ class PeseeRepository {
             FROM missions m
             JOIN missions_collectes mc ON mc.mission_id = m.id
             JOIN collectes c ON c.id = mc.collecte_id
+            JOIN clients cl ON cl.id=c.client_id AND cl.organisation_id=m.organisation_id
+            JOIN sites_de_collecte s ON s.id=c.site_id AND s.organisation_id=m.organisation_id
             WHERE m.id = $1 AND c.id = $2 AND m.organisation_id = $3
               ${filtreAgent}
-            FOR UPDATE OF m, mc;
+            FOR UPDATE OF m, mc, c;
         `, valeurs);
         return resultat.rows[0] || null;
     }

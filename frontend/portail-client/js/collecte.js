@@ -922,6 +922,27 @@ const afficherPreuves = (
 };
 
 
+const afficherTracabilite = lignes => {
+    const zone = element('detailTracabilite');
+    if (!zone) return;
+    zone.replaceChildren();
+    if (!Array.isArray(lignes) || !lignes.length) {
+        zone.textContent = 'Aucune filiation de lot documentée pour cette collecte.';
+        return;
+    }
+    for (const ligne of lignes) {
+        const article = document.createElement('article');
+        const code = document.createElement('strong'); code.textContent = String(ligne.code_qr || 'Lot sans QR renseigné');
+        const quantite = document.createElement('p');
+        quantite.textContent = ligne.quantite_origine_kg == null ? 'Quantité d’origine à réconcilier.' :
+            'Contribution d’origine : ' + ligne.quantite_origine_kg + ' kg.';
+        const reste = document.createElement('p');
+        reste.textContent = ligne.reste_attribuable_kg == null ? 'Quantité restante attribuable : non déterminée.' :
+            'Quantité restante attribuable : ' + ligne.reste_attribuable_kg + ' kg.';
+        article.append(code,quantite,reste);zone.append(article);
+    }
+};
+
 const afficherCollecte = (
     collecte
 ) => {
@@ -1168,6 +1189,7 @@ const afficherCollecte = (
     afficherPreuves(
         preuves
     );
+    afficherTracabilite(collecte.tracabilite);
 
 
     element(

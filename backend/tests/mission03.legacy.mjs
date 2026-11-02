@@ -1,0 +1,11 @@
+import './mission03.setup.mjs';
+import { describe, it, before, beforeEach, afterEach, after } from 'node:test';
+Object.assign(globalThis, { describe, it, before, beforeEach, afterEach, after });
+await import('./stockTraceabiliteLots.test.js');
+await import('./stockLegacyNouveauLot.test.js');
+await import('./qrLotLegacyStock.test.js');
+await import('./venteLots.test.js');
+await import('./traceabiliteVenteLots.test.js');
+await import('./venteLotsBackendContract.test.js');
+await import('./qrLotsCleanup.test.js');
+await import('./qrLotsTransaction.test.js');

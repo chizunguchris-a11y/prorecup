@@ -182,4 +182,5 @@ router.get(
     validationMiddleware,
     portailClientController.urlPreuve
 );
+router.get('/tracabilite/:code', authMiddleware, portailClientContextMiddleware, portailClientController.tracabiliteQr);
 export default router;

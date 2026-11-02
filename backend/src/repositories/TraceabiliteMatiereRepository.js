@@ -5,9 +5,68 @@ class TraceabiliteMatiereRepository {
         const resultat = await connexion.query(`SELECT
           ($2::uuid IS NULL OR EXISTS (SELECT 1 FROM sites_de_collecte s WHERE s.id=$2 AND s.organisation_id=$1)) AS site_ok,
           ($3::uuid IS NULL OR EXISTS (SELECT 1 FROM clients c WHERE c.id=$3 AND c.organisation_id=$1)) AS client_ok,
-          ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM types_dechets td WHERE td.id=$4)) AS type_ok`,
+          ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM types_dechets td WHERE td.id=$4)) AS type_ok,
+          ($2::uuid IS NULL OR $3::uuid IS NULL OR EXISTS(SELECT 1 FROM client_sites cs
+            WHERE cs.site_id=$2 AND cs.client_id=$3 AND cs.organisation_id=$1 AND cs.actif=TRUE)) AS site_client_ok`,
         [organisationId, siteId, clientId, typeDechetId]);
         return resultat.rows[0];
+    }
+
+    async lotDirectPourCollecte(organisationId, collecteId, connexion = pool) {
+        const result = await connexion.query('SELECT id FROM lots WHERE organisation_id=$1 AND collecte_id=$2 LIMIT 1', [organisationId, collecteId]);
+        return result.rows.length > 0;
+    }
+
+    async contenantsPourCollecte(organisationId, collecteId, connexion = pool) {
+        const result = await connexion.query('SELECT id FROM contenants WHERE organisation_id=$1 AND collecte_origine_id=$2 LIMIT 1', [organisationId, collecteId]);
+        return result.rows.length > 0;
+    }
+
+    async originesPourMiseAJour(organisationId, ids, connexion = pool) {
+        const result = await connexion.query(`SELECT co.id, co.statut, co.poids_reel, co.type_dechet_id,
+            EXISTS(SELECT 1 FROM missions_collectes mc WHERE mc.collecte_id=co.id) AS parcours_present,
+            (NOT EXISTS(SELECT 1 FROM missions_collectes mc JOIN missions m ON m.id=mc.mission_id WHERE mc.collecte_id=co.id AND m.statut IN ('planifiee','en_cours')) AND EXISTS(
+              SELECT 1 FROM missions_collectes mc JOIN missions m ON m.id=mc.mission_id AND m.organisation_id=$1
+              WHERE mc.collecte_id=co.id AND m.statut='terminee'
+                AND EXISTS(SELECT 1 FROM mission_evenements e WHERE e.mission_id=m.id AND e.collecte_id=co.id AND e.type_evenement='collecte_terminee')
+                AND EXISTS(SELECT 1 FROM preuves_collecte p WHERE p.organisation_id=$1 AND p.mission_id=m.id AND p.collecte_id=co.id AND p.type_preuve='avant_collecte')
+                AND EXISTS(SELECT 1 FROM preuves_collecte p WHERE p.organisation_id=$1 AND p.mission_id=m.id AND p.collecte_id=co.id AND p.type_preuve='apres_collecte')
+                AND EXISTS(SELECT 1 FROM pesees p WHERE p.organisation_id=$1 AND p.mission_id=m.id AND p.collecte_id=co.id AND p.type='terrain')
+            )) AS parcours_complet,
+            EXISTS(SELECT 1 FROM lots l WHERE l.organisation_id=$1 AND l.collecte_id=co.id) AS lot_direct,
+            EXISTS(SELECT 1 FROM contenants source JOIN lot_contenants lien ON lien.contenant_id=source.id JOIN lots parent ON parent.id=lien.lot_id
+              WHERE source.collecte_origine_id=co.id AND (
+                parent.poids_reel IS NULL OR parent.poids_reel<=0 OR parent.poids_reel='NaN'::numeric OR source.organisation_id<>$1 OR parent.organisation_id<>$1 OR parent.type_dechet_id IS DISTINCT FROM co.type_dechet_id OR
+                EXISTS(SELECT 1 FROM lot_contenants lc JOIN contenants ct ON ct.id=lc.contenant_id WHERE lc.lot_id=parent.id AND
+                  (ct.organisation_id<>$1 OR ct.poids_courant_kg IS NULL OR ct.poids_courant_kg<=0 OR ct.type_dechet_id IS DISTINCT FROM parent.type_dechet_id)) OR
+                ABS(parent.poids_reel-(SELECT SUM(ct.poids_courant_kg) FROM lot_contenants lc JOIN contenants ct ON ct.id=lc.contenant_id WHERE lc.lot_id=parent.id))>0.0005
+              )) AS provenance_non_reconciliee,
+            (SELECT COALESCE(SUM(ct.poids_courant_kg),0) FROM contenants ct
+             WHERE ct.organisation_id=$1 AND ct.collecte_origine_id=co.id
+               AND EXISTS(SELECT 1 FROM lot_contenants lc JOIN lots l ON l.id=lc.lot_id AND l.organisation_id=$1 WHERE lc.contenant_id=ct.id)) AS deja_loti_kg
+            FROM collectes co JOIN clients cl ON cl.id=co.client_id AND cl.organisation_id=$1
+            JOIN sites_de_collecte s ON s.id=co.site_id AND s.organisation_id=$1
+            WHERE co.id=ANY($2::uuid[]) ORDER BY co.id FOR UPDATE OF co`, [organisationId, ids]);
+        return result.rows;
+    }
+
+    async mesuresContenants(organisationId, ids, connexion = pool) {
+        const result = await connexion.query(`SELECT c.id, p.poids_net, p.tare, p.collecte_id, p.date_heure
+          FROM contenants c
+          JOIN LATERAL (
+            SELECT p.* FROM pesees p JOIN pesees_unites pu ON pu.pesee_id=p.id AND pu.contenant_id=c.id
+            WHERE p.organisation_id=$1 AND p.type='depot'
+              AND NOT EXISTS(SELECT 1 FROM pesees_unites autre WHERE autre.pesee_id=p.id
+                AND (autre.contenant_id IS DISTINCT FROM c.id OR autre.lot_id IS NOT NULL))
+            ORDER BY p.date_heure DESC,p.cree_le DESC,p.id DESC LIMIT 1
+          ) p ON true
+          WHERE c.organisation_id=$1 AND c.id=ANY($2::uuid[])`, [organisationId, ids]);
+        return result.rows;
+    }
+
+    async trouverContenantParCode(organisationId, code, connexion = pool) {
+        const result = await connexion.query('SELECT * FROM contenants WHERE organisation_id=$1 AND code_qr=$2', [organisationId,code]);
+        return result.rows[0] || null;
     }
 
     async creerContenant(donnees, connexion = pool) {
@@ -52,11 +111,13 @@ class TraceabiliteMatiereRepository {
 
     async trouverLotParOperation(organisationId, operationId, connexion = pool) {
         const resultat = await connexion.query(`SELECT l.*,
+            (SELECT e.utilisateur_id FROM tracabilite_matiere_evenements e WHERE e.lot_id=l.id AND e.organisation_id=$1 AND e.type_evenement='creation' ORDER BY e.cree_le LIMIT 1) AS createur_id,
+            (SELECT e.survenu_le FROM tracabilite_matiere_evenements e WHERE e.lot_id=l.id AND e.organisation_id=$1 AND e.type_evenement='creation' ORDER BY e.cree_le LIMIT 1) AS date_regroupement,
             COALESCE(array_agg(c.code_qr ORDER BY c.code_qr)
               FILTER (WHERE c.code_qr IS NOT NULL), ARRAY[]::varchar[]) AS codes_contenants
             FROM lots l
             LEFT JOIN lot_contenants lc ON lc.lot_id=l.id
-            LEFT JOIN contenants c ON c.id=lc.contenant_id
+            LEFT JOIN contenants c ON c.id=lc.contenant_id AND c.organisation_id=$1
             WHERE l.organisation_id=$1 AND l.operation_id=$2
             GROUP BY l.id LIMIT 1`, [organisationId, operationId]);
         return resultat.rows[0] || null;
@@ -68,13 +129,13 @@ class TraceabiliteMatiereRepository {
             c.client_courant_id,c.type_dechet_id,td.nom AS matiere,s.nom AS site_nom,cl.nom AS client_nom,c.cree_le,c.modifie_le,
             NULL::numeric AS quantite_restante_kg
           FROM contenants c LEFT JOIN types_dechets td ON td.id=c.type_dechet_id
-          LEFT JOIN sites_de_collecte s ON s.id=c.site_courant_id LEFT JOIN clients cl ON cl.id=c.client_courant_id
+          LEFT JOIN sites_de_collecte s ON s.id=c.site_courant_id AND s.organisation_id=$1 LEFT JOIN clients cl ON cl.id=c.client_courant_id AND cl.organisation_id=$1
           WHERE c.organisation_id=$1
           UNION ALL
           SELECT 'lot',l.id,l.code_qr,'lot',l.tare_kg,l.statut_lot,l.poids_reel,l.collecte_id,l.site_courant_id,
             l.client_courant_id,l.type_dechet_id,td.nom,s.nom,cl.nom,l.cree_le,l.modifie_le,l.quantite_restante_kg
           FROM lots l LEFT JOIN types_dechets td ON td.id=l.type_dechet_id
-          LEFT JOIN sites_de_collecte s ON s.id=l.site_courant_id LEFT JOIN clients cl ON cl.id=l.client_courant_id
+          LEFT JOIN sites_de_collecte s ON s.id=l.site_courant_id AND s.organisation_id=$1 LEFT JOIN clients cl ON cl.id=l.client_courant_id AND cl.organisation_id=$1
           WHERE l.organisation_id=$1 ORDER BY cree_le DESC`, [organisationId]);
         return resultat.rows;
     }
@@ -84,10 +145,10 @@ class TraceabiliteMatiereRepository {
         const verrou = verrouiller ? " FOR UPDATE" : "";
         const contenants = await connexion.query(`SELECT 'contenant' AS nature,id,code_qr,tare_kg,statut,
             site_courant_id,client_courant_id,collecte_origine_id,type_dechet_id,poids_courant_kg AS poids_courant
-            FROM contenants WHERE organisation_id=$1 AND code_qr=ANY($2::text[])${verrou}`, [organisationId, codes]);
+            FROM contenants WHERE organisation_id=$1 AND code_qr=ANY($2::text[]) ORDER BY id${verrou}`, [organisationId, codes]);
         const lots = await connexion.query(`SELECT 'lot' AS nature,id,code_qr,tare_kg,statut_lot AS statut,
             site_courant_id,client_courant_id,collecte_id AS collecte_origine_id,type_dechet_id,poids_reel AS poids_courant
-            FROM lots WHERE organisation_id=$1 AND code_qr=ANY($2::text[])${verrou}`, [organisationId, codes]);
+            FROM lots WHERE organisation_id=$1 AND code_qr=ANY($2::text[]) ORDER BY id${verrou}`, [organisationId, codes]);
         return [...contenants.rows, ...lots.rows];
     }
 
@@ -119,10 +180,14 @@ class TraceabiliteMatiereRepository {
                 collecte_origine_id=COALESCE(collecte_origine_id,$2),site_courant_id=$3,
                 client_courant_id=CASE WHEN $10::text='terrain' THEN $4::uuid ELSE NULL::uuid END,
                 type_dechet_id=COALESCE(type_dechet_id,$5),
-                poids_courant_kg=CASE WHEN $9=1 THEN $6 ELSE poids_courant_kg END,modifie_le=CURRENT_TIMESTAMP
-                WHERE id=$7 AND organisation_id=$8`, [contexte.type === "terrain" ? "en_collecte" : "recu_depot",
+                poids_courant_kg=CASE WHEN $9=1 THEN $6 ELSE NULL END,modifie_le=CURRENT_TIMESTAMP
+                WHERE id=$7 AND organisation_id=$8 AND NOT EXISTS (
+                  SELECT 1 FROM pesees_unites pu JOIN pesees p ON p.id=pu.pesee_id
+                  WHERE pu.contenant_id=$7 AND p.organisation_id=$8 AND p.type=$10
+                    AND p.date_heure > $11::timestamptz
+                )`, [contexte.type === "terrain" ? "en_collecte" : "recu_depot",
                 contexte.collecte_id, contexte.site_id, contexte.client_id, contexte.type_dechet_id,
-                contexte.poids_net, contenantId, contexte.organisation_id, contexte.nombre_unites, contexte.type]);
+                contexte.poids_net, contenantId, contexte.organisation_id, contexte.nombre_unites, contexte.type, contexte.survenu_le]);
         }
     }
 
@@ -145,9 +210,13 @@ class TraceabiliteMatiereRepository {
             e.type_evenement,e.survenu_le,e.collecte_id,e.mission_id,e.pesee_id,e.details,
             s.nom AS site_nom,cl.nom AS client_nom,p.poids_brut,p.tare,p.poids_net,p.type AS type_pesee
           FROM unite u LEFT JOIN tracabilite_matiere_evenements e
-            ON (u.nature='contenant' AND e.contenant_id=u.id) OR (u.nature='lot' AND e.lot_id=u.id)
-          LEFT JOIN sites_de_collecte s ON s.id=e.site_id LEFT JOIN clients cl ON cl.id=e.client_id
-          LEFT JOIN pesees p ON p.id=e.pesee_id ORDER BY e.survenu_le ASC,e.cree_le ASC`, [organisationId, code]);
+            ON e.organisation_id=$1
+            AND (e.mission_id IS NULL OR EXISTS(SELECT 1 FROM missions m WHERE m.id=e.mission_id AND m.organisation_id=$1))
+            AND (e.pesee_id IS NULL OR EXISTS(SELECT 1 FROM pesees pe WHERE pe.id=e.pesee_id AND pe.organisation_id=$1))
+            AND (e.collecte_id IS NULL OR EXISTS(SELECT 1 FROM collectes co JOIN clients cl2 ON cl2.id=co.client_id AND cl2.organisation_id=$1 WHERE co.id=e.collecte_id))
+            AND ((u.nature='contenant' AND e.contenant_id=u.id) OR (u.nature='lot' AND e.lot_id=u.id))
+          LEFT JOIN sites_de_collecte s ON s.id=e.site_id AND s.organisation_id=$1 LEFT JOIN clients cl ON cl.id=e.client_id AND cl.organisation_id=$1
+          LEFT JOIN pesees p ON p.id=e.pesee_id AND p.organisation_id=$1 ORDER BY e.survenu_le ASC,e.cree_le ASC`, [organisationId, code]);
         return resultat.rows;
     }
 
@@ -155,11 +224,13 @@ class TraceabiliteMatiereRepository {
         const resultat = await connexion.query(`SELECT c.id,c.code_qr,c.collecte_origine_id,
             c.poids_courant_kg,c.tare_kg,cl.nom AS client_nom,s.nom AS site_nom,td.nom AS matiere
           FROM lot_contenants lc JOIN lots l ON l.id=lc.lot_id AND l.organisation_id=$1
-          JOIN contenants c ON c.id=lc.contenant_id
+          JOIN contenants c ON c.id=lc.contenant_id AND c.organisation_id=$1
           LEFT JOIN collectes co ON co.id=c.collecte_origine_id
-          LEFT JOIN clients cl ON cl.id=co.client_id LEFT JOIN sites_de_collecte s ON s.id=co.site_id
+          LEFT JOIN clients cl ON cl.id=co.client_id AND cl.organisation_id=$1 LEFT JOIN sites_de_collecte s ON s.id=co.site_id AND s.organisation_id=$1
           LEFT JOIN types_dechets td ON td.id=c.type_dechet_id
-          WHERE lc.lot_id=$2 ORDER BY lc.ajoute_le,c.code_qr`, [organisationId, lotId]);
+          WHERE lc.lot_id=$2 AND (c.collecte_origine_id IS NULL OR EXISTS(
+            SELECT 1 FROM collectes origine JOIN clients client_origine ON client_origine.id=origine.client_id AND client_origine.organisation_id=$1 WHERE origine.id=c.collecte_origine_id
+          )) ORDER BY lc.ajoute_le,c.code_qr`, [organisationId, lotId]);
         return resultat.rows;
     }
 }

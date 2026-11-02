@@ -202,7 +202,8 @@ class CollecteRepository {
     async trouverParIdPourOrganisation(
         id,
         organisationId,
-        connexion = pool
+        connexion = pool,
+        verrouiller = false
     ) {
 
         const requete = `
@@ -219,7 +220,8 @@ class CollecteRepository {
 
             WHERE c.id = $1
               AND cl.organisation_id = $2
-              AND s.organisation_id = $2;
+              AND s.organisation_id = $2
+            ${verrouiller ? 'FOR UPDATE OF c' : ''};
         `;
 
         const resultat =

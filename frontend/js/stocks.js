@@ -59,7 +59,9 @@ let stocks = [];
 
 const seuilStockFaible = 10;
 
+const quantiteConnue = stock => stock.quantite != null && Number.isFinite(Number(stock.quantite)) && Number(stock.quantite) >= 0;
 const obtenirNiveau = (stock) => {
+    if (!quantiteConnue(stock)) return 'a_reconcilier';
 
     return Number(stock.quantite) <
         seuilStockFaible
@@ -84,7 +86,8 @@ const mettreAJourCompteurs = () => {
         );
 
     quantiteTotale.textContent =
-        `${ProRecup.formaterNombre(total)} kg`;
+        stocks.some(stock => !quantiteConnue(stock)) ? 'Total non déterminé : stock à réconcilier' :
+        `${ProRecup.formaterNombre(total)} kg${stocks.some(stock => stock.tracabilite_lots_active !== true) ? ' — provenance partielle' : ''}`;
 
     nombreStocksFaibles.textContent =
         stocks.filter(
@@ -162,9 +165,7 @@ const afficherStocks = (
 
         ligne.appendChild(
             creerCellule(
-                ProRecup.formaterNombre(
-                    stock.quantite
-                ),
+                quantiteConnue(stock) ? ProRecup.formaterNombre(stock.quantite) : 'Non déterminée : à réconcilier',
                 "quantite-stock"
             )
         );
@@ -192,7 +193,8 @@ const afficherStocks = (
         badge.textContent =
             niveau === "faible"
                 ? "Stock faible"
-                : "Stock normal";
+                : niveau === 'a_reconcilier' ? 'À réconcilier' : "Stock normal";
+        if (stock.tracabilite_lots_active !== true) badge.textContent += ' — provenance partielle';
 
         celluleNiveau.appendChild(
             badge
@@ -221,6 +223,10 @@ const afficherStocks = (
 const afficherRepartition = () => {
 
     listeRepartition.innerHTML = "";
+    if (stocks.some(stock => !quantiteConnue(stock))) {
+        listeRepartition.textContent = 'Répartition non déterminée : un stock nécessite une réconciliation.';
+        return;
+    }
 
     if (stocks.length === 0) {
 

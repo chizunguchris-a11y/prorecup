@@ -186,4 +186,11 @@ describe("Entrées de stock et activation de la traçabilité lots hors réseau"
             /déjà une entrée en stock/
         );
     });
+    it("refuse une entrée qui perpétuerait une divergence stock/lots actifs", async function () {
+        state.stock = {id:'stock-actif',organisation_id:'organisation-1',type_dechet_id:'acier',quantite:10,tracabilite_lots_active:true};
+        lotRepository.sommeQuantitesRestantes = async () => ({total:20,lots_non_initialises:0,lots_statuts_inconnus:0});
+        await assert.rejects(service.ajouterDansTransaction('organisation-1','acier',20,'lot-1',{}), /Stock traçable incohérent/);
+        assert.equal(state.mouvements.length,0);
+    });
+
 });

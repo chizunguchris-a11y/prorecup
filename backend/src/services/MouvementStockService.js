@@ -1,3 +1,4 @@
+import { kilos } from './TracabiliteRules.js';
 import mouvementStockRepository
     from "../repositories/MouvementStockRepository.js";
 
@@ -20,6 +21,7 @@ class MouvementStockService {
             );
         }
 
+        kilos(quantite);
         if (!quantite || Number(quantite) <= 0) {
             throw new Error(
                 "La quantité du mouvement doit être supérieure à zéro."
@@ -55,6 +57,7 @@ class MouvementStockService {
             );
         }
 
+        kilos(quantite);
         if (!quantite || Number(quantite) <= 0) {
             throw new Error(
                 "La quantité du mouvement doit être supérieure à zéro."
